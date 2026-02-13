@@ -19,6 +19,14 @@ type ProviderOutcome =
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_API_BASE = process.env.DEEPSEEK_API_BASE ?? "https://api.deepseek.com";
 const DETECTION_API_URL = process.env.DETECTION_API_URL;
+const ROBOFLOW_API_KEY = process.env.ROBOFLOW_API_KEY;
+const ROBOFLOW_WORKSPACE = process.env.ROBOFLOW_WORKSPACE;
+const ROBOFLOW_WORKFLOW_ID = process.env.ROBOFLOW_WORKFLOW_ID;
+/** Legacy model: project_id/version (e.g. find-head-lice-psoriases-and-dandruffs/1). Used when workflow is not set. */
+const ROBOFLOW_MODEL_ID = process.env.ROBOFLOW_MODEL_ID;
+const ROBOFLOW_BASE = "https://detect.roboflow.com";
+/** Serverless Hosted Workflow API (Rapid / Deploy in app). */
+const ROBOFLOW_SERVERLESS_BASE = "https://serverless.roboflow.com";
 
 const VALID_LABELS: ScanResult["label"][] = ["lice", "nits", "dandruff", "psoriasis", "clear"];
 
@@ -116,6 +124,96 @@ function parseConfidenceLevel(s: unknown): "high" | "medium" | "low" {
   return "medium";
 }
 
+/** Call Roboflow: Workflow API if workspace+workflow set, else legacy model (project/version). */
+async function scanWithRoboflow(imageBase64: string): Promise<ProviderOutcome> {
+  if (!ROBOFLOW_API_KEY) return { ok: false, reason: "no_config" };
+  if (ROBOFLOW_WORKSPACE && ROBOFLOW_WORKFLOW_ID) {
+    return scanWithRoboflowWorkflow(imageBase64);
+  }
+  if (ROBOFLOW_MODEL_ID) {
+    return scanWithRoboflowModel(imageBase64);
+  }
+  return { ok: false, reason: "no_config" };
+}
+
+/** Roboflow Workflow (Run in Cloud / Rapid deploy: serverless.roboflow.com/{workspace}/workflows/{workflow_id}). */
+async function scanWithRoboflowWorkflow(imageBase64: string): Promise<ProviderOutcome> {
+  if (!ROBOFLOW_WORKSPACE || !ROBOFLOW_WORKFLOW_ID) return { ok: false, reason: "no_config" };
+  const path = `${ROBOFLOW_SERVERLESS_BASE}/${encodeURIComponent(ROBOFLOW_WORKSPACE)}/workflows/${encodeURIComponent(ROBOFLOW_WORKFLOW_ID)}`;
+  try {
+    const res = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: ROBOFLOW_API_KEY,
+        inputs: { image: { type: "base64", value: imageBase64 } },
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      return { ok: false, reason: "provider_error", detail: text.slice(0, 200) };
+    }
+    const data = (await res.json()) as Record<string, unknown>;
+    return mapRoboflowResult(data);
+  } catch (e) {
+    return { ok: false, reason: "provider_error", detail: String(e) };
+  }
+}
+
+/** Roboflow legacy model (project_id/version, e.g. find-head-lice-psoriases-and-dandruffs/1). */
+async function scanWithRoboflowModel(imageBase64: string): Promise<ProviderOutcome> {
+  if (!ROBOFLOW_MODEL_ID) return { ok: false, reason: "no_config" };
+  const [projectId, version] = ROBOFLOW_MODEL_ID.split("/");
+  if (!projectId || !version) return { ok: false, reason: "no_config" };
+  const url = `${ROBOFLOW_BASE}/${encodeURIComponent(projectId)}/${encodeURIComponent(version)}?api_key=${encodeURIComponent(ROBOFLOW_API_KEY!)}`;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: imageBase64,
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      return { ok: false, reason: "provider_error", detail: text.slice(0, 200) };
+    }
+    const data = (await res.json()) as Record<string, unknown>;
+    return mapRoboflowResult(data);
+  } catch (e) {
+    return { ok: false, reason: "provider_error", detail: String(e) };
+  }
+}
+
+function mapRoboflowResult(data: Record<string, unknown>): ProviderOutcome {
+  const label = extractRoboflowLabel(data);
+  const confidence = extractRoboflowConfidence(data);
+  return {
+    ok: true,
+    result: {
+      label,
+      confidence: typeof confidence === "number" ? confidence : 0.85,
+    },
+  };
+}
+
+/** Workflow output shape varies; try common classification fields (top-level or under outputs). */
+function extractRoboflowLabel(data: Record<string, unknown>): ScanResult["label"] {
+  const root = (data?.outputs as Record<string, unknown>) ?? data;
+  const top = root?.top ?? root?.predicted_class ?? root?.class;
+  if (typeof top === "string") return normalizeLabel(top);
+  const preds = root?.predictions as Array<{ class?: string; label?: string }> | undefined;
+  const c = preds?.[0]?.class ?? preds?.[0]?.label;
+  if (typeof c === "string") return normalizeLabel(c);
+  return "clear";
+}
+
+function extractRoboflowConfidence(data: Record<string, unknown>): number | undefined {
+  const root = (data?.outputs as Record<string, unknown>) ?? data;
+  if (typeof root?.confidence === "number") return root.confidence;
+  const preds = root?.predictions as Array<{ confidence?: number }> | undefined;
+  return preds?.[0]?.confidence;
+}
+
+/** Images are only held in memory for the request; we never write to disk or store anywhere (zero data retention). */
 export async function POST(request: NextRequest) {
   let imageBytes: Buffer;
   let contentType: string = "image/jpeg";
@@ -166,7 +264,22 @@ export async function POST(request: NextRequest) {
 
   const imageBase64 = imageBytes.toString("base64");
 
-  // 1) Fine-tuned model (when configured)
+  // 1) Roboflow (Workflow or legacy model when configured)
+  const roboflowConfigured =
+    ROBOFLOW_API_KEY &&
+    (ROBOFLOW_MODEL_ID || (ROBOFLOW_WORKSPACE && ROBOFLOW_WORKFLOW_ID));
+  if (roboflowConfigured) {
+    const outcome = await scanWithRoboflow(imageBase64);
+    if (outcome.ok) return NextResponse.json(outcome.result);
+    if (outcome.reason === "provider_error") {
+      return NextResponse.json(
+        { error: "Scan temporarily unavailable", code: "PROVIDER_ERROR", detail: outcome.detail },
+        { status: 503 }
+      );
+    }
+  }
+
+  // 2) Fine-tuned model (when configured)
   if (DETECTION_API_URL) {
     const outcome = await scanWithDetectionApi(imageBase64, contentType);
     if (outcome.ok) return NextResponse.json(outcome.result);
@@ -178,7 +291,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // 2) DeepSeek (interim)
+  // 3) DeepSeek (interim)
   const deepSeekOutcome = await scanWithDeepSeek(imageBase64);
   if (deepSeekOutcome.ok) return NextResponse.json(deepSeekOutcome.result);
   if (deepSeekOutcome.reason === "provider_error") {
@@ -192,7 +305,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 3) Stub when no provider configured
+  // 4) Stub when no provider configured
   const stub: ScanResult = {
     label: VALID_LABELS[Math.floor(Math.random() * VALID_LABELS.length)],
     confidence: 0.85,

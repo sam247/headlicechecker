@@ -6,7 +6,7 @@ Next.js front end for the NitNot head lice photo checker and clinic finder. User
 
 - **Next.js 14** (App Router), React 18, TypeScript
 - **Tailwind CSS**, shadcn/ui (Radix)
-- **Photo scan API** (`/api/scan`) — fine-tuned model (when configured), DeepSeek vision, or stub
+- **Photo scan API** (`/api/scan`) — Roboflow Workflow, fine-tuned model, DeepSeek vision, or stub
 
 ## Scripts
 
@@ -15,22 +15,22 @@ Next.js front end for the NitNot head lice photo checker and clinic finder. User
 - `npm run start` — start production server
 - `npm run lint` — run ESLint
 
-## Scan: fine-tuned model or DeepSeek or stub
+## Scan: Roboflow, fine-tuned model, DeepSeek, or stub
 
-**Recommended — your fine-tuned model:**
+**Roboflow (model or workflow):**
 
-1. Host your detection API (e.g. Replicate, Hugging Face Inference, or your own server) that accepts POST with an image and returns `{ label, confidence?, explanation? }`.
-2. Set `DETECTION_API_URL` to that base URL. The app calls `{DETECTION_API_URL}/predict` with JSON `{ image: base64 }`. Labels: `lice`, `nits`, `dandruff`, `psoriasis`, `clear`.
+- **By project/version:** Set `ROBOFLOW_API_KEY` (your **private** API key) and `ROBOFLOW_MODEL_ID=project-slug/version` (e.g. `find-head-lice-psoriases-and-dandruffs/1`). The app uses Roboflow’s hosted inference and maps the result to `{ label, confidence }`.
+- **By workflow:** Set `ROBOFLOW_API_KEY`, `ROBOFLOW_WORKSPACE`, and `ROBOFLOW_WORKFLOW_ID` from Deploy Workflow in the app. Use class names: `lice`, `nits`, `dandruff`, `psoriasis`, `clear`.
 
-**Interim — DeepSeek vision:**
+**Your own detection API:** Set `DETECTION_API_URL` to the base URL of an API that exposes `POST /predict` with `{ image: base64 }` and returns `{ label, confidence?, explanation? }`. Same labels as above.
 
-1. Get an API key at [DeepSeek Platform](https://platform.deepseek.com).
-2. In `.env.local`: `DEEPSEEK_API_KEY=sk-...`
-3. Deploy to Vercel and set `DEEPSEEK_API_KEY` in the project env. `/api/scan` will use DeepSeek vision to classify and explain in one call.
+**DeepSeek vision:** Set `DEEPSEEK_API_KEY` (from [DeepSeek Platform](https://platform.deepseek.com)). The app uses vision to classify and explain in one call.
 
-If neither is set, `/api/scan` returns a random stub so the app still works.
+If none are set, `/api/scan` returns a random stub.
 
-**Diagnostics:** `GET /api/scan/status` returns `{ configured: boolean, provider: 'finetuned' | 'deepseek' | 'stub' }` (no keys or secrets).
+**Privacy / zero data:** The app does not store or log uploaded images. They exist only in memory for the duration of the request. For Roboflow’s retention policy on inference requests, see [Roboflow docs](https://docs.roboflow.com/) or their privacy policy.
+
+**Diagnostics:** `GET /api/scan/status` returns `{ configured, provider: 'roboflow' | 'finetuned' | 'deepseek' | 'stub' }`.
 
 **Image size:** For consistent detection, the app guides users to use at least 640px on the shortest side. Images are resized client-side to 1024px on the long edge before upload. The API rejects images with either dimension below 320px.
 
@@ -38,7 +38,7 @@ If neither is set, `/api/scan` returns a random stub so the app still works.
 
 You can deploy the Next.js app to Vercel with **no local runs**. Vercel runs the front end and `/api/scan` only.
 
-- **Recommended:** Set `DETECTION_API_URL` and/or `DEEPSEEK_API_KEY` in Vercel. Detection uses the fine-tuned endpoint first, then DeepSeek.
+- **Recommended:** Set Roboflow env vars and/or `DEEPSEEK_API_KEY` in Vercel. Scan tries Roboflow first, then custom detection API, then DeepSeek.
 - **Stub:** Leave both unset. Scan results are random placeholders.
 
 ## Project structure
