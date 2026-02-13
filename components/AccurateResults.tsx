@@ -38,7 +38,7 @@ const AccurateResults = () => {
           Accurate Results You Can Trust
         </h2>
         <p className="text-muted-foreground max-w-2xl mx-auto mb-10">
-          Our photo checker analyses hair and scalp images to give you a clear indication of what you're dealing with.
+          Our photo checker analyses hair and scalp images to give you a clear indication of what you&apos;re dealing with.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

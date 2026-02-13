@@ -40,7 +40,7 @@ const HeroSection = ({ onFileSelect }: HeroSectionProps) => {
             </div>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-foreground leading-[1.05] mb-4 md:mb-5">
-              Not sure if it's{" "}
+              Not sure if it&apos;s{" "}
               <span className="text-primary">nits</span>?{" "}
               <br />
               Use the head lice checker.

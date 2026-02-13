@@ -127,7 +127,7 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
             Upload a Photo for a Quick Check
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Snap a close-up of the hair or scalp and we'll give you a quick indication.
+            Snap a close-up of the hair or scalp and we&apos;ll give you a quick indication.
             It takes just a few seconds.
           </p>
         </div>

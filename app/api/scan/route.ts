@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
   if (RAM_SERVICE_URL) {
     try {
       const form = new FormData();
-      form.append("image", new Blob([imageBytes], { type: contentType }), "image.jpg");
+      form.append("image", new Blob([new Uint8Array(imageBytes)], { type: contentType }), "image.jpg");
       const res = await fetch(`${RAM_SERVICE_URL.replace(/\/$/, "")}/predict`, {
         method: "POST",
         body: form,

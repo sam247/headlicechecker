@@ -29,7 +29,7 @@ const FeatureHighlight = () => {
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed mb-8">
               Our network of professional clinics provides fast, friendly treatment. 
-              No judgement, no fuss — just experienced specialists who've seen it all.
+              No judgement, no fuss — just experienced specialists who&apos;ve seen it all.
             </p>
             <div className="grid grid-cols-2 gap-4 mb-8">
               {[
