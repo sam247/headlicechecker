@@ -2,11 +2,13 @@
 RAM inference service for NitNot head-lice checker.
 
 - RAM: image → label (lice | nits | dandruff | clear) + confidence.
-- Optional: DeepSeek API (vision) to generate user-facing explanation from image + RAM result.
-  DeepSeek is called from here, alongside RAM — not "inside" RAM.
+  If setup_ram.py has been run (checkpoint + recognize-anything installed), uses real RAM.
+  Otherwise returns a stub result.
+- Optional: DeepSeek API to generate user-facing explanation from image + RAM result.
 """
 import os
 import base64
+import io
 from typing import Literal
 
 import httpx
@@ -18,17 +20,72 @@ app = FastAPI(title="NitNot RAM Service")
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 DEEPSEEK_BASE = os.environ.get("DEEPSEEK_API_BASE", "https://api.deepseek.com")
+RAM_CHECKPOINT = os.environ.get(
+    "RAM_CHECKPOINT",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "pretrained", "ram_swin_large_14m.pth"),
+)
+
+# Keywords from RAM tag string → our labels (order matters: more specific first)
+TAG_KEYWORDS: list[tuple[Label, list[str]]] = [
+    ("nits", ["nit", "nits", "egg", "eggs"]),
+    ("lice", ["lice", "louse", "insect", "parasite", "bug", "head lice"]),
+    ("dandruff", ["dandruff", "dandruffs", "flake", "flakes", "scalp", "dry skin", "dry scalp"]),
+]
+
+
+def _tags_to_label(tag_string: str) -> tuple[Label, float]:
+    """Map RAM tag string to our label and a simple confidence."""
+    tag_string_lower = tag_string.lower()
+    tags = [t.strip().lower() for t in tag_string_lower.split("|")]
+    for label, keywords in TAG_KEYWORDS:
+        for kw in keywords:
+            if any(kw in t for t in tags) or kw in tag_string_lower:
+                return label, 0.85
+    return "clear", 0.9
+
+
+_ram_model = None
+_ram_transform = None
+
+
+def _load_ram():
+    global _ram_model, _ram_transform
+    if _ram_model is not None:
+        return True
+    if not os.path.isfile(RAM_CHECKPOINT):
+        return False
+    try:
+        import torch
+        from PIL import Image
+    from ram.models import ram
+    from ram import get_transform
+    except ImportError:
+        return False
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    _ram_transform = get_transform(image_size=384)
+    _ram_model = ram(pretrained=RAM_CHECKPOINT, image_size=384, vit="swin_l")
+    _ram_model.eval()
+    _ram_model = _ram_model.to(device)
+    return True
 
 
 def run_ram_inference(image_bytes: bytes) -> tuple[Label, float]:
-    """
-    Run RAM (Recognize Anything Model) on image.
-    Replace this with real RAM inference (load model, preprocess, forward).
-    """
-    # Stub: return deterministic stub based on size for demo
-    # TODO: load RAM/RAM++ and run real inference; fine-tune for lice/nits/dandruff/clear
-    _ = image_bytes
-    return "clear", 0.9
+    """Run RAM if available; otherwise stub."""
+    if not _load_ram():
+        # Stub when RAM not set up
+        _ = image_bytes
+        return "clear", 0.9
+
+    import torch
+    from PIL import Image
+
+    device = next(_ram_model.parameters()).device
+    pil = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    image_tensor = _ram_transform(pil).unsqueeze(0).to(device)
+    with torch.no_grad():
+        tag_en, _tag_zh = _ram_model.generate_tag(image_tensor)
+    tag_string = tag_en[0] if isinstance(tag_en, (list, tuple)) else str(tag_en)
+    return _tags_to_label(tag_string)
 
 
 def get_explanation_from_deepseek(image_b64: str, label: Label, confidence: float) -> str | None:
@@ -89,4 +146,5 @@ async def predict(image: UploadFile = File(...)):
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    ram_loaded = _ram_model is not None or (os.path.isfile(RAM_CHECKPOINT) and _load_ram())
+    return {"status": "ok", "ram_loaded": ram_loaded}
