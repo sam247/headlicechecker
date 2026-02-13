@@ -1,9 +1,0 @@
-fastapi>=0.115.0
-uvicorn[standard]>=0.32.0
-python-multipart>=0.0.12
-# Uncomment when adding real RAM model:
-# torch>=2.0.0
-# torchvision
-# Pillow
-# Optional: DeepSeek API client (use httpx or openai-compatible client)
-httpx>=0.27.0

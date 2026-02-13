@@ -1,4 +1,4 @@
-import { Check, AlertTriangle, Sparkles } from "lucide-react";
+import { Check, AlertTriangle, Sparkles, CircleAlert } from "lucide-react";
 
 const cards = [
   {
@@ -18,6 +18,15 @@ const cards = [
     description: "The flakes appear to be dandruff, not nits. Dandruff flakes move easily and aren't cemented to the hair shaft.",
     color: "text-muted-foreground",
     iconColor: "text-muted-foreground",
+  },
+  {
+    label: "Psoriasis",
+    image: "/images/dandruff.jpeg",
+    icon: CircleAlert,
+    title: "Scalp Psoriasis",
+    description: "Scalp psoriasis can look similar to dandruff or nits — silvery or red, scaly patches. We distinguish it from lice; see a GP or dermatologist for diagnosis and treatment.",
+    color: "text-amber-600",
+    iconColor: "text-amber-600",
   },
   {
     label: "Clean",
@@ -41,7 +50,7 @@ const AccurateResults = () => {
           Our photo checker analyses hair and scalp images to give you a clear indication of what you&apos;re dealing with.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {cards.map((card) => (
             <div key={card.label} className="bg-background rounded-2xl border border-border overflow-hidden shadow-sm">
               {/* Alert bar */}

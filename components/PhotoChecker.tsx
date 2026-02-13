@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Upload, Camera, Search, AlertTriangle, MapPin, CheckCircle2, Clock, Shield, Users } from "lucide-react";
 import ClinicFinder from "@/components/ClinicFinder";
 
-type ScanResult = { label: "lice" | "nits" | "dandruff" | "clear"; confidence: number; explanation?: string };
+type ScanResult = { label: "lice" | "nits" | "dandruff" | "psoriasis" | "clear"; confidence: number; explanation?: string; confidenceLevel?: "high" | "medium" | "low" };
 
 const SCAN_MESSAGES = [
   "Examining hair strands…",
@@ -17,7 +17,10 @@ const SCAN_MESSAGES = [
   "Compiling results…",
 ];
 
-type Stage = "upload" | "scanning" | "result";
+const MIN_SIDE_PX = 640;
+const TARGET_LONG_EDGE_PX = 1024;
+
+type Stage = "upload" | "confirmSize" | "scanning" | "result";
 
 interface PhotoCheckerProps {
   initialFile?: File | null;
@@ -32,17 +35,42 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
   const [showClinics, setShowClinics] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
+  const [providerError, setProviderError] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const clinicSectionRef = useRef<HTMLDivElement>(null);
 
   const processFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPreview(e.target?.result as string);
-      runScan(file);
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const minSide = Math.min(img.naturalWidth, img.naturalHeight);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreview(e.target?.result as string);
+        if (minSide < MIN_SIDE_PX) {
+          setPendingFile(file);
+          setStage("confirmSize");
+        } else {
+          setStage("scanning");
+          runScan(file);
+        }
+      };
+      reader.readAsDataURL(file);
     };
-    reader.readAsDataURL(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreview(e.target?.result as string);
+        setStage("scanning");
+        runScan(file);
+      };
+      reader.readAsDataURL(file);
+    };
+    img.src = url;
   }, []);
 
   // Handle file passed from hero
@@ -53,6 +81,42 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
     }
   }, [initialFile, processFile, onFileConsumed]);
 
+  const resizeToLongEdge = (file: File, longEdge: number): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+        const scale = w > h ? longEdge / w : longEdge / h;
+        if (scale >= 1) {
+          resolve(file);
+          return;
+        }
+        const c = document.createElement("canvas");
+        c.width = Math.round(w * scale);
+        c.height = Math.round(h * scale);
+        const ctx = c.getContext("2d");
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        c.toBlob(
+          (blob) => (blob ? resolve(blob) : resolve(file)),
+          "image/jpeg",
+          0.9
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(file);
+      };
+      img.src = url;
+    });
+  };
+
   const runScan = async (file: File) => {
     setStage("scanning");
     setProgress(0);
@@ -60,6 +124,7 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
     setShowClinics(false);
     setScanResult(null);
     setScanError(null);
+    setProviderError(false);
 
     const progressInterval = setInterval(() => {
       setProgress((p) => {
@@ -70,14 +135,23 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
     }, 400);
 
     try {
+      const blob = await resizeToLongEdge(file, TARGET_LONG_EDGE_PX);
       const form = new FormData();
-      form.append("image", file);
+      form.append("image", blob, "image.jpg");
       const res = await fetch("/api/scan", { method: "POST", body: form });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error ?? data?.detail ?? "Scan failed");
-      const result = data as ScanResult;
-      setScanResult(result);
-      if (result.label === "lice" || result.label === "nits") setShowClinics(true);
+      if (!res.ok) {
+        if (data?.code === "PROVIDER_ERROR") {
+          setProviderError(true);
+          setScanError(data?.error ?? "We couldn't analyse this photo right now.");
+        } else {
+          throw new Error(data?.error ?? data?.detail ?? "Scan failed");
+        }
+      } else {
+        const result = data as ScanResult;
+        setScanResult(result);
+        if (result.label === "lice" || result.label === "nits") setShowClinics(true);
+      }
     } catch (e) {
       setScanError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
@@ -108,6 +182,16 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
     setShowClinics(false);
     setScanResult(null);
     setScanError(null);
+    setProviderError(false);
+    setPendingFile(null);
+  };
+
+  const useAnyway = () => {
+    if (pendingFile) {
+      setStage("scanning");
+      runScan(pendingFile);
+      setPendingFile(null);
+    }
   };
 
   const handleDrop = useCallback(
@@ -148,8 +232,11 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
                   <p className="text-lg font-semibold text-foreground mb-2">
                     Drag & drop a photo here
                   </p>
-                  <p className="text-muted-foreground text-sm mb-6">
+                  <p className="text-muted-foreground text-sm mb-2">
                     or click to browse your files
+                  </p>
+                  <p className="text-muted-foreground text-xs max-w-sm mb-6">
+                    Best results: close-up of scalp or hair, good lighting, at least {MIN_SIDE_PX}px on the shortest side.
                   </p>
                   <Button variant="outline" className="rounded-full border-primary/40 text-primary hover:bg-primary/5">
                     <Upload className="mr-2 h-4 w-4" />
@@ -165,6 +252,33 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
                       if (file) processFile(file);
                     }}
                   />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {stage === "confirmSize" && preview && (
+            <Card className="bg-background border-amber-500/30">
+              <CardContent className="p-8 md:p-12">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-32 h-32 rounded-2xl overflow-hidden mb-6 shadow-lg">
+                    <img src={preview} alt="Uploaded photo" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center mb-4">
+                    <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">Photo may be too small</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md">
+                    For best results use at least {MIN_SIDE_PX}px on the shortest side. You can still try with this photo.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button size="lg" variant="outline" onClick={reset} className="rounded-full border-primary/30 text-primary hover:bg-primary/5">
+                      Choose another
+                    </Button>
+                    <Button size="lg" onClick={useAnyway} className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                      Use anyway
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -207,8 +321,14 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
                       <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
                         <AlertTriangle className="h-7 w-7 text-destructive" />
                       </div>
-                      <h3 className="text-xl font-bold text-foreground mb-2">Something went wrong</h3>
-                      <p className="text-muted-foreground mb-6 max-w-md">{scanError}</p>
+                      <h3 className="text-xl font-bold text-foreground mb-2">
+                        {providerError ? "We couldn't analyse this photo right now" : "Something went wrong"}
+                      </h3>
+                      <p className="text-muted-foreground mb-6 max-w-md">
+                        {providerError
+                          ? "Please try again in a moment or use a clearer close-up. If it keeps happening, check your connection and try later."
+                          : scanError}
+                      </p>
                       <Button size="lg" variant="outline" onClick={reset} className="rounded-full border-primary/30 text-primary hover:bg-primary/5">
                         Try again
                       </Button>
@@ -221,10 +341,17 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
                             <CheckCircle2 className="h-7 w-7 text-green-600 dark:text-green-400" />
                           </div>
                           <h3 className="text-xl font-bold text-foreground mb-2">No signs detected</h3>
-                          <p className="text-muted-foreground mb-6 max-w-md">
+                          <p className="text-muted-foreground mb-4 max-w-md">
                             {scanResult.explanation ??
                               "We didn't spot signs of lice or nits in this image. If you're still concerned, a quick professional check can put your mind at ease."}
                           </p>
+                          {scanResult.confidenceLevel === "low" ? (
+                            <p className="text-sm text-amber-600 dark:text-amber-500 mb-6 max-w-md">
+                              For best accuracy, try a closer, well-lit photo.
+                            </p>
+                          ) : (
+                            <div className="mb-6" />
+                          )}
                         </>
                       ) : (
                         <>
@@ -236,15 +363,27 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
                               ? "Possible nits (eggs) detected"
                               : scanResult.label === "dandruff"
                                 ? "Likely dandruff or similar"
-                                : "Potential signs detected"}
+                                : scanResult.label === "psoriasis"
+                                  ? "Possible scalp psoriasis"
+                                  : "Potential signs detected"}
                           </h3>
                           <p className="text-muted-foreground mb-4 max-w-md">
                             {scanResult.explanation ??
-                              "Based on the image, we recommend a quick professional check to be sure. Our clinics can give you a clear answer and treatment if needed."}
+                              (scanResult.label === "psoriasis"
+                                ? "Scalp psoriasis can look similar to dandruff or nits. We recommend seeing a GP or dermatologist for a proper diagnosis and treatment options."
+                                : "Based on the image, we recommend a quick professional check to be sure. Our clinics can give you a clear answer and treatment if needed.")}
                           </p>
-                          <p className="text-sm font-medium text-primary mb-6">
-                            Find your nearest clinic below — quick, confidential, and expert.
-                          </p>
+                          {(scanResult.label === "lice" || scanResult.label === "nits") && (
+                            <p className="text-sm font-medium text-primary mb-4">
+                              Find your nearest clinic below — quick, confidential, and expert.
+                            </p>
+                          )}
+                          {scanResult.confidenceLevel === "low" && (
+                            <p className="text-sm text-amber-600 dark:text-amber-500 mb-6 max-w-md">
+                              For best accuracy, try a closer, well-lit photo.
+                            </p>
+                          )}
+                          {scanResult.confidenceLevel !== "low" && <div className="mb-6" />}
                         </>
                       )}
                       <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
