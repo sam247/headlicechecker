@@ -1,21 +1,23 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import NextImage from "next/image";
+import { AlertTriangle, Camera, CheckCircle2, Loader2, Upload, RefreshCw, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Upload, Camera, Search, AlertTriangle, MapPin, CheckCircle2, Clock, Shield, Users } from "lucide-react";
 import ClinicFinder from "@/components/ClinicFinder";
+import ClinicContactForm from "@/components/site/ClinicContactForm";
+import { trackEvent } from "@/lib/data/events";
+import { getSiteCopy } from "@/lib/data/content";
+import type { ScanConfidenceLevel, ScanLabel } from "@/lib/data/types";
 
-type ScanResult = { label: "lice" | "nits" | "dandruff" | "psoriasis" | "clear"; confidence: number; explanation?: string; confidenceLevel?: "high" | "medium" | "low" };
-
-const SCAN_MESSAGES = [
-  "Examining hair strands…",
-  "Looking for signs of lice…",
-  "Analysing close-up details…",
-  "Checking for nits near the scalp…",
-  "Compiling results…",
-];
+type ScanResult = {
+  label: ScanLabel;
+  confidence: number;
+  explanation?: string;
+  confidenceLevel?: ScanConfidenceLevel;
+};
 
 const MIN_SIDE_PX = 640;
 const TARGET_LONG_EDGE_PX = 1024;
@@ -27,62 +29,62 @@ interface PhotoCheckerProps {
   onFileConsumed?: () => void;
 }
 
+const SCAN_STEPS = [15, 33, 52, 70, 86, 95];
+const copy = getSiteCopy();
+
+function nextStepCopy(label: ScanLabel): { title: string; description: string; showClinicCTA: boolean } {
+  if (label === "lice" || label === "nits") {
+    return {
+      title: "Possible lice activity detected",
+      description:
+        "This result suggests signs that should be professionally confirmed. Fast treatment can reduce spread in your household.",
+      showClinicCTA: true,
+    };
+  }
+
+  if (label === "dandruff" || label === "psoriasis") {
+    return {
+      title: label === "psoriasis" ? "Possible scalp irritation pattern" : "Likely dandruff-like pattern",
+      description:
+        "This can overlap visually with other scalp conditions. If symptoms continue, speak to a GP or dermatologist for medical advice.",
+      showClinicCTA: false,
+    };
+  }
+
+  return {
+    title: "No clear signs detected in this image",
+    description:
+      "This is reassuring, but routine checks are still recommended. Re-scan with a sharper close-up if symptoms persist.",
+    showClinicCTA: false,
+  };
+}
+
 const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
   const [stage, setStage] = useState<Stage>("upload");
   const [progress, setProgress] = useState(0);
-  const [messageIndex, setMessageIndex] = useState(0);
   const [preview, setPreview] = useState<string | null>(null);
-  const [showClinics, setShowClinics] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   const [providerError, setProviderError] = useState(false);
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [showClinics, setShowClinics] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const clinicSectionRef = useRef<HTMLDivElement>(null);
 
-  const processFile = useCallback((file: File) => {
-    if (!file.type.startsWith("image/")) return;
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const minSide = Math.min(img.naturalWidth, img.naturalHeight);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreview(e.target?.result as string);
-        if (minSide < MIN_SIDE_PX) {
-          setPendingFile(file);
-          setStage("confirmSize");
-        } else {
-          setStage("scanning");
-          runScan(file);
-        }
-      };
-      reader.readAsDataURL(file);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreview(e.target?.result as string);
-        setStage("scanning");
-        runScan(file);
-      };
-      reader.readAsDataURL(file);
-    };
-    img.src = url;
+  const reset = useCallback(() => {
+    setStage("upload");
+    setProgress(0);
+    setPreview(null);
+    setPendingFile(null);
+    setScanResult(null);
+    setScanError(null);
+    setProviderError(false);
+    setShowClinics(false);
+    setShowContactForm(false);
   }, []);
 
-  // Handle file passed from hero
-  useEffect(() => {
-    if (initialFile) {
-      processFile(initialFile);
-      onFileConsumed?.();
-    }
-  }, [initialFile, processFile, onFileConsumed]);
-
-  const resizeToLongEdge = (file: File, longEdge: number): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
+  const resizeToLongEdge = useCallback((file: File, longEdge: number): Promise<Blob> => {
+    return new Promise((resolve) => {
       const url = URL.createObjectURL(file);
       const img = new Image();
       img.onload = () => {
@@ -94,20 +96,18 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
           resolve(file);
           return;
         }
-        const c = document.createElement("canvas");
-        c.width = Math.round(w * scale);
-        c.height = Math.round(h * scale);
-        const ctx = c.getContext("2d");
+
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(w * scale);
+        canvas.height = Math.round(h * scale);
+        const ctx = canvas.getContext("2d");
         if (!ctx) {
           resolve(file);
           return;
         }
-        ctx.drawImage(img, 0, 0, c.width, c.height);
-        c.toBlob(
-          (blob) => (blob ? resolve(blob) : resolve(file)),
-          "image/jpeg",
-          0.9
-        );
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => resolve(blob ?? file), "image/jpeg", 0.9);
       };
       img.onerror = () => {
         URL.revokeObjectURL(url);
@@ -115,343 +115,296 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
       };
       img.src = url;
     });
-  };
+  }, []);
 
-  const runScan = async (file: File) => {
-    setStage("scanning");
-    setProgress(0);
-    setMessageIndex(0);
-    setShowClinics(false);
-    setScanResult(null);
-    setScanError(null);
-    setProviderError(false);
+  const runScan = useCallback(
+    async (file: File) => {
+      setStage("scanning");
+      setProgress(8);
+      setScanError(null);
+      setProviderError(false);
+      setScanResult(null);
+      setShowClinics(false);
+      setShowContactForm(false);
+      await trackEvent({ event: "scan_start" });
 
-    const progressInterval = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 95) return p;
-        return p + Math.random() * 10 + 2;
-      });
-      setMessageIndex((i) => Math.min(i + 1, SCAN_MESSAGES.length - 1));
-    }, 400);
+      let index = 0;
+      const timer = setInterval(() => {
+        setProgress((prev) => {
+          if (index >= SCAN_STEPS.length) return prev;
+          const next = SCAN_STEPS[index];
+          index += 1;
+          return next;
+        });
+      }, 450);
 
-    try {
-      const blob = await resizeToLongEdge(file, TARGET_LONG_EDGE_PX);
-      const form = new FormData();
-      form.append("image", blob, "image.jpg");
-      const res = await fetch("/api/scan", { method: "POST", body: form });
-      const data = await res.json();
-      if (!res.ok) {
-        if (data?.code === "PROVIDER_ERROR") {
-          setProviderError(true);
-          setScanError(data?.error ?? "We couldn't analyse this photo right now.");
-        } else {
-          throw new Error(data?.error ?? data?.detail ?? "Scan failed");
+      try {
+        const blob = await resizeToLongEdge(file, TARGET_LONG_EDGE_PX);
+        const form = new FormData();
+        form.append("image", blob, "image.jpg");
+
+        const res = await fetch("/api/scan", { method: "POST", body: form });
+        const data = await res.json();
+
+        if (!res.ok) {
+          if (data?.code === "PROVIDER_ERROR") {
+            setProviderError(true);
+            setScanError(data?.error ?? "Scan service unavailable.");
+          } else {
+            setScanError(data?.error ?? "Scan failed.");
+          }
+          return;
         }
-      } else {
+
         const result = data as ScanResult;
         setScanResult(result);
-        if (result.label === "lice" || result.label === "nits") setShowClinics(true);
+        setShowClinics(result.label === "lice" || result.label === "nits");
+        setShowContactForm(result.label === "lice" || result.label === "nits");
+        await trackEvent({
+          event: "scan_result",
+          label: result.label,
+          confidenceLevel: result.confidenceLevel,
+        });
+      } catch (error) {
+        setScanError(error instanceof Error ? error.message : "Unexpected error.");
+      } finally {
+        clearInterval(timer);
+        setProgress(100);
+        setTimeout(() => setStage("result"), 220);
       }
-    } catch (e) {
-      setScanError(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
-      clearInterval(progressInterval);
-      setProgress(100);
-      setMessageIndex(SCAN_MESSAGES.length - 1);
-      setTimeout(() => setStage("result"), 400);
-    }
-  };
-
-  useEffect(() => {
-    if (stage === "result" && scanResult && (scanResult.label === "lice" || scanResult.label === "nits") && showClinics) {
-      const t = setTimeout(() => clinicSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 400);
-      return () => clearTimeout(t);
-    }
-  }, [stage, scanResult, showClinics]);
-
-  const scrollToClinics = () => {
-    setShowClinics(true);
-    setTimeout(() => clinicSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
-  };
-
-  const reset = () => {
-    setStage("upload");
-    setProgress(0);
-    setPreview(null);
-    setMessageIndex(0);
-    setShowClinics(false);
-    setScanResult(null);
-    setScanError(null);
-    setProviderError(false);
-    setPendingFile(null);
-  };
-
-  const useAnyway = () => {
-    if (pendingFile) {
-      setStage("scanning");
-      runScan(pendingFile);
-      setPendingFile(null);
-    }
-  };
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      const file = e.dataTransfer.files[0];
-      if (file) processFile(file);
     },
-    [processFile]
+    [resizeToLongEdge]
   );
 
-  return (
-    <section id="photo-checker" className="py-20 md:py-28 bg-muted/50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Upload a Photo for a Quick Check
-          </h2>
-          <p className="text-muted-foreground max-w-lg mx-auto">
-            Snap a close-up of the hair or scalp and we&apos;ll give you a quick indication.
-            It takes just a few seconds.
-          </p>
-        </div>
+  const processFile = useCallback(
+    (file: File) => {
+      if (!file.type.startsWith("image/")) return;
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const minSide = Math.min(img.naturalWidth, img.naturalHeight);
 
-        <div className="max-w-xl mx-auto">
-          {stage === "upload" && (
-            <Card className="border-2 border-dashed border-primary/30 bg-background hover:border-primary/60 transition-colors">
-              <CardContent className="p-0">
-                <div
-                  className="flex flex-col items-center justify-center py-16 px-8 cursor-pointer"
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={handleDrop}
-                  onClick={() => fileRef.current?.click()}
-                >
-                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                    <Camera className="h-9 w-9 text-primary" />
-                  </div>
-                  <p className="text-lg font-semibold text-foreground mb-2">
-                    Drag & drop a photo here
-                  </p>
-                  <p className="text-muted-foreground text-sm mb-2">
-                    or click to browse your files
-                  </p>
-                  <p className="text-muted-foreground text-xs max-w-sm mb-6">
-                    Best results: close-up of scalp or hair, good lighting, at least {MIN_SIDE_PX}px on the shortest side.
-                  </p>
-                  <Button variant="outline" className="rounded-full border-primary/40 text-primary hover:bg-primary/5">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Choose Photo
-                  </Button>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setPreview(event.target?.result as string);
+          if (minSide < MIN_SIDE_PX) {
+            setPendingFile(file);
+            setStage("confirmSize");
+            return;
+          }
+          runScan(file);
+        };
+        reader.readAsDataURL(file);
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        setScanError("Could not read image. Please try another file.");
+        setStage("result");
+      };
+
+      img.src = url;
+    },
+    [runScan]
+  );
+
+  useEffect(() => {
+    if (initialFile) {
+      processFile(initialFile);
+      onFileConsumed?.();
+    }
+  }, [initialFile, onFileConsumed, processFile]);
+
+  const resultCopy = scanResult ? nextStepCopy(scanResult.label) : null;
+
+  return (
+    <section id="start-scan" className="section-shell bg-muted/40">
+      <div className="container mx-auto px-4">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-8 text-center">
+            <h2 className="section-title">Start a free photo scan</h2>
+            <p className="mx-auto mt-3 max-w-2xl section-copy">
+              Upload a clear scalp close-up for an indicative result in seconds. Designed for anxious parents on mobile.
+            </p>
+          </div>
+
+          <div className="mx-auto max-w-2xl">
+            {stage === "upload" && (
+              <Card className="border-2 border-dashed border-primary/30">
+                <CardContent className="p-6 md:p-10">
+                  <div
+                    className="cursor-pointer text-center"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files[0];
                       if (file) processFile(file);
                     }}
+                    onClick={() => fileRef.current?.click()}
+                  >
+                    <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                      <Camera className="h-7 w-7 text-primary" />
+                    </div>
+                    <p className="text-lg font-semibold">Drop a photo or tap to upload</p>
+                    <p className="mt-1 text-sm text-muted-foreground">JPG, PNG, HEIC accepted</p>
+
+                    <div className="mx-auto mt-5 max-w-lg rounded-xl bg-secondary/60 p-4 text-left">
+                      <p className="text-sm font-semibold">Best photo checklist</p>
+                      <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                        <li>Bright lighting and close to scalp</li>
+                        <li>Hair parted to show roots</li>
+                        <li>At least {MIN_SIDE_PX}px shortest side</li>
+                      </ul>
+                    </div>
+
+                    <Button className="mt-6 rounded-full">
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload photo
+                    </Button>
+
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) processFile(file);
+                      }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {stage === "confirmSize" && preview && (
+              <Card>
+                <CardContent className="p-6 text-center md:p-8">
+                  <NextImage
+                    src={preview}
+                    alt="Uploaded preview"
+                    width={112}
+                    height={112}
+                    unoptimized
+                    className="mx-auto mb-4 h-28 w-28 rounded-xl object-cover"
                   />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {stage === "confirmSize" && preview && (
-            <Card className="bg-background border-amber-500/30">
-              <CardContent className="p-8 md:p-12">
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-32 h-32 rounded-2xl overflow-hidden mb-6 shadow-lg">
-                    <img src={preview} alt="Uploaded photo" className="w-full h-full object-cover" />
+                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
+                    <AlertTriangle className="h-5 w-5 text-amber-700" />
                   </div>
-                  <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center mb-4">
-                    <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-500" />
-                  </div>
-                  <h3 className="text-xl font-bold text-foreground mb-2">Photo may be too small</h3>
-                  <p className="text-muted-foreground mb-6 max-w-md">
-                    For best results use at least {MIN_SIDE_PX}px on the shortest side. You can still try with this photo.
+                  <p className="text-lg font-semibold">Photo may be too small for strong confidence</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    You can continue, but a closer image usually improves reliability.
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button size="lg" variant="outline" onClick={reset} className="rounded-full border-primary/30 text-primary hover:bg-primary/5">
-                      Choose another
+                  <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
+                    <Button variant="outline" className="rounded-full" onClick={reset}>
+                      Choose another photo
                     </Button>
-                    <Button size="lg" onClick={useAnyway} className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                      Use anyway
+                    <Button
+                      className="rounded-full"
+                      onClick={() => {
+                        if (pendingFile) {
+                          runScan(pendingFile);
+                          setPendingFile(null);
+                        }
+                      }}
+                    >
+                      Continue anyway
                     </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                </CardContent>
+              </Card>
+            )}
 
-          {stage === "scanning" && (
-            <Card className="bg-background">
-              <CardContent className="p-8 md:p-12">
-                <div className="flex flex-col items-center text-center">
+            {stage === "scanning" && (
+              <Card>
+                <CardContent className="p-6 text-center md:p-8">
                   {preview && (
-                    <div className="w-32 h-32 rounded-2xl overflow-hidden mb-6 shadow-lg">
-                      <img src={preview} alt="Uploaded photo" className="w-full h-full object-cover" />
-                    </div>
+                    <NextImage
+                      src={preview}
+                      alt="Uploaded preview"
+                      width={112}
+                      height={112}
+                      unoptimized
+                      className="mx-auto mb-5 h-28 w-28 rounded-xl object-cover"
+                    />
                   )}
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 animate-pulse">
-                    <Search className="h-6 w-6 text-primary" />
-                  </div>
-                  <p className="text-lg font-semibold text-foreground mb-1">Checking your photo…</p>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    {SCAN_MESSAGES[messageIndex]}
-                  </p>
-                  <Progress value={progress} className="w-full h-3 mb-3 [&>div]:bg-gradient-to-r [&>div]:from-primary [&>div]:to-secondary" />
-                  <p className="text-xs text-muted-foreground">This usually takes a few seconds</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                  <Loader2 className="mx-auto h-7 w-7 animate-spin text-primary" />
+                  <p className="mt-4 text-lg font-semibold">Analyzing photo</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Checking for lice, nits, dandruff, and scalp patterns</p>
+                  <Progress value={progress} className="mx-auto mt-5 h-3 w-full max-w-md" />
+                </CardContent>
+              </Card>
+            )}
 
-          {stage === "result" && (
-            <Card className="bg-background border-primary/20">
-              <CardContent className="p-8 md:p-12">
-                <div className="flex flex-col items-center text-center">
+            {stage === "result" && (
+              <Card>
+                <CardContent className="p-6 text-center md:p-8">
                   {preview && (
-                    <div className="w-24 h-24 rounded-2xl overflow-hidden mb-6 shadow-lg">
-                      <img src={preview} alt="Uploaded photo" className="w-full h-full object-cover" />
-                    </div>
+                    <NextImage
+                      src={preview}
+                      alt="Uploaded preview"
+                      width={96}
+                      height={96}
+                      unoptimized
+                      className="mx-auto mb-5 h-24 w-24 rounded-xl object-cover"
+                    />
                   )}
+
                   {scanError ? (
                     <>
-                      <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
-                        <AlertTriangle className="h-7 w-7 text-destructive" />
-                      </div>
-                      <h3 className="text-xl font-bold text-foreground mb-2">
-                        {providerError ? "We couldn't analyse this photo right now" : "Something went wrong"}
+                      <AlertTriangle className="mx-auto h-8 w-8 text-destructive" />
+                      <h3 className="mt-3 text-xl font-semibold">
+                        {providerError ? "Scan service is temporarily unavailable" : "We couldn't process this image"}
                       </h3>
-                      <p className="text-muted-foreground mb-6 max-w-md">
+                      <p className="mt-2 text-sm text-muted-foreground">
                         {providerError
-                          ? "Please try again in a moment or use a clearer close-up. If it keeps happening, check your connection and try later."
+                          ? "Please try again in a minute or upload a clearer close-up."
                           : scanError}
                       </p>
-                      <Button size="lg" variant="outline" onClick={reset} className="rounded-full border-primary/30 text-primary hover:bg-primary/5">
-                        Try again
-                      </Button>
                     </>
-                  ) : scanResult ? (
+                  ) : scanResult && resultCopy ? (
                     <>
-                      {scanResult.label === "clear" ? (
-                        <>
-                          <div className="w-14 h-14 rounded-full bg-green-500/20 flex items-center justify-center mb-4">
-                            <CheckCircle2 className="h-7 w-7 text-green-600 dark:text-green-400" />
-                          </div>
-                          <h3 className="text-xl font-bold text-foreground mb-2">No signs detected</h3>
-                          <p className="text-muted-foreground mb-4 max-w-md">
-                            {scanResult.explanation ??
-                              "We didn't spot signs of lice or nits in this image. If you're still concerned, a quick professional check can put your mind at ease."}
-                          </p>
-                          {scanResult.confidenceLevel === "low" ? (
-                            <p className="text-sm text-amber-600 dark:text-amber-500 mb-6 max-w-md">
-                              For best accuracy, try a closer, well-lit photo.
-                            </p>
-                          ) : (
-                            <div className="mb-6" />
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <div className="w-14 h-14 rounded-full bg-secondary/20 flex items-center justify-center mb-4">
-                            <AlertTriangle className="h-7 w-7 text-primary" />
-                          </div>
-                          <h3 className="text-xl font-bold text-foreground mb-2">
-                            {scanResult.label === "nits"
-                              ? "Possible nits (eggs) detected"
-                              : scanResult.label === "dandruff"
-                                ? "Likely dandruff or similar"
-                                : scanResult.label === "psoriasis"
-                                  ? "Possible scalp psoriasis"
-                                  : "Potential signs detected"}
-                          </h3>
-                          <p className="text-muted-foreground mb-4 max-w-md">
-                            {scanResult.explanation ??
-                              (scanResult.label === "psoriasis"
-                                ? "Scalp psoriasis can look similar to dandruff or nits. We recommend seeing a GP or dermatologist for a proper diagnosis and treatment options."
-                                : "Based on the image, we recommend a quick professional check to be sure. Our clinics can give you a clear answer and treatment if needed.")}
-                          </p>
-                          {(scanResult.label === "lice" || scanResult.label === "nits") && (
-                            <p className="text-sm font-medium text-primary mb-4">
-                              Find your nearest clinic below — quick, confidential, and expert.
-                            </p>
-                          )}
-                          {scanResult.confidenceLevel === "low" && (
-                            <p className="text-sm text-amber-600 dark:text-amber-500 mb-6 max-w-md">
-                              For best accuracy, try a closer, well-lit photo.
-                            </p>
-                          )}
-                          {scanResult.confidenceLevel !== "low" && <div className="mb-6" />}
-                        </>
-                      )}
-                      <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                        {(scanResult.label === "lice" || scanResult.label === "nits") && (
-                          <Button
-                            size="lg"
-                            onClick={scrollToClinics}
-                            className="rounded-full px-8 py-6 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
-                          >
-                            <MapPin className="mr-2 h-5 w-5" />
-                            Find your nearest clinic
-                          </Button>
-                        )}
-                        <Button
-                          size="lg"
-                          variant="outline"
-                          onClick={reset}
-                          className="rounded-full border-primary/30 text-primary hover:bg-primary/5"
-                        >
-                          Check another photo
-                        </Button>
+                      <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+                        <CheckCircle2 className="h-6 w-6 text-primary" />
                       </div>
+                      <h3 className="text-xl font-semibold">{resultCopy.title}</h3>
+                      <p className="mt-2 text-sm text-muted-foreground">{scanResult.explanation ?? resultCopy.description}</p>
+                      {scanResult.confidenceLevel === "low" && (
+                        <p className="mt-3 text-sm text-amber-700">
+                          Confidence is low for this image. Re-upload a sharper close-up for a better signal.
+                        </p>
+                      )}
                     </>
-                  ) : (
-                    <>
-                      <p className="text-muted-foreground mb-6">No result yet.</p>
-                      <Button size="lg" variant="outline" onClick={reset} className="rounded-full border-primary/30 text-primary hover:bg-primary/5">
-                        Check another photo
-                      </Button>
-                    </>
-                  )}
-                  <p className="mt-8 text-xs text-muted-foreground max-w-sm">
-                    <strong>Disclaimer:</strong> This tool provides an indicative result only and is not a
-                    medical diagnosis. Always consult a professional for confirmation.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+                  ) : null}
 
-        {showClinics && stage === "result" && (
-          <div ref={clinicSectionRef} className="mt-16 scroll-mt-8">
-            <div className="max-w-3xl mx-auto text-center mb-10">
-              <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                Get peace of mind — visit your nearest head lice clinic
-              </h3>
-              <p className="text-muted-foreground mb-8">
-                A quick in-person check takes minutes. Our clinics are experts at putting families at ease.
-              </p>
-              <div className="flex flex-wrap justify-center gap-6 text-sm">
-                <span className="flex items-center gap-2 text-foreground">
-                  <Clock className="h-4 w-4 text-primary" />
-                  Quick, same-day checks
-                </span>
-                <span className="flex items-center gap-2 text-foreground">
-                  <Shield className="h-4 w-4 text-primary" />
-                  Confidential & professional
-                </span>
-                <span className="flex items-center gap-2 text-foreground">
-                  <Users className="h-4 w-4 text-primary" />
-                  Expert removal & advice
-                </span>
-              </div>
-            </div>
-            <ClinicFinder />
+                  <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+                    <Button className="rounded-full" onClick={reset}>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Scan another photo
+                    </Button>
+                    {scanResult && (scanResult.label === "lice" || scanResult.label === "nits") && (
+                      <Button className="rounded-full" variant="outline" onClick={() => setShowClinics(true)}>
+                        <MapPin className="mr-2 h-4 w-4" />
+                        View clinics
+                      </Button>
+                    )}
+                  </div>
+
+                  <p className="mt-6 text-xs text-muted-foreground">{copy.medicalDisclaimer}</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
-        )}
+
+          {stage === "result" && showContactForm && scanResult && (
+            <div className="mx-auto mt-8 max-w-2xl">
+              <ClinicContactForm scanLabel={scanResult.label} scanConfidenceLevel={scanResult.confidenceLevel} />
+            </div>
+          )}
+
+          {stage === "result" && showClinics && <ClinicFinder showHeader={false} country="US" />}
+        </div>
       </div>
     </section>
   );

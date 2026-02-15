@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "how-to-check-for-head-lice-at-home",
+    "title": "How to Check for Head Lice at Home (Without Panic)",
+    "description": "A practical, parent-friendly checklist for spotting lice and nits quickly and calmly.",
+    "publishedAt": "2026-02-10",
+    "readMinutes": 6,
+    "category": "Parents",
+    "body": [
+      "Head lice are common and manageable. Start by using bright light and separating hair into sections.",
+      "Check behind the ears and at the nape of the neck first, where lice and nits are often found.",
+      "Nits are usually fixed to the hair shaft and do not flick away like dandruff.",
+      "If unsure, use an AI photo scan as a first pass and follow up with a professional check for confirmation."
+    ]
+  },
+  {
+    "slug": "nits-vs-dandruff-key-differences",
+    "title": "Nits vs Dandruff: Key Differences Parents Miss",
+    "description": "Learn the visual differences between fixed nits and loose scalp flakes.",
+    "publishedAt": "2026-01-28",
+    "readMinutes": 5,
+    "category": "Education",
+    "body": [
+      "Dandruff flakes are usually irregular and come away easily.",
+      "Nits are oval and attached to one side of the hair shaft.",
+      "If the image is blurry, results can be less reliable. Re-upload a sharper close-up.",
+      "When symptoms persist, speak with a GP or dermatologist for medical advice."
+    ]
+  },
+  {
+    "slug": "school-outbreak-response-playbook",
+    "title": "School Outbreak Response: A Practical 48-Hour Playbook",
+    "description": "A communication and screening flow schools can use to reduce disruption and stigma.",
+    "publishedAt": "2026-01-17",
+    "readMinutes": 8,
+    "category": "Schools",
+    "body": [
+      "Send a calm, factual parent notice with home-check guidance.",
+      "Encourage screening and same-week follow-up for affected families.",
+      "Avoid singling children out. Focus on routine checks and quick action.",
+      "Use professional clinics for rapid confirmation where needed."
+    ]
+  }
+]

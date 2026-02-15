@@ -1,0 +1,50 @@
+[
+  {
+    "id": "uk-london-kensington",
+    "name": "NitNot Kensington",
+    "region": "England",
+    "country": "UK",
+    "city": "London",
+    "postcode": "W8 4PT",
+    "address1": "42 High Street, Kensington",
+    "phone": "+44 20 7946 0958",
+    "email": "kensington@nitnot.com",
+    "bookingUrl": "https://nitnot.com/contact",
+    "lat": 51.4995,
+    "lng": -0.1927,
+    "services": ["Screening", "Removal"],
+    "active": true
+  },
+  {
+    "id": "uk-manchester-deansgate",
+    "name": "NitNot Deansgate",
+    "region": "England",
+    "country": "UK",
+    "city": "Manchester",
+    "postcode": "M3 1AZ",
+    "address1": "15 Deansgate",
+    "phone": "+44 161 496 0321",
+    "email": "deansgate@nitnot.com",
+    "bookingUrl": "https://nitnot.com/contact",
+    "lat": 53.4808,
+    "lng": -2.2426,
+    "services": ["Screening", "Removal"],
+    "active": true
+  },
+  {
+    "id": "uk-edinburgh-princes",
+    "name": "NitNot Princes Street",
+    "region": "Scotland",
+    "country": "UK",
+    "city": "Edinburgh",
+    "postcode": "EH2 2AN",
+    "address1": "23 Princes Street",
+    "phone": "+44 131 496 0285",
+    "email": "princes@nitnot.com",
+    "bookingUrl": "https://nitnot.com/contact",
+    "lat": 55.9533,
+    "lng": -3.1883,
+    "services": ["Screening", "Removal", "School support"],
+    "active": true
+  }
+]

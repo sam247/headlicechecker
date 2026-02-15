@@ -1,0 +1,27 @@
+[
+  {
+    "id": "faq-1",
+    "question": "Is this a medical diagnosis?",
+    "answer": "No. The checker gives an indicative AI screening result only. For diagnosis or treatment decisions, consult a clinician."
+  },
+  {
+    "id": "faq-2",
+    "question": "What photo works best?",
+    "answer": "Use bright natural light, move close to the scalp, and keep the image in focus. Photos above 640px on the shortest side are recommended."
+  },
+  {
+    "id": "faq-3",
+    "question": "Do you store my uploaded image?",
+    "answer": "No. Images are processed in-memory for the scan request and are not stored by this app. Third-party providers may apply their own retention policies."
+  },
+  {
+    "id": "faq-4",
+    "question": "What should I do if lice or nits are detected?",
+    "answer": "Book a professional check promptly so a specialist can confirm and advise treatment options for your family."
+  },
+  {
+    "id": "faq-5",
+    "question": "Can schools use this tool?",
+    "answer": "Yes. Schools and childcare teams can use scan guidance pages and clinic referrals to reduce uncertainty during outbreaks."
+  }
+]
