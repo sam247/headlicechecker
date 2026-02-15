@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import Link from "next/link";
 import NextImage from "next/image";
 import { AlertTriangle, Camera, CheckCircle2, Loader2, Upload, RefreshCw, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,8 @@ import { Progress } from "@/components/ui/progress";
 import ClinicFinder from "@/components/ClinicFinder";
 import ClinicContactForm from "@/components/site/ClinicContactForm";
 import { trackEvent } from "@/lib/data/events";
-import { getSiteCopy } from "@/lib/data/content";
-import type { ScanConfidenceLevel, ScanLabel } from "@/lib/data/types";
+import { getClinics, getSiteCopy } from "@/lib/data/content";
+import type { ScanConfidenceLevel, ScanErrorCode, ScanLabel } from "@/lib/data/types";
 
 type ScanResult = {
   label: ScanLabel;
@@ -21,6 +22,8 @@ type ScanResult = {
 
 const MIN_SIDE_PX = 640;
 const TARGET_LONG_EDGE_PX = 1024;
+const SCAN_STEPS = [15, 33, 52, 70, 86, 95];
+const defaultClinic = getClinics("US")[0];
 
 type Stage = "upload" | "confirmSize" | "scanning" | "result";
 
@@ -29,7 +32,6 @@ interface PhotoCheckerProps {
   onFileConsumed?: () => void;
 }
 
-const SCAN_STEPS = [15, 33, 52, 70, 86, 95];
 const copy = getSiteCopy();
 
 function nextStepCopy(label: ScanLabel): { title: string; description: string; showClinicCTA: boolean } {
@@ -59,17 +61,24 @@ function nextStepCopy(label: ScanLabel): { title: string; description: string; s
   };
 }
 
-const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
+export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheckerProps) {
   const [stage, setStage] = useState<Stage>("upload");
   const [progress, setProgress] = useState(0);
   const [preview, setPreview] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
-  const [providerError, setProviderError] = useState(false);
+  const [scanErrorCode, setScanErrorCode] = useState<ScanErrorCode | null>(null);
   const [showClinics, setShowClinics] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
+  const [retryCooldown, setRetryCooldown] = useState(0);
+  const [selectedClinicId, setSelectedClinicId] = useState<string | undefined>(defaultClinic?.id);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const selectedClinicName = useMemo(() => {
+    if (!selectedClinicId) return undefined;
+    return getClinics("ALL").find((c) => c.id === selectedClinicId)?.name;
+  }, [selectedClinicId]);
 
   const reset = useCallback(() => {
     setStage("upload");
@@ -78,10 +87,17 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
     setPendingFile(null);
     setScanResult(null);
     setScanError(null);
-    setProviderError(false);
+    setScanErrorCode(null);
     setShowClinics(false);
     setShowContactForm(false);
+    setRetryCooldown(0);
   }, []);
+
+  useEffect(() => {
+    if (retryCooldown <= 0) return;
+    const t = setTimeout(() => setRetryCooldown((v) => Math.max(0, v - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [retryCooldown]);
 
   const resizeToLongEdge = useCallback((file: File, longEdge: number): Promise<Blob> => {
     return new Promise((resolve) => {
@@ -122,7 +138,7 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
       setStage("scanning");
       setProgress(8);
       setScanError(null);
-      setProviderError(false);
+      setScanErrorCode(null);
       setScanResult(null);
       setShowClinics(false);
       setShowContactForm(false);
@@ -144,28 +160,30 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
         form.append("image", blob, "image.jpg");
 
         const res = await fetch("/api/scan", { method: "POST", body: form });
-        const data = await res.json();
+        const data = (await res.json()) as ScanResult & { code?: ScanErrorCode; error?: string };
 
         if (!res.ok) {
-          if (data?.code === "PROVIDER_ERROR") {
-            setProviderError(true);
-            setScanError(data?.error ?? "Scan service unavailable.");
-          } else {
-            setScanError(data?.error ?? "Scan failed.");
+          setScanErrorCode(data?.code ?? "UNKNOWN_ERROR");
+          setScanError(data?.error ?? "Scan failed.");
+          if (data?.code === "NO_PROVIDER_CONFIGURED" || data?.code === "PROVIDER_ERROR") {
+            setRetryCooldown(5);
           }
           return;
         }
 
         const result = data as ScanResult;
         setScanResult(result);
-        setShowClinics(result.label === "lice" || result.label === "nits");
-        setShowContactForm(result.label === "lice" || result.label === "nits");
+        const shouldShowClinicFlow = result.label === "lice" || result.label === "nits";
+        setShowClinics(shouldShowClinicFlow);
+        setShowContactForm(shouldShowClinicFlow);
+
         await trackEvent({
           event: "scan_result",
           label: result.label,
           confidenceLevel: result.confidenceLevel,
         });
       } catch (error) {
+        setScanErrorCode("UNKNOWN_ERROR");
         setScanError(error instanceof Error ? error.message : "Unexpected error.");
       } finally {
         clearInterval(timer);
@@ -188,8 +206,8 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
         const reader = new FileReader();
         reader.onload = (event) => {
           setPreview(event.target?.result as string);
+          setPendingFile(file);
           if (minSide < MIN_SIDE_PX) {
-            setPendingFile(file);
             setStage("confirmSize");
             return;
           }
@@ -201,6 +219,7 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
       img.onerror = () => {
         URL.revokeObjectURL(url);
         setScanError("Could not read image. Please try another file.");
+        setScanErrorCode("BAD_REQUEST");
         setStage("result");
       };
 
@@ -355,13 +374,16 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
                     <>
                       <AlertTriangle className="mx-auto h-8 w-8 text-destructive" />
                       <h3 className="mt-3 text-xl font-semibold">
-                        {providerError ? "Scan service is temporarily unavailable" : "We couldn't process this image"}
+                        {scanErrorCode === "NO_PROVIDER_CONFIGURED"
+                          ? "Scan service setup is in progress"
+                          : "We couldn't process this image"}
                       </h3>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        {providerError
-                          ? "Please try again in a minute or upload a clearer close-up."
-                          : scanError}
-                      </p>
+                      <p className="mt-2 text-sm text-muted-foreground">{scanError}</p>
+                      {(scanErrorCode === "NO_PROVIDER_CONFIGURED" || scanErrorCode === "PROVIDER_ERROR") && (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Please retry in a few seconds or request a clinic callback now.
+                        </p>
+                      )}
                     </>
                   ) : scanResult && resultCopy ? (
                     <>
@@ -383,10 +405,25 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
                       <RefreshCw className="mr-2 h-4 w-4" />
                       Scan another photo
                     </Button>
-                    {scanResult && (scanResult.label === "lice" || scanResult.label === "nits") && (
+                    {scanErrorCode && (
+                      <Button
+                        className="rounded-full"
+                        variant="outline"
+                        disabled={retryCooldown > 0 || !pendingFile}
+                        onClick={() => pendingFile && runScan(pendingFile)}
+                      >
+                        Retry {retryCooldown > 0 ? `in ${retryCooldown}s` : "now"}
+                      </Button>
+                    )}
+                    {(scanResult?.label === "lice" || scanResult?.label === "nits") && (
                       <Button className="rounded-full" variant="outline" onClick={() => setShowClinics(true)}>
                         <MapPin className="mr-2 h-4 w-4" />
                         View clinics
+                      </Button>
+                    )}
+                    {scanErrorCode === "NO_PROVIDER_CONFIGURED" && (
+                      <Button asChild className="rounded-full" variant="outline">
+                        <Link href="/contact">Request clinic callback</Link>
                       </Button>
                     )}
                   </div>
@@ -399,15 +436,28 @@ const PhotoChecker = ({ initialFile, onFileConsumed }: PhotoCheckerProps) => {
 
           {stage === "result" && showContactForm && scanResult && (
             <div className="mx-auto mt-8 max-w-2xl">
-              <ClinicContactForm scanLabel={scanResult.label} scanConfidenceLevel={scanResult.confidenceLevel} />
+              <ClinicContactForm
+                clinicId={selectedClinicId}
+                clinicName={selectedClinicName}
+                scanLabel={scanResult.label}
+                scanConfidenceLevel={scanResult.confidenceLevel}
+              />
             </div>
           )}
 
-          {stage === "result" && showClinics && <ClinicFinder showHeader={false} country="US" />}
+          {stage === "result" && showClinics && (
+            <ClinicFinder
+              showHeader={false}
+              country="US"
+              onClinicSelect={(clinicId) => {
+                setSelectedClinicId(clinicId);
+                setShowContactForm(true);
+                document.getElementById("start-scan")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            />
+          )}
         </div>
       </div>
     </section>
   );
-};
-
-export default PhotoChecker;
+}

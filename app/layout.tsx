@@ -3,16 +3,22 @@ import "./globals.css";
 import { Providers } from "./providers";
 import SiteHeader from "@/components/site/SiteHeader";
 import SiteFooter from "@/components/site/SiteFooter";
+import { SITE_URL } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "NitNot | AI Head Lice Checker & Clinic Finder",
+  title: {
+    default: "NitNot | Head Lice Checker and Clinic Finder",
+    template: "%s | NitNot",
+  },
   description:
     "Upload a scalp photo for an indicative AI check, then connect with professional head lice clinics.",
-  metadataBase: new URL("https://nitnot.com"),
+  metadataBase: new URL(SITE_URL),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "NitNot | AI Head Lice Checker & Clinic Finder",
-    description:
-      "Fast, private head lice screening with clear next steps and clinic support.",
+    title: "NitNot | Head Lice Checker and Clinic Finder",
+    description: "Fast, private head lice screening with clear next steps and clinic support.",
     type: "website",
     images: [{ url: "/images/logo_colour.png" }],
   },
@@ -22,11 +28,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>

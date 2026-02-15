@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "For Clinic Partners",
+  description: "Join the NitNot clinic partner network and receive consented parent follow-up enquiries.",
+  alternates: { canonical: "/for-clinics" },
+};
 
 export default function ForClinicsPage() {
   return (
@@ -12,11 +19,7 @@ export default function ForClinicsPage() {
         </p>
 
         <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {[
-            "Lead capture with consent",
-            "Region-based routing",
-            "US-first demand focus",
-          ].map((item) => (
+          {["Lead capture with consent", "Region-based routing", "US-first demand focus"].map((item) => (
             <Card key={item}>
               <CardContent className="p-5 text-sm text-muted-foreground">{item}</CardContent>
             </Card>

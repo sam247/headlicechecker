@@ -2,6 +2,13 @@ export type ScanLabel = "lice" | "nits" | "dandruff" | "psoriasis" | "clear";
 
 export type ScanConfidenceLevel = "high" | "medium" | "low";
 
+export type ScanErrorCode =
+  | "PROVIDER_ERROR"
+  | "NO_PROVIDER_CONFIGURED"
+  | "IMAGE_TOO_SMALL"
+  | "BAD_REQUEST"
+  | "UNKNOWN_ERROR";
+
 export interface Clinic {
   id: string;
   name: string;
@@ -31,8 +38,12 @@ export interface BlogPost {
   title: string;
   description: string;
   publishedAt: string;
+  updatedAt: string;
   readMinutes: number;
   category: string;
+  author: string;
+  keywords: string[];
+  isPublished: boolean;
   body: string[];
 }
 
@@ -43,4 +54,12 @@ export interface SiteCopy {
   privacyClaim: string;
   primaryCta: string;
   secondaryCta: string;
+}
+
+export interface LeadSubmissionResult {
+  ok: boolean;
+  referenceId?: string;
+  deliveryStatus?: "sent" | "queued" | "failed";
+  code?: "VALIDATION_ERROR" | "RATE_LIMITED" | "TRANSIENT_DELIVERY_ERROR" | "PERMANENT_DELIVERY_ERROR";
+  error?: string;
 }

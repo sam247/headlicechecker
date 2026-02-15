@@ -16,9 +16,10 @@ export function getFaqs(): FaqItem[] {
 }
 
 export function getBlogPosts(): BlogPost[] {
-  return (posts as BlogPost[]).slice().sort((a, b) =>
-    new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-  );
+  return (posts as BlogPost[])
+    .filter((p) => p.isPublished)
+    .slice()
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 }
 
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {

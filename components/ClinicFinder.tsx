@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { MapPin, Phone, ExternalLink, Search, Mail } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { MapPin, Phone, ExternalLink, Search, Mail, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +14,7 @@ import type { Clinic } from "@/lib/data/types";
 interface ClinicFinderProps {
   showHeader?: boolean;
   country?: "US" | "UK" | "ALL";
+  onClinicSelect?: (clinicId: string) => void;
 }
 
 const initialClinics = getClinics("ALL");
@@ -32,11 +34,32 @@ function buildMapSrc(clinics: Clinic[]): string {
   return `https://www.openstreetmap.org/export/embed.html?bbox=${minLng},${minLat},${maxLng},${maxLat}&layer=mapnik`;
 }
 
-export default function ClinicFinder({ showHeader = true, country = "US" }: ClinicFinderProps) {
-  const [query, setQuery] = useState("");
-  const [showMap, setShowMap] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState<"US" | "UK" | "ALL">(country);
+export default function ClinicFinder({ showHeader = true, country = "US", onClinicSelect }: ClinicFinderProps) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const isMobile = useIsMobile();
+
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
+  const [showMap, setShowMap] = useState((searchParams.get("view") ?? "list") === "map");
+  const [selectedCountry, setSelectedCountry] = useState<"US" | "UK" | "ALL">(
+    (searchParams.get("country") as "US" | "UK" | "ALL") ?? country
+  );
+  const [copiedClinicId, setCopiedClinicId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (query) params.set("q", query);
+    else params.delete("q");
+
+    params.set("view", showMap ? "map" : "list");
+    params.set("country", selectedCountry);
+    const next = params.toString();
+    const current = searchParams.toString();
+    if (next !== current) {
+      router.replace(`${pathname}?${next}`, { scroll: false });
+    }
+  }, [query, showMap, selectedCountry, pathname, router, searchParams]);
 
   const clinics = useMemo(() => {
     const source =
@@ -60,6 +83,17 @@ export default function ClinicFinder({ showHeader = true, country = "US" }: Clin
 
   const mapSrc = useMemo(() => buildMapSrc(clinics), [clinics]);
   const origin = useMemo(() => findOriginFromQuery(initialClinics, query), [query]);
+
+  const handleCopy = async (clinic: Clinic) => {
+    const text = `${clinic.name} | ${clinic.phone} | ${clinic.address1}, ${clinic.city} ${clinic.postcode}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedClinicId(clinic.id);
+      setTimeout(() => setCopiedClinicId(null), 1500);
+    } catch {
+      setCopiedClinicId(null);
+    }
+  };
 
   return (
     <section id="clinic-finder" className="section-shell">
@@ -104,13 +138,17 @@ export default function ClinicFinder({ showHeader = true, country = "US" }: Clin
           <div className="mb-5 flex justify-center">
             <div className="inline-flex rounded-full bg-muted p-1">
               <button
-                className={`rounded-full px-4 py-1.5 text-sm font-medium ${!showMap ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium ${
+                  !showMap ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                }`}
                 onClick={() => setShowMap(false)}
               >
                 List
               </button>
               <button
-                className={`rounded-full px-4 py-1.5 text-sm font-medium ${showMap ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium ${
+                  showMap ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                }`}
                 onClick={() => setShowMap(true)}
               >
                 Map
@@ -125,7 +163,7 @@ export default function ClinicFinder({ showHeader = true, country = "US" }: Clin
               {clinics.length === 0 && (
                 <Card>
                   <CardContent className="p-5 text-sm text-muted-foreground">
-                    No clinics matched your search. Try a nearby city or reset filters.
+                    No clinics matched your search. Try a nearby city, state, or ZIP prefix.
                   </CardContent>
                 </Card>
               )}
@@ -175,6 +213,20 @@ export default function ClinicFinder({ showHeader = true, country = "US" }: Clin
                               <ExternalLink className="ml-1 h-3 w-3" />
                             </a>
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-full"
+                            onClick={() => {
+                              if (onClinicSelect) {
+                                onClinicSelect(clinic.id);
+                                return;
+                              }
+                              router.push(`/contact?clinicId=${encodeURIComponent(clinic.id)}`);
+                            }}
+                          >
+                            Request callback
+                          </Button>
                           <Button asChild size="sm" variant="outline" className="rounded-full">
                             <a
                               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -185,6 +237,17 @@ export default function ClinicFinder({ showHeader = true, country = "US" }: Clin
                             >
                               Directions
                             </a>
+                          </Button>
+                          <Button size="sm" variant="ghost" className="rounded-full" onClick={() => handleCopy(clinic)}>
+                            {copiedClinicId === clinic.id ? (
+                              <>
+                                <Check className="mr-1 h-3 w-3" /> Copied
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="mr-1 h-3 w-3" /> Copy details
+                              </>
+                            )}
                           </Button>
                         </div>
                       </div>

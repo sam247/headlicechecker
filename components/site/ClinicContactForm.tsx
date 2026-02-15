@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { ScanConfidenceLevel, ScanLabel } from "@/lib/data/types";
+import type { LeadSubmissionResult, ScanConfidenceLevel, ScanLabel } from "@/lib/data/types";
 import { trackEvent } from "@/lib/data/events";
 
 const schema = z.object({
@@ -17,25 +17,36 @@ const schema = z.object({
   postcode: z.string().min(3, "Postcode/ZIP is required"),
   message: z.string().max(500, "Keep message under 500 characters").optional(),
   consent: z.boolean().refine((v) => v, "You must agree before submitting"),
+  hp_field: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 interface ClinicContactFormProps {
   clinicId?: string;
+  clinicName?: string;
   scanLabel?: ScanLabel;
   scanConfidenceLevel?: ScanConfidenceLevel;
   compact?: boolean;
 }
 
+function mapError(result: LeadSubmissionResult): string {
+  if (result.code === "RATE_LIMITED") return "Too many attempts. Please wait a minute and try again.";
+  if (result.code === "VALIDATION_ERROR") return "Please check the highlighted fields and try again.";
+  if (result.code === "PERMANENT_DELIVERY_ERROR") return "Delivery is temporarily misconfigured. Please call the clinic directly.";
+  return "Temporary delivery issue. Please retry in a moment.";
+}
+
 export default function ClinicContactForm({
   clinicId,
+  clinicName,
   scanLabel,
   scanConfidenceLevel,
   compact = false,
 }: ClinicContactFormProps) {
   const [referenceId, setReferenceId] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [deliveryStatus, setDeliveryStatus] = useState<"sent" | "queued" | "failed" | null>(null);
 
   const {
     register,
@@ -51,12 +62,16 @@ export default function ClinicContactForm({
       postcode: "",
       message: "",
       consent: false,
+      hp_field: "",
     },
   });
+
+  const slaCopy = useMemo(() => "Most families receive a clinic response within 2 business hours.", []);
 
   const onSubmit = async (values: FormValues) => {
     setServerError(null);
     setReferenceId(null);
+    setDeliveryStatus(null);
 
     const res = await fetch("/api/contact-clinic", {
       method: "POST",
@@ -69,15 +84,25 @@ export default function ClinicContactForm({
       }),
     });
 
-    const data = (await res.json()) as { ok?: boolean; referenceId?: string; error?: string };
+    const data = (await res.json()) as LeadSubmissionResult;
     if (!res.ok || !data.ok) {
-      setServerError(data.error ?? "We couldn't send your request. Please try again.");
+      setServerError(mapError(data));
+      setDeliveryStatus("failed");
       return;
     }
 
     setReferenceId(data.referenceId ?? null);
+    setDeliveryStatus(data.deliveryStatus ?? "queued");
     await trackEvent({ event: "clinic_contact_submit", clinicId });
-    reset();
+    reset({
+      name: "",
+      email: "",
+      phone: "",
+      postcode: "",
+      message: "",
+      consent: false,
+      hp_field: "",
+    });
   };
 
   return (
@@ -85,9 +110,13 @@ export default function ClinicContactForm({
       <h3 className="text-lg font-semibold text-foreground">Request clinic follow-up</h3>
       <p className="mt-1 text-sm text-muted-foreground">
         Share your details and a clinic specialist will contact you.
+        {clinicName ? ` Selected clinic: ${clinicName}.` : ""}
       </p>
+      <p className="mt-1 text-xs text-muted-foreground">{slaCopy}</p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-3">
+        <input type="text" tabIndex={-1} autoComplete="off" className="hidden" {...register("hp_field")} />
+
         <div className={compact ? "grid grid-cols-1 gap-3" : "grid grid-cols-1 gap-3 md:grid-cols-2"}>
           <div>
             <Input placeholder="Parent/guardian name" {...register("name")} />
@@ -118,9 +147,10 @@ export default function ClinicContactForm({
         {errors.consent && <p className="text-xs text-destructive">{errors.consent.message}</p>}
 
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}
+
         {referenceId && (
           <p className="text-sm text-green-700">
-            Request sent. Reference: <strong>{referenceId}</strong>
+            Request sent ({deliveryStatus ?? "queued"}). Reference: <strong>{referenceId}</strong>
           </p>
         )}
 

@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "About NitNot",
+  description: "Learn how NitNot helps families move from uncertainty to action with calm, practical head lice guidance.",
+  alternates: { canonical: "/about" },
+};
+
 export default function AboutPage() {
   return (
     <section className="section-shell">

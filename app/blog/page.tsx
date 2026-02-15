@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { getBlogPosts, formatDate } from "@/lib/data/content";
 
 const posts = getBlogPosts();
+
+export const metadata: Metadata = {
+  title: "Head Lice Guides and Articles",
+  description: "Browse practical guides on nits, head lice checks, and school response playbooks.",
+  alternates: { canonical: "/blog" },
+};
 
 export default function BlogPage() {
   return (
@@ -15,7 +22,9 @@ export default function BlogPage() {
           {posts.map((post) => (
             <Card key={post.slug}>
               <CardContent className="p-5">
-                <p className="text-xs text-muted-foreground">{formatDate(post.publishedAt)} · {post.readMinutes} min read</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(post.publishedAt)} · {post.readMinutes} min read
+                </p>
                 <h2 className="mt-2 text-xl font-semibold">
                   <Link href={`/blog/${post.slug}`} className="hover:text-primary">
                     {post.title}

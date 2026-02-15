@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { Card, CardContent } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "How The Checker Works",
+  description: "Learn how NitNot screens scalp photos and guides families toward the right next step.",
+  alternates: { canonical: "/how-it-works" },
+};
 
 export default function HowItWorksPage() {
   return (

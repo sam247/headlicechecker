@@ -9,6 +9,6 @@ export async function GET() {
   const hasDetection = !!process.env.DETECTION_API_URL;
   const hasDeepSeek = !!process.env.DEEPSEEK_API_KEY;
   const configured = hasRoboflow || hasDetection || hasDeepSeek;
-  const provider = hasRoboflow ? "roboflow" : hasDetection ? "finetuned" : hasDeepSeek ? "deepseek" : "stub";
+  const provider = hasRoboflow ? "roboflow" : hasDetection ? "finetuned" : hasDeepSeek ? "deepseek" : "none";
   return NextResponse.json({ configured, provider });
 }
