@@ -4,6 +4,9 @@ export type AnalyticsEventName =
   | "scan_start"
   | "scan_result"
   | "clinic_contact_submit"
+  | "clinic_modal_opened"
+  | "clinic_contact_panel_opened"
+  | "clinic_contact_submitted"
   | "scan_overlay_toggled"
   | "scan_legend_filter_used"
   | "scan_clinic_cta_clicked";
@@ -37,12 +40,32 @@ interface ClinicClickPayload extends BasePayload {
   label?: ScanLabel;
 }
 
+interface ClinicModalOpenedPayload extends BasePayload {
+  event: "clinic_modal_opened";
+  label?: ScanLabel;
+}
+
+interface ClinicContactPanelOpenedPayload extends BasePayload {
+  event: "clinic_contact_panel_opened";
+  clinicId?: string;
+  label?: ScanLabel;
+}
+
+interface ClinicContactSubmittedPayload extends BasePayload {
+  event: "clinic_contact_submitted";
+  clinicId?: string;
+  source?: "page" | "modal";
+}
+
 export type EventPayload =
   | BasePayload
   | ScanResultPayload
   | OverlayTogglePayload
   | LegendFilterPayload
   | ClinicClickPayload
+  | ClinicModalOpenedPayload
+  | ClinicContactPanelOpenedPayload
+  | ClinicContactSubmittedPayload
   | (BasePayload & { event: "clinic_contact_submit"; clinicId?: string });
 
 export async function trackEvent(payload: EventPayload): Promise<void> {

@@ -46,6 +46,32 @@ const clinicCtaSchema = z
   })
   .strict();
 
+const clinicModalOpenedSchema = z
+  .object({
+    event: z.literal("clinic_modal_opened"),
+    timestamp: z.string().optional(),
+    label: z.enum(["lice", "nits", "dandruff", "psoriasis", "clear"]).optional(),
+  })
+  .strict();
+
+const clinicContactPanelOpenedSchema = z
+  .object({
+    event: z.literal("clinic_contact_panel_opened"),
+    timestamp: z.string().optional(),
+    clinicId: z.string().optional(),
+    label: z.enum(["lice", "nits", "dandruff", "psoriasis", "clear"]).optional(),
+  })
+  .strict();
+
+const clinicContactSubmittedSchema = z
+  .object({
+    event: z.literal("clinic_contact_submitted"),
+    timestamp: z.string().optional(),
+    clinicId: z.string().optional(),
+    source: z.enum(["page", "modal"]).optional(),
+  })
+  .strict();
+
 const clinicSubmitSchema = z
   .object({
     event: z.literal("clinic_contact_submit"),
@@ -61,6 +87,9 @@ const schema = z.discriminatedUnion("event", [
   overlayToggleSchema,
   legendFilterSchema,
   clinicCtaSchema,
+  clinicModalOpenedSchema,
+  clinicContactPanelOpenedSchema,
+  clinicContactSubmittedSchema,
 ]);
 
 const counters: Record<string, number> = {
@@ -70,6 +99,9 @@ const counters: Record<string, number> = {
   scan_overlay_toggled: 0,
   scan_legend_filter_used: 0,
   scan_clinic_cta_clicked: 0,
+  clinic_modal_opened: 0,
+  clinic_contact_panel_opened: 0,
+  clinic_contact_submitted: 0,
 };
 
 export async function POST(request: NextRequest) {

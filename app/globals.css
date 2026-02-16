@@ -145,3 +145,26 @@
 .scan-legend-reveal {
   animation: scan-legend-fade 260ms ease-out both;
 }
+
+@keyframes clinic-panel-slide-in {
+  0% {
+    transform: translateX(100%);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.clinic-modal-shell {
+  display: flex;
+  flex-direction: column;
+}
+
+.clinic-contact-panel {
+  position: absolute;
+  right: 0;
+  top: 0;
+  animation: clinic-panel-slide-in 220ms ease-out both;
+}

@@ -3,14 +3,15 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import NextImage from "next/image";
-import { AlertTriangle, Camera, CheckCircle2, Loader2, Upload, RefreshCw, MapPin, Eye, EyeOff } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, Loader2, Upload, RefreshCw, MapPin, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import ClinicFinder from "@/components/ClinicFinder";
+import ClinicContactForm from "@/components/site/ClinicContactForm";
 import { trackEvent } from "@/lib/data/events";
-import { getSiteCopy } from "@/lib/data/content";
+import { getClinics, getSiteCopy } from "@/lib/data/content";
 import type { DetectionItem, ScanConfidenceLevel, ScanErrorCode, ScanLabel } from "@/lib/data/types";
 
 type ScanResult = {
@@ -32,6 +33,7 @@ const MIN_SIDE_PX = 640;
 const TARGET_LONG_EDGE_PX = 1024;
 const SCAN_STEPS = [15, 33, 52, 70, 86, 95];
 const OVERLAY_UI_ENABLED = process.env.NEXT_PUBLIC_SCAN_OVERLAY_UI === "true";
+const MODAL_LEAD_FLOW_ENABLED = process.env.NEXT_PUBLIC_MODAL_LEAD_FLOW === "true";
 
 type Stage = "upload" | "confirmSize" | "scanning" | "result";
 type DetectionFilter = "all" | Exclude<ScanLabel, "clear">;
@@ -113,11 +115,17 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanErrorCode, setScanErrorCode] = useState<ScanErrorCode | null>(null);
   const [showClinicsModal, setShowClinicsModal] = useState(false);
+  const [contactPanelOpen, setContactPanelOpen] = useState(false);
+  const [selectedClinicId, setSelectedClinicId] = useState<string | undefined>(undefined);
   const [retryCooldown, setRetryCooldown] = useState(0);
   const [showMarkers, setShowMarkers] = useState(true);
   const [markerFilter, setMarkerFilter] = useState<DetectionFilter>("all");
   const [previewMeta, setPreviewMeta] = useState<{ width: number; height: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const selectedClinicName = useMemo(() => {
+    if (!selectedClinicId) return undefined;
+    return getClinics("ALL").find((c) => c.id === selectedClinicId)?.name;
+  }, [selectedClinicId]);
 
   const reset = useCallback(() => {
     setStage("upload");
@@ -129,6 +137,8 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
     setScanError(null);
     setScanErrorCode(null);
     setShowClinicsModal(false);
+    setContactPanelOpen(false);
+    setSelectedClinicId(undefined);
     setRetryCooldown(0);
     setShowMarkers(true);
     setMarkerFilter("all");
@@ -182,6 +192,8 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
       setScanErrorCode(null);
       setScanResult(null);
       setShowClinicsModal(false);
+      setContactPanelOpen(false);
+      setSelectedClinicId(undefined);
       setShowMarkers(true);
       setMarkerFilter("all");
       await trackEvent({ event: "scan_start" });
@@ -441,14 +453,14 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                       {preview && (
                         <div className="mx-auto mb-5 w-full max-w-[560px]">
                           <div className="rounded-2xl border border-border/80 bg-muted/40 p-3">
-                            <div className="relative overflow-hidden rounded-xl bg-card">
+                            <div className="relative mx-auto w-fit overflow-hidden rounded-xl bg-card">
                               <NextImage
                                 src={preview}
                                 alt="Uploaded scalp preview"
                                 width={scanResult.imageMeta?.width ?? 1024}
                                 height={scanResult.imageMeta?.height ?? 1024}
                                 unoptimized
-                                className="mx-auto max-h-[320px] w-full rounded-xl object-contain"
+                                className="block max-h-[320px] w-auto max-w-full rounded-xl"
                               />
                               {OVERLAY_UI_ENABLED &&
                                 showMarkers &&
@@ -459,7 +471,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                                     aria-hidden="true"
                                     viewBox={`0 0 ${overlayMeta.width} ${overlayMeta.height}`}
                                     className="pointer-events-none absolute inset-0 h-full w-full"
-                                    preserveAspectRatio="none"
+                                    preserveAspectRatio="xMidYMid meet"
                                   >
                                     {filteredDetections.map((det, index) => {
                                       const marker = markerClasses(det.label);
@@ -611,6 +623,9 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                         variant="outline"
                         onClick={async () => {
                           setShowClinicsModal(true);
+                          if (MODAL_LEAD_FLOW_ENABLED) {
+                            await trackEvent({ event: "clinic_modal_opened", label: scanResult?.label });
+                          }
                           await trackEvent({ event: "scan_clinic_cta_clicked", label: scanResult?.label });
                         }}
                       >
@@ -633,14 +648,23 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
         </div>
       </div>
 
-      <Dialog open={showClinicsModal} onOpenChange={setShowClinicsModal}>
-        <DialogContent className="max-h-[85vh] max-w-6xl overflow-y-auto p-0">
+      <Dialog
+        open={showClinicsModal}
+        onOpenChange={(open) => {
+          setShowClinicsModal(open);
+          if (!open) {
+            setContactPanelOpen(false);
+            setSelectedClinicId(undefined);
+          }
+        }}
+      >
+        <DialogContent className="clinic-modal-shell h-[min(92dvh,900px)] w-[95vw] max-w-6xl overflow-hidden p-0 md:h-[min(85vh,900px)]">
           <DialogHeader className="border-b border-border px-6 py-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <DialogTitle>Find a clinic near you</DialogTitle>
                 <DialogDescription>
-                  Search clinics by ZIP/postcode or city. You can contact any listed clinic directly.
+                  Search clinics by ZIP/postcode or city. Submit one quick form and we handle routing to the clinic.
                 </DialogDescription>
               </div>
               <Button asChild variant="outline" size="sm" className="rounded-full">
@@ -648,8 +672,51 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
               </Button>
             </div>
           </DialogHeader>
-          <div className="px-2 pb-2 pt-0 md:px-4">
-            <ClinicFinder showHeader={false} country="US" />
+          <div className="relative flex-1 min-h-0 px-2 pb-2 pt-0 md:px-4">
+            <ClinicFinder
+              showHeader={false}
+              country="US"
+              mode="modal"
+              hideDirectContact={MODAL_LEAD_FLOW_ENABLED}
+              onContactClinic={async (clinicId) => {
+                setSelectedClinicId(clinicId);
+                setContactPanelOpen(true);
+                await trackEvent({ event: "clinic_contact_panel_opened", clinicId, label: scanResult?.label });
+              }}
+            />
+            {MODAL_LEAD_FLOW_ENABLED && contactPanelOpen && (
+              <>
+                <button
+                  type="button"
+                  className="absolute inset-0 z-[60] bg-black/35"
+                  onClick={() => setContactPanelOpen(false)}
+                  aria-label="Close contact panel"
+                />
+                <aside className="clinic-contact-panel z-[70] flex h-full w-full max-w-[440px] flex-col border-l border-border bg-background p-4 md:p-5">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Contact clinic</p>
+                      {selectedClinicName && <p className="text-xs text-muted-foreground">{selectedClinicName}</p>}
+                    </div>
+                    <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setContactPanelOpen(false)}>
+                      <ArrowLeft className="mr-1 h-4 w-4" />
+                      Back
+                    </Button>
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+                    <ClinicContactForm
+                      compact
+                      clinicId={selectedClinicId}
+                      clinicName={selectedClinicName}
+                      scanLabel={scanResult?.label}
+                      scanConfidenceLevel={scanResult?.confidenceLevel}
+                      source="modal"
+                      onCancel={() => setContactPanelOpen(false)}
+                    />
+                  </div>
+                </aside>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>

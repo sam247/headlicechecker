@@ -28,6 +28,9 @@ interface ClinicContactFormProps {
   scanLabel?: ScanLabel;
   scanConfidenceLevel?: ScanConfidenceLevel;
   compact?: boolean;
+  source?: "page" | "modal";
+  onSuccess?: (referenceId: string) => void | Promise<void>;
+  onCancel?: () => void;
 }
 
 function mapError(result: LeadSubmissionResult): string {
@@ -43,6 +46,9 @@ export default function ClinicContactForm({
   scanLabel,
   scanConfidenceLevel,
   compact = false,
+  source = "page",
+  onSuccess,
+  onCancel,
 }: ClinicContactFormProps) {
   const [referenceId, setReferenceId] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -94,6 +100,10 @@ export default function ClinicContactForm({
     setReferenceId(data.referenceId ?? null);
     setDeliveryStatus(data.deliveryStatus ?? "queued");
     await trackEvent({ event: "clinic_contact_submit", clinicId });
+    await trackEvent({ event: "clinic_contact_submitted", clinicId, source });
+    if (data.referenceId) {
+      await onSuccess?.(data.referenceId);
+    }
     reset({
       name: "",
       email: "",
@@ -158,6 +168,14 @@ export default function ClinicContactForm({
           {isSubmitting ? "Sending..." : "Send request"}
         </Button>
       </form>
+
+      {onCancel && (
+        <div className="mt-3 flex justify-end">
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
