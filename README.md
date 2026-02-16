@@ -14,6 +14,47 @@ Next.js front end for the NitNot head lice photo checker and clinic finder. User
 - `npm run build` — production build
 - `npm run start` — start production server
 - `npm run lint` — run ESLint
+- `npm run sync:clinics` — pull clinics from Google Sheet, geocode, and write JSON files
+- `npm run sync:clinics:check` — validate/mapping check only (no file writes)
+
+## Clinic Data Via Google Sheet
+
+Clinics are sourced from a spreadsheet and synced into:
+
+- `content/clinics.uk.json`
+- `content/clinics.us.json`
+
+The sync script defaults to this public CSV export URL:
+
+- `https://docs.google.com/spreadsheets/d/1YE-937KWlOp2WB7LhdcPAQ8D5OOtK6X-8AYyn3aeBNU/export?format=csv&gid=0`
+
+You can override with env vars:
+
+- `CLINICS_GSHEET_CSV_URL` — custom CSV URL
+- `CLINIC_SYNC_STRICT` — defaults to `true`; if `false`, invalid rows are skipped
+- `CLINIC_GEOCODE_DELAY_MS` — defaults to `1100` ms between geocoding calls
+
+### Required Sheet Headers
+
+Use this exact header row:
+
+| Name | Address 1 | Address 2 | Town | County | Postcode | Country | Telephone | Email | Website |
+
+### Mapping Notes
+
+- `Town -> city`
+- `County -> region`
+- `Website` is normalized to `https://...` if protocol is omitted
+- `Country` is normalized to `UK` or `US` (`uk`, `gb`, `united kingdom`, `us`, `usa`, `united states`)
+- `lat/lng` are auto-geocoded during sync and cached in `content/.clinic-geocode-cache.json`
+- `id` is generated deterministically from country/city/name
+
+### Typical Workflow
+
+1. Update rows in Google Sheet.
+2. Run `npm run sync:clinics`.
+3. Commit updated `content/clinics.uk.json`, `content/clinics.us.json`, and cache file changes.
+4. Deploy.
 
 ## Scan: Roboflow, fine-tuned model, DeepSeek, or stub
 

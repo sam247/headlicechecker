@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sync:clinics": "node scripts/sync-clinics.mjs",
+    "sync:clinics:check": "node scripts/sync-clinics.mjs --check"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
