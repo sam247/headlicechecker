@@ -37,6 +37,7 @@ const MODAL_LEAD_FLOW_ENABLED = process.env.NEXT_PUBLIC_MODAL_LEAD_FLOW === "tru
 
 type Stage = "upload" | "confirmSize" | "scanning" | "result";
 type DetectionFilter = "all" | Exclude<ScanLabel, "clear">;
+type CoordinateMode = "center" | "top_left";
 
 interface PhotoCheckerProps {
   initialFile?: File | null;
@@ -104,6 +105,34 @@ function nextStepsForLabel(label: ScanLabel): string[] {
     "If symptoms persist, re-scan with sharper focus near the roots.",
     "Seek professional advice if itching or irritation continues.",
   ];
+}
+
+function inferCoordinateMode(
+  detections: DetectionItem[],
+  meta?: { width: number; height: number } | null
+): CoordinateMode {
+  if (!meta || detections.length === 0) return "center";
+  const sample = detections.slice(0, 20);
+  let likelyTopLeftVotes = 0;
+
+  for (const d of sample) {
+    const leftFromCenter = d.x - d.width / 2;
+    const topFromCenter = d.y - d.height / 2;
+    const rightFromCenter = d.x + d.width / 2;
+    const bottomFromCenter = d.y + d.height / 2;
+
+    // If many boxes would go out-of-bounds in center mode, x/y are likely top-left.
+    if (
+      leftFromCenter < 0 ||
+      topFromCenter < 0 ||
+      rightFromCenter > meta.width ||
+      bottomFromCenter > meta.height
+    ) {
+      likelyTopLeftVotes += 1;
+    }
+  }
+
+  return likelyTopLeftVotes / sample.length >= 0.45 ? "top_left" : "center";
 }
 
 export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheckerProps) {
@@ -294,6 +323,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   const resultCopy = scanResult ? nextStepCopy(scanResult.label) : null;
   const overlayMeta = scanResult?.imageMeta ?? previewMeta;
   const allDetections = useMemo(() => scanResult?.detections ?? [], [scanResult?.detections]);
+  const coordinateMode = useMemo(() => inferCoordinateMode(allDetections, overlayMeta), [allDetections, overlayMeta]);
   const markerFilterEnabled = OVERLAY_UI_ENABLED && allDetections.length > 0;
   const filteredDetections = useMemo(
     () => allDetections.filter((d) => markerFilter === "all" || d.label === markerFilter),
@@ -475,6 +505,8 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                                   >
                                     {filteredDetections.map((det, index) => {
                                       const marker = markerClasses(det.label);
+                                      const cx = coordinateMode === "top_left" ? det.x + det.width / 2 : det.x;
+                                      const cy = coordinateMode === "top_left" ? det.y + det.height / 2 : det.y;
                                       return (
                                         <g
                                           key={det.id}
@@ -482,16 +514,16 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                                           style={{ animationDelay: `${index * 100}ms` }}
                                         >
                                           <ellipse
-                                            cx={det.x}
-                                            cy={det.y}
+                                            cx={cx}
+                                            cy={cy}
                                             rx={Math.max(det.width / 2, 8)}
                                             ry={Math.max(det.height / 2, 8)}
                                             strokeWidth={2}
                                           />
-                                          <circle cx={det.x + det.width / 2} cy={det.y - det.height / 2} r={13} className={marker.badge} />
+                                          <circle cx={cx + det.width / 2} cy={cy - det.height / 2} r={13} className={marker.badge} />
                                           <text
-                                            x={det.x + det.width / 2}
-                                            y={det.y - det.height / 2 + 4}
+                                            x={cx + det.width / 2}
+                                            y={cy - det.height / 2 + 4}
                                             textAnchor="middle"
                                             className="fill-white text-[12px] font-bold"
                                           >
