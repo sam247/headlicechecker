@@ -22,6 +22,7 @@ const ROBOFLOW_WORKFLOW_ID = process.env.ROBOFLOW_WORKFLOW_ID;
 const ROBOFLOW_MODEL_ID = process.env.ROBOFLOW_MODEL_ID;
 const ROBOFLOW_BASE = "https://detect.roboflow.com";
 const ROBOFLOW_SERVERLESS_BASE = "https://serverless.roboflow.com";
+const ROBOFLOW_DEBUG = process.env.ROBOFLOW_DEBUG === "true";
 
 const VALID_LABELS: ScanResult["label"][] = ["lice", "nits", "dandruff", "psoriasis", "clear"];
 
@@ -144,6 +145,7 @@ async function scanWithRoboflowWorkflow(imageBase64: string): Promise<ProviderOu
     }
 
     const data = (await res.json()) as Record<string, unknown>;
+    debugRoboflowWorkflowShape(data);
     return mapRoboflowResult(data);
   } catch (e) {
     return { ok: false, reason: "provider_error", detail: String(e) };
@@ -176,8 +178,20 @@ async function scanWithRoboflowModel(imageBase64: string): Promise<ProviderOutco
 }
 
 function mapRoboflowResult(data: Record<string, unknown>): ProviderOutcome {
-  const label = extractRoboflowLabel(data);
-  const confidence = extractRoboflowConfidence(data);
+  const bestPrediction = extractBestRoboflowPrediction(data);
+  const label = bestPrediction?.label ? normalizeLabel(bestPrediction.label) : extractRoboflowLabel(data);
+  const confidence =
+    typeof bestPrediction?.confidence === "number" ? bestPrediction.confidence : extractRoboflowConfidence(data);
+
+  if (ROBOFLOW_DEBUG) {
+    console.log("[scan][roboflow_mapped_result]", {
+      bestPrediction,
+      mappedLabel: label,
+      mappedConfidence: confidence,
+      fallbackLabel: extractRoboflowLabel(data),
+      fallbackConfidence: extractRoboflowConfidence(data),
+    });
+  }
 
   return {
     ok: true,
@@ -186,6 +200,128 @@ function mapRoboflowResult(data: Record<string, unknown>): ProviderOutcome {
       confidence: typeof confidence === "number" ? confidence : 0.85,
     },
   };
+}
+
+type RoboflowPrediction = {
+  class?: unknown;
+  class_name?: unknown;
+  label?: unknown;
+  confidence?: unknown;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function pushPredictionArray(
+  value: unknown,
+  out: RoboflowPrediction[][],
+  seen: Set<unknown>,
+  depth = 0
+): void {
+  if (depth > 8 || value == null || seen.has(value)) return;
+  seen.add(value);
+
+  if (Array.isArray(value)) {
+    const objectItems = value.filter((item): item is RoboflowPrediction => isRecord(item));
+    if (objectItems.length > 0) out.push(objectItems);
+    for (const item of value) {
+      pushPredictionArray(item, out, seen, depth + 1);
+    }
+    return;
+  }
+
+  if (!isRecord(value)) return;
+  for (const [key, child] of Object.entries(value)) {
+    if (key === "predictions" && Array.isArray(child)) {
+      const objectItems = child.filter((item): item is RoboflowPrediction => isRecord(item));
+      if (objectItems.length > 0) out.push(objectItems);
+    }
+    pushPredictionArray(child, out, seen, depth + 1);
+  }
+}
+
+function extractBestRoboflowPrediction(data: Record<string, unknown>): { label?: string; confidence?: number } | null {
+  const roots: unknown[] = [data];
+  if ("outputs" in data) roots.push((data as Record<string, unknown>).outputs);
+  if ("result" in data) roots.push((data as Record<string, unknown>).result);
+
+  const predictionArrays: RoboflowPrediction[][] = [];
+  const seen = new Set<unknown>();
+  for (const root of roots) {
+    pushPredictionArray(root, predictionArrays, seen);
+  }
+
+  let best: { label?: string; confidence?: number } | null = null;
+  for (const arr of predictionArrays) {
+    for (const p of arr) {
+      const labelCandidate =
+        typeof p.class === "string"
+          ? p.class
+          : typeof p.class_name === "string"
+            ? p.class_name
+            : typeof p.label === "string"
+              ? p.label
+              : undefined;
+      const conf = typeof p.confidence === "number" ? p.confidence : undefined;
+
+      if (!labelCandidate && conf == null) continue;
+      if (!best) {
+        best = { label: labelCandidate, confidence: conf };
+        continue;
+      }
+      const current = best.confidence ?? -Infinity;
+      const candidate = conf ?? -Infinity;
+      if (candidate > current) {
+        best = { label: labelCandidate, confidence: conf };
+      }
+    }
+  }
+
+  return best;
+}
+
+function debugRoboflowWorkflowShape(data: Record<string, unknown>): void {
+  if (!ROBOFLOW_DEBUG) return;
+
+  const root = isRecord(data.outputs) ? data.outputs : data;
+  const outputV2 = isRecord(root.output_predictions_v2) ? root.output_predictions_v2 : null;
+  const predsContainer = outputV2 && isRecord(outputV2.predictions) ? outputV2.predictions : null;
+  const nestedPreds = Array.isArray(predsContainer?.predictions) ? (predsContainer?.predictions as unknown[]) : [];
+  const directPreds = Array.isArray((root as Record<string, unknown>).predictions)
+    ? ((root as Record<string, unknown>).predictions as unknown[])
+    : [];
+
+  console.log("[scan][roboflow_raw_response]", JSON.stringify(data, null, 2));
+  console.log("[scan][roboflow_shape]", {
+    rootKeys: Object.keys(root),
+    outputPredictionsV2Keys: outputV2 ? Object.keys(outputV2) : [],
+    outputPredictionsV2PredictionsKeys: predsContainer ? Object.keys(predsContainer) : [],
+    nestedPredictionsCount: nestedPreds.length,
+    directPredictionsCount: directPreds.length,
+  });
+
+  for (const [idx, pred] of nestedPreds.entries()) {
+    if (!isRecord(pred)) continue;
+    console.log("[scan][roboflow_nested_pred]", {
+      index: idx,
+      class: pred.class,
+      class_name: pred.class_name,
+      label: pred.label,
+      confidence: pred.confidence,
+    });
+  }
+
+  for (const [idx, pred] of directPreds.entries()) {
+    if (!isRecord(pred)) continue;
+    console.log("[scan][roboflow_direct_pred]", {
+      index: idx,
+      class: pred.class,
+      class_name: pred.class_name,
+      label: pred.label,
+      confidence: pred.confidence,
+    });
+  }
 }
 
 function extractRoboflowLabel(data: Record<string, unknown>): ScanResult["label"] {
