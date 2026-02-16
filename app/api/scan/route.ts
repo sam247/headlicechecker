@@ -32,6 +32,8 @@ function normalizeLabel(s: unknown): ScanResult["label"] {
   const lower = s.toLowerCase().trim();
   if (VALID_LABELS.includes(lower as ScanResult["label"])) return lower as ScanResult["label"];
   if (lower === "nit") return "nits";
+  if (lower === "head lice" || lower === "lice detected" || lower === "louse") return "lice";
+  if (lower === "no lice" || lower === "none") return "clear";
   if (lower === "scalp psoriasis" || lower === "psoriasis") return "psoriasis";
   return "clear";
 }
@@ -191,8 +193,18 @@ function extractRoboflowLabel(data: Record<string, unknown>): ScanResult["label"
   const top = root?.top ?? root?.predicted_class ?? root?.class;
   if (typeof top === "string") return normalizeLabel(top);
 
-  const preds = root?.predictions as Array<{ class?: string; label?: string }> | undefined;
-  const c = preds?.[0]?.class ?? preds?.[0]?.label;
+  const directPreds = root?.predictions as Array<{ class?: string; label?: string }> | undefined;
+  const directClass = directPreds?.[0]?.class ?? directPreds?.[0]?.label;
+  if (typeof directClass === "string") return normalizeLabel(directClass);
+
+  // Workflow output often nests detections in output_predictions_v2.predictions.predictions[]
+  const workflowPredContainer = (root?.output_predictions_v2 as Record<string, unknown> | undefined)?.predictions as
+    | Record<string, unknown>
+    | undefined;
+  const workflowPreds = workflowPredContainer?.predictions as
+    | Array<{ class?: string; class_name?: string; label?: string }>
+    | undefined;
+  const c = workflowPreds?.[0]?.class ?? workflowPreds?.[0]?.class_name ?? workflowPreds?.[0]?.label;
   if (typeof c === "string") return normalizeLabel(c);
 
   return "clear";
@@ -201,8 +213,14 @@ function extractRoboflowLabel(data: Record<string, unknown>): ScanResult["label"
 function extractRoboflowConfidence(data: Record<string, unknown>): number | undefined {
   const root = (data?.outputs as Record<string, unknown>) ?? data;
   if (typeof root?.confidence === "number") return root.confidence;
-  const preds = root?.predictions as Array<{ confidence?: number }> | undefined;
-  return preds?.[0]?.confidence;
+  const directPreds = root?.predictions as Array<{ confidence?: number }> | undefined;
+  if (typeof directPreds?.[0]?.confidence === "number") return directPreds[0].confidence;
+
+  const workflowPredContainer = (root?.output_predictions_v2 as Record<string, unknown> | undefined)?.predictions as
+    | Record<string, unknown>
+    | undefined;
+  const workflowPreds = workflowPredContainer?.predictions as Array<{ confidence?: number }> | undefined;
+  return workflowPreds?.[0]?.confidence;
 }
 
 async function scanWithDetectionApi(imageBase64: string): Promise<ProviderOutcome> {
