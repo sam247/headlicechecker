@@ -10,6 +10,7 @@ const footerColumns = [
     links: [
       { label: "How It Works", href: "/how-it-works" },
       { label: "Find Clinics", href: "/find-clinics" },
+      { label: "Locations", href: "/locations" },
       { label: "FAQ", href: "/faq" },
       { label: "Contact", href: "/contact" },
     ],
@@ -20,6 +21,7 @@ const footerColumns = [
       { label: "For Parents", href: "/" },
       { label: "For Schools", href: "/for-schools" },
       { label: "For Clinics", href: "/for-clinics" },
+      { label: "Head Lice Symptoms", href: "/head-lice-symptoms" },
       { label: "Blog", href: "/blog" },
     ],
   },
@@ -27,6 +29,9 @@ const footerColumns = [
     title: "Company",
     links: [
       { label: "About", href: "/about" },
+      { label: "Methodology", href: "/methodology" },
+      { label: "Clinical Safety", href: "/clinical-safety" },
+      { label: "Editorial Policy", href: "/editorial-policy" },
       { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "/terms" },
     ],
@@ -41,7 +46,7 @@ export default function SiteFooter() {
           <div>
             <Image
               src="/logo_new.png"
-              alt="NitNot"
+              alt="Head Lice Checker"
               width={152}
               height={44}
               className="mb-4 h-9 w-auto"

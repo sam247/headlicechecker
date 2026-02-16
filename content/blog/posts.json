@@ -4,17 +4,21 @@
     "title": "How to Check for Head Lice at Home (Without Panic)",
     "description": "A practical, parent-friendly checklist for spotting lice and nits quickly and calmly.",
     "publishedAt": "2026-02-10",
-    "updatedAt": "2026-02-12",
-    "readMinutes": 6,
+    "updatedAt": "2026-02-16",
+    "readMinutes": 8,
     "category": "Parents",
-    "author": "NitNot Editorial Team",
-    "keywords": ["head lice check", "nits", "parents"],
+    "author": "Head Lice Checker Editorial Team",
+    "keywords": ["head lice check", "nits", "parents", "home scalp check"],
     "isPublished": true,
     "body": [
-      "Head lice are common and manageable. Start by using bright light and separating hair into sections.",
-      "Check behind the ears and at the nape of the neck first, where lice and nits are often found.",
-      "Nits are usually fixed to the hair shaft and do not flick away like dandruff.",
-      "If unsure, use an AI photo scan as a first pass and follow up with a professional check for confirmation."
+      "Head lice are common and manageable, but uncertainty can escalate quickly when a child starts itching. A calm, structured check gives better answers than a rushed look under poor lighting.",
+      "Start with bright light and a fine-tooth comb. Part hair in narrow sections so you can inspect near the scalp rather than only scanning the surface.",
+      "Check behind both ears and the nape first. These zones are often where indicators appear earliest and where missed signs can delay confirmation.",
+      "Look for attached oval particles on one side of the hair shaft. Loose flakes that brush away easily are more often dandruff or dry scalp debris.",
+      "Use tissue contrast during comb passes. Wipe the comb after each section and compare what you see across multiple areas rather than relying on one strand.",
+      "If your first check is unclear, capture two or three close-up photos and run an indicative scan to prioritize urgency. Better photos improve confidence.",
+      "When likely indicators repeat across sections or household symptoms overlap, move to professional confirmation quickly. Early action usually reduces household spread.",
+      "Remember the boundary: this is practical guidance, not diagnosis. If symptoms persist or worsen, seek clinician support."
     ]
   },
   {
@@ -22,17 +26,21 @@
     "title": "Nits vs Dandruff: Key Differences Parents Miss",
     "description": "Learn the visual differences between fixed nits and loose scalp flakes.",
     "publishedAt": "2026-01-28",
-    "updatedAt": "2026-02-04",
-    "readMinutes": 5,
+    "updatedAt": "2026-02-16",
+    "readMinutes": 7,
     "category": "Education",
-    "author": "NitNot Clinical Review",
-    "keywords": ["nits vs dandruff", "scalp", "lice symptoms"],
+    "author": "Head Lice Checker Clinical Review",
+    "keywords": ["nits vs dandruff", "scalp", "lice symptoms", "attached particles"],
     "isPublished": true,
     "body": [
-      "Dandruff flakes are usually irregular and come away easily.",
-      "Nits are oval and attached to one side of the hair shaft.",
-      "If the image is blurry, results can be less reliable. Re-upload a sharper close-up.",
-      "When symptoms persist, speak with a GP or dermatologist for medical advice."
+      "Nits and dandruff are often confused, especially in rushed checks at the end of the day. The distinction matters because next steps are very different.",
+      "Nits are usually oval and fixed to one side of the hair shaft. They remain attached when hair is gently moved or blown.",
+      "Dandruff appears as irregular loose flakes and usually dislodges with light brushing. It can appear across surface hair and on clothing.",
+      "The movement test is useful but should not be your only test. Always check multiple sections in bright light before deciding.",
+      "Product residue can create false alarms. Dry shampoo buildup or styling product fragments may look similar under weak lighting.",
+      "Pattern matters more than one isolated speck. Repeated attached ovals near scalp zones increase the likelihood that you should escalate.",
+      "If image quality is poor, recapture before acting. A sharper close-up often resolves uncertainty quickly.",
+      "When ambiguity remains, seek professional confirmation instead of repeating uncertain home checks."
     ]
   },
   {
@@ -40,17 +48,21 @@
     "title": "School Outbreak Response: A Practical 48-Hour Playbook",
     "description": "A communication and screening flow schools can use to reduce disruption and stigma.",
     "publishedAt": "2026-01-17",
-    "updatedAt": "2026-02-01",
-    "readMinutes": 8,
+    "updatedAt": "2026-02-16",
+    "readMinutes": 9,
     "category": "Schools",
-    "author": "NitNot Education Team",
-    "keywords": ["school outbreak", "head lice policy", "parent communication"],
+    "author": "Head Lice Checker Education Team",
+    "keywords": ["school outbreak", "head lice policy", "parent communication", "school checklist"],
     "isPublished": true,
     "body": [
-      "Send a calm, factual parent notice with home-check guidance.",
-      "Encourage screening and same-week follow-up for affected families.",
-      "Avoid singling children out. Focus on routine checks and quick action.",
-      "Use professional clinics for rapid confirmation where needed."
+      "When reports rise, schools need a calm framework that reduces panic and keeps parent messaging consistent. The first 48 hours set the tone.",
+      "Start with a neutral notice: explain that concerns are manageable, provide home-check steps, and avoid singling out children.",
+      "Encourage same-week household checks with clear instructions on lighting, sectioning, and where to look first.",
+      "Provide scan-first guidance for uncertain households. Indicative triage can help families decide whether to monitor or book confirmation quickly.",
+      "Avoid stigma-heavy policies. Focus communication on practical routine checks and respectful language across all channels.",
+      "By day two, issue a short reminder with the same core instructions and escalation triggers for persistent symptoms.",
+      "For families still unsure, direct them to professional clinics for confirmation rather than repeated uncertain treatments.",
+      "Review outcomes after each cluster: what language worked, where confusion appeared, and how to improve the next response cycle."
     ]
   }
 ]

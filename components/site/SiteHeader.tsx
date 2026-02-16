@@ -12,6 +12,7 @@ import { getSiteCopy } from "@/lib/data/content";
 const navItems = [
   { href: "/how-it-works", label: "How It Works" },
   { href: "/find-clinics", label: "Find Clinics" },
+  { href: "/locations", label: "Locations" },
   { href: "/for-schools", label: "For Schools" },
   { href: "/for-clinics", label: "For Clinics" },
   { href: "/blog", label: "Blog" },
@@ -27,8 +28,8 @@ export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/95 backdrop-blur">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2" aria-label="NitNot home">
-          <Image src="/logo_new.png" alt="NitNot" width={152} height={44} className="h-9 w-auto" />
+        <Link href="/" className="flex items-center gap-2" aria-label="Head Lice Checker home">
+          <Image src="/logo_new.png" alt="Head Lice Checker" width={152} height={44} className="h-9 w-auto" />
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex" aria-label="Primary">

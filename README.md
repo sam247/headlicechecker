@@ -1,6 +1,6 @@
-# NitNot — Head Lice Photo Checker
+# Head Lice Checker — Head Lice Photo Checker
 
-Next.js front end for the NitNot head lice photo checker and clinic finder. Users upload photos for a quick check and can find their nearest professional clinic.
+Next.js front end for the Head Lice Checker photo screening tool and clinic finder. Users upload photos for a quick indicative check and can find nearby professional clinics.
 
 ## Stack
 

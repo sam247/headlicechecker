@@ -47,7 +47,7 @@ export default function HomePageClient() {
               </Button>
             </div>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              {["Indicative result in seconds", "Built for mobile parents", "US-first clinic pathways"].map((item) => (
+              {["Indicative result in seconds", "Built for mobile parents", "Global clinic pathways"].map((item) => (
                 <div key={item} className="rounded-xl border border-border/80 bg-card px-3 py-2 text-sm">
                   <CheckCircle2 className="mr-2 inline h-4 w-4 text-primary" />
                   {item}
@@ -161,6 +161,37 @@ export default function HomePageClient() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section-shell pt-0">
+        <div className="container mx-auto px-4">
+          <div className="rounded-2xl border border-border bg-card p-6 md:p-8">
+            <h2 className="text-2xl font-bold">Learn more before you decide</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Explore symptom guides, methodology details, and location-specific clinic support.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+              <Link href="/head-lice-symptoms" className="text-primary hover:underline">
+                Head lice symptoms
+              </Link>
+              <Link href="/nits-vs-dandruff" className="text-primary hover:underline">
+                Nits vs dandruff
+              </Link>
+              <Link href="/locations" className="text-primary hover:underline">
+                City location guides
+              </Link>
+              <Link href="/methodology" className="text-primary hover:underline">
+                Methodology
+              </Link>
+              <Link href="/clinical-safety" className="text-primary hover:underline">
+                Clinical safety
+              </Link>
+              <Link href="/editorial-policy" className="text-primary hover:underline">
+                Editorial policy
+              </Link>
             </div>
           </div>
         </div>

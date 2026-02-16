@@ -16,7 +16,7 @@ export function isAllowedOrigin(request: NextRequest): boolean {
   const origin = request.headers.get("origin");
   if (!origin) return true;
 
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "https://nitnot.com";
+  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "https://headlicechecker.com";
   try {
     const originHost = new URL(origin).host;
     const siteHost = new URL(site).host;

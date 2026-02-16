@@ -1,5 +1,5 @@
-export const PRIVACY_CONTACT_EMAIL = "privacy@nitnot.com";
-export const SUPPORT_CONTACT_EMAIL = "support@nitnot.com";
+export const PRIVACY_CONTACT_EMAIL = "privacy@headlicechecker.com";
+export const SUPPORT_CONTACT_EMAIL = "support@headlicechecker.com";
 export const POLICY_VERSION = "2026-02-v2";
 export const LEAD_RETENTION_DAYS = 180;
 export const EVENT_RETENTION_DAYS = 90;

@@ -152,7 +152,7 @@ export default function ClinicContactForm({
 
         <label className="flex items-start gap-2 text-sm text-muted-foreground">
           <input type="checkbox" className="mt-1" {...register("consent")} />
-          <span>I consent to NitNot sharing my details with the nearest clinic for follow-up.</span>
+          <span>I consent to Head Lice Checker sharing my details with the nearest clinic for follow-up.</span>
         </label>
         {errors.consent && <p className="text-xs text-destructive">{errors.consent.message}</p>}
 

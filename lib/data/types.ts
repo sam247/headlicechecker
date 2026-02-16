@@ -74,3 +74,47 @@ export interface LeadSubmissionResult {
   code?: "VALIDATION_ERROR" | "RATE_LIMITED" | "TRANSIENT_DELIVERY_ERROR" | "PERMANENT_DELIVERY_ERROR";
   error?: string;
 }
+
+export interface SeoMeta {
+  title: string;
+  description: string;
+  keywords?: string[];
+  publishedAt?: string;
+  updatedAt?: string;
+}
+
+export interface ContentSection {
+  heading: string;
+  paragraphs: string[];
+  bullets?: string[];
+}
+
+export interface ContentFaq {
+  question: string;
+  answer: string;
+}
+
+export interface EvergreenPage extends SeoMeta {
+  slug: string;
+  intro: string;
+  sections: ContentSection[];
+  faqs: ContentFaq[];
+}
+
+export interface TrustPage extends SeoMeta {
+  slug: string;
+  intro: string;
+  reviewedAt: string;
+  sections: ContentSection[];
+  faqs: ContentFaq[];
+}
+
+export interface LocationSeoPage extends SeoMeta {
+  slug: string;
+  city: string;
+  region: string;
+  country: "UK" | "US";
+  intro: string;
+  sections: ContentSection[];
+  faqs: ContentFaq[];
+}

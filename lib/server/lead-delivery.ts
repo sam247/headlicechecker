@@ -54,7 +54,7 @@ export async function deliverLeadEmail(
     return { deliveryStatus: "failed", provider: "none", error: "Missing email routing configuration" };
   }
 
-  const subject = `NitNot lead ${payload.referenceId} (${destination.region})`;
+  const subject = `Head Lice Checker lead ${payload.referenceId} (${destination.region})`;
   const text = buildTextBody(payload, destination);
 
   if (provider === "resend") {

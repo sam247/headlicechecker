@@ -8,18 +8,28 @@ import {
   PROCESSOR_DISCLOSURE,
 } from "@/lib/data/compliance";
 import { getSiteCopy } from "@/lib/data/content";
+import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
 const copy = getSiteCopy();
 
 export const metadata: Metadata = {
-  title: "Privacy Policy",
-  description: "How NitNot handles uploaded images, consented lead data, retention windows, and processor disclosures.",
-  alternates: { canonical: "/privacy" },
+  ...pageMetadata({
+    title: "Privacy Policy",
+    description:
+      "How Head Lice Checker handles uploaded images, consented lead data, retention windows, and processor disclosures.",
+    path: "/privacy",
+  }),
 };
 
 export default function PrivacyPage() {
+  const breadcrumb = breadcrumbJsonLd([
+    { name: "Home", path: "/" },
+    { name: "Privacy Policy", path: "/privacy" },
+  ]);
+
   return (
     <section className="section-shell">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <div className="container mx-auto max-w-4xl px-4">
         <h1 className="section-title">Privacy policy</h1>
         <div className="mt-5 space-y-4 text-sm text-muted-foreground">

@@ -1,0 +1,308 @@
+[
+  {
+    "slug": "methodology",
+    "title": "Head Lice Checker Methodology",
+    "description": "How Head Lice Checker processes photo evidence, scores confidence tiers, and produces non-diagnostic screening guidance.",
+    "keywords": [
+      "head lice checker methodology",
+      "ai lice screening method",
+      "photo screening process",
+      "head lice confidence tiers"
+    ],
+    "publishedAt": "2026-02-16",
+    "updatedAt": "2026-02-16",
+    "reviewedAt": "2026-02-16",
+    "intro": "Head Lice Checker is designed as a practical triage tool for families who need quick direction. The platform combines image-based model output, deterministic rule mapping, and clear safety wording so users can understand what was detected, where it was detected, and what actions to take next. This page explains our methodology in plain language.",
+    "sections": [
+      {
+        "heading": "Method purpose and scope",
+        "paragraphs": [
+          "Our screening flow is intended to reduce uncertainty, not to replace a clinician. The main purpose is to help parents decide whether a professional confirmation should be prioritized and to reduce delayed action when multiple risk indicators are visible.",
+          "The system works best on close-up scalp photos where hair is parted and lighting is strong. It is not optimized for distant portraits, heavy motion blur, or obstructed views. In low-quality conditions we keep language conservative and encourage a better re-scan.",
+          "Outputs are therefore written as indicative guidance. We avoid definitive medical claims and direct users toward qualified clinical support whenever confidence is low, symptoms persist, or findings appear significant."
+        ]
+      },
+      {
+        "heading": "Image intake and preprocessing",
+        "paragraphs": [
+          "When a user uploads an image, the file is checked for validity and minimum dimensions before screening. This protects model stability and avoids confidence distortions caused by very small or corrupted inputs.",
+          "The same prepared image variant used for inference is also used in result rendering. This alignment matters because detection overlays are projected using the source coordinate system, and visual trust depends on marker placement matching the displayed frame.",
+          "Preprocessing is intentionally minimal: we do not apply aggressive enhancement pipelines that could alter visual artifacts. Users are encouraged to provide better source captures rather than relying on synthetic sharpening."
+        ]
+      },
+      {
+        "heading": "Detection extraction and normalization",
+        "paragraphs": [
+          "Provider outputs can include nested prediction objects, class aliases, and mixed confidence keys. We normalize these structures into a stable internal detection array so frontend behavior remains consistent as long as providers return valid bounding metadata.",
+          "Class aliases are mapped into standardized labels such as lice and nits. We reject malformed detections, enforce numeric coordinate validation, and apply a minimum confidence floor before items are exposed in UI summaries.",
+          "For each accepted detection we retain center coordinates, width, height, raw confidence, and tier assignment. This normalized object powers evidence overlays, counts, summary chips, and analytics instrumentation."
+        ]
+      },
+      {
+        "heading": "Confidence policy and result labeling",
+        "paragraphs": [
+          "Confidence tiers are grouped for parent-facing clarity. High confidence indicates strong model evidence, medium confidence indicates useful but less certain evidence, and low confidence signals that image quality or visual ambiguity may affect interpretation.",
+          "When valid detections exist, top-level result labels are determined by the strongest detection class. When detections are absent, fallback logic returns a clear-screening outcome with supportive language and re-check guidance if symptoms continue.",
+          "This policy avoids overpromising while still giving clear direction. Users can inspect marker overlays and summaries before deciding whether to seek clinic confirmation."
+        ]
+      },
+      {
+        "heading": "Human-centered output design",
+        "paragraphs": [
+          "Result cards prioritize evidence-first communication. We surface the uploaded photo, detection markers, total indicator count, and confidence tier in a compact hierarchy so users can understand why a suggestion is being shown.",
+          "Guidance text then translates output into practical next actions: monitor, rescan with better lighting, or request clinic follow-up. We deliberately avoid alarmist language and avoid diagnostic wording.",
+          "By combining visible evidence with calm copy, the methodology supports trust while keeping decisions grounded in professional confirmation when appropriate."
+        ]
+      },
+      {
+        "heading": "Measurement and iteration",
+        "paragraphs": [
+          "We track anonymized interaction events to improve reliability and user comprehension. Examples include overlay toggles, legend filtering, scan retries, and clinic CTA engagement.",
+          "These signals help us evaluate whether users understand results and whether next-step guidance is effective. Improvements are prioritized when we detect confusion patterns such as immediate repeated rescans after strong positive signals.",
+          "Method updates are reviewed before release and documented in content timestamps so users and partners can see when guidance standards were last updated."
+        ]
+      },
+      {
+        "heading": "Method governance and release controls",
+        "paragraphs": [
+          "Method changes follow a release checklist that validates parser stability, confidence tier mapping, and user-facing language consistency before deployment. This helps prevent regressions where back-end detection structure changes could silently affect frontend interpretation.",
+          "Each release includes deterministic tests around nested prediction extraction, alias mapping, and malformed detection rejection. We also verify overlay coordinate rendering against the exact image variant used for inference so trust is preserved in evidence view.",
+          "When major behavior changes are introduced, content guidance and FAQ references are updated in the same cycle so user education remains aligned with product behavior."
+        ]
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does this methodology provide a diagnosis?",
+        "answer": "No. It provides indicative screening guidance and should be followed by professional clinical confirmation when risk is elevated or symptoms persist."
+      },
+      {
+        "question": "Why can confidence be low even when markers appear?",
+        "answer": "Low confidence can occur with blur, poor lighting, or visually similar scalp artifacts. In those cases we recommend a sharper re-scan or clinic review."
+      },
+      {
+        "question": "Are overlays drawn from real model coordinates?",
+        "answer": "Yes. Markers are based on normalized detection coordinates from the inference payload and mapped onto the rendered scan image."
+      },
+      {
+        "question": "How often is methodology content reviewed?",
+        "answer": "Methodology content is reviewed on release cycles and timestamped so users can verify recency."
+      }
+    ]
+  },
+  {
+    "slug": "clinical-safety",
+    "title": "Clinical Safety and Risk Boundaries",
+    "description": "Our safety posture for indicative head lice screening, including limitations, escalation triggers, and non-diagnostic language controls.",
+    "keywords": [
+      "head lice safety",
+      "non diagnostic screening",
+      "clinical escalation",
+      "lice checker limitations"
+    ],
+    "publishedAt": "2026-02-16",
+    "updatedAt": "2026-02-16",
+    "reviewedAt": "2026-02-16",
+    "intro": "Clinical safety is built into both the model-to-message pipeline and the surrounding UX. Head Lice Checker is intentionally framed as triage support: fast guidance, clear limitations, and consistent direction to seek professional care when certainty is limited or symptoms continue.",
+    "sections": [
+      {
+        "heading": "Safety-first language policy",
+        "paragraphs": [
+          "All public outputs are written to avoid diagnostic claims. We use phrases such as possible activity detected, likely indicators, and routine checks recommended. This wording is designed to reduce false certainty and keep decisions grounded.",
+          "We also avoid treatment prescriptions. Even when evidence appears strong, users are encouraged to seek professional confirmation before acting on household-wide treatment decisions.",
+          "This language policy is applied across result cards, educational pages, and follow-up flows so the safety posture remains consistent throughout the journey."
+        ]
+      },
+      {
+        "heading": "Known limitations and uncertainty factors",
+        "paragraphs": [
+          "Visual overlap exists between lice indicators and other scalp conditions such as dandruff, dermatitis, and product residue. A model can flag regions of interest, but context from trained practitioners remains important.",
+          "Image quality strongly affects reliability. Underexposed photos, glare, and motion blur can suppress real signals or create misleading artifacts. For this reason low-confidence outcomes include quality tips rather than assertive conclusions.",
+          "Age, scalp sensitivity, and symptom history are not inferred from a single image. Users with ongoing symptoms should escalate regardless of a clear or low-confidence result."
+        ]
+      },
+      {
+        "heading": "Escalation triggers and guidance",
+        "paragraphs": [
+          "We advise rapid clinic confirmation when repeated indicators appear, multiple household contacts report symptoms, or school exposure notifications coincide with persistent itching.",
+          "We also prompt escalation when users repeatedly upload uncertain images. Multiple inconclusive checks can delay effective action, so the product encourages moving to professional evaluation rather than continuous self-screening.",
+          "Emergency or severe symptoms are explicitly out of scope for this tool. In those situations, users should seek immediate medical advice through local healthcare channels."
+        ]
+      },
+      {
+        "heading": "Data handling and consent boundaries",
+        "paragraphs": [
+          "Safety also includes privacy and consent. Contact forms are explicit about data use, and lead routing is confined to operational follow-up for selected clinics.",
+          "We minimize retained fields to what is needed for service quality, abuse prevention, and user support. Retention windows and support contacts are documented in policy pages.",
+          "This balance supports practical care pathways while limiting unnecessary exposure of personal information."
+        ]
+      },
+      {
+        "heading": "Clinic handoff safeguards",
+        "paragraphs": [
+          "Clinic handoff is presented as an optional follow-up step, never as mandatory care. Users can review guidance first, then decide whether to contact a clinic through the in-product lead form.",
+          "The lead flow is designed for clarity: selected clinic context, transparent consent copy, and confirmation references on successful submission.",
+          "By routing communication through a controlled form, we reduce fragmented outreach and improve follow-up tracking for users and clinic partners."
+        ]
+      },
+      {
+        "heading": "Continuous safety review",
+        "paragraphs": [
+          "Safety checks are part of release QA. We verify wording consistency, fallback behavior, and error-path messaging before publishing significant updates.",
+          "Analytics and support signals are used to detect confusion hotspots, such as unexpected rescans after strong findings or high bounce rates on guidance pages.",
+          "When issues are identified, copy and flow adjustments are prioritized to keep risk communication calm, accurate, and easy to follow."
+        ]
+      },
+      {
+        "heading": "Risk communication and parental decision support",
+        "paragraphs": [
+          "Safety communication must help families act without creating fear. We therefore present risk as a tiered likelihood signal and pair every result with context-specific guidance that explains what to do next in practical terms.",
+          "Positive or medium-confidence outputs emphasize professional confirmation, household coordination, and avoiding unnecessary repeated interventions. Clear outputs are framed as reassuring but not absolute, with reminders to recheck if symptoms persist.",
+          "This approach supports better decisions under stress: users see evidence, understand uncertainty, and move toward the most appropriate next step with lower confusion."
+        ]
+      },
+      {
+        "heading": "How we handle uncertain outcomes",
+        "paragraphs": [
+          "Uncertain outcomes are treated as a first-class safety case. Rather than forcing a binary answer, the product surfaces low-confidence context and recommends a better evidence capture process or professional follow-up where symptoms persist.",
+          "This protects users from false certainty and reduces avoidable delays caused by repeated ambiguous self-checks. It also keeps messaging aligned with responsible non-diagnostic standards."
+        ]
+      },
+      {
+        "heading": "Safety messaging across channels",
+        "paragraphs": [
+          "Safety language is kept consistent across results, educational pages, and contact forms so users do not receive conflicting signals. Consistency reduces misinterpretation and supports safer decision-making, especially for first-time users under time pressure."
+        ]
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Is this tool suitable for medical emergencies?",
+        "answer": "No. The tool is for indicative screening only. Severe or urgent symptoms should be assessed by healthcare professionals immediately."
+      },
+      {
+        "question": "Why does the app suggest clinics after a positive result?",
+        "answer": "Clinic suggestions are provided to support professional confirmation and reduce delays when indicative risk appears elevated."
+      },
+      {
+        "question": "Can I rely on a clear result to rule out lice entirely?",
+        "answer": "A clear result is reassuring but not absolute. If symptoms persist, repeat a high-quality check and seek clinical advice."
+      },
+      {
+        "question": "How does the product prevent overconfident messaging?",
+        "answer": "The UI and copy are intentionally non-diagnostic, confidence-tiered, and paired with escalation guidance where uncertainty remains."
+      }
+    ]
+  },
+  {
+    "slug": "editorial-policy",
+    "title": "Editorial Policy and Content Standards",
+    "description": "How Head Lice Checker creates, reviews, and updates educational content using factual, non-diagnostic standards.",
+    "keywords": [
+      "editorial policy",
+      "medical content standards",
+      "head lice guidance quality",
+      "content review policy"
+    ],
+    "publishedAt": "2026-02-16",
+    "updatedAt": "2026-02-16",
+    "reviewedAt": "2026-02-16",
+    "intro": "Our editorial policy is designed for practical trust. Content must be understandable for parents, consistent with non-diagnostic safety standards, and periodically reviewed for clarity. We focus on evidence-informed guidance and avoid exaggerated or fear-driven claims. We keep updates practical so families can trust quickly what they read.",
+    "sections": [
+      {
+        "heading": "Editorial principles",
+        "paragraphs": [
+          "Each page is written for real decision moments: what the user is seeing, what it may mean, and what to do next. We avoid vague reassurance and avoid alarmist framing.",
+          "Claims are constrained to observable behavior, platform workflow, and generally accepted practical guidance. We do not publish statements implying guaranteed clinical outcomes from an AI scan.",
+          "Consistency matters. Core terms such as indicative result, confidence tier, and professional confirmation are used across pages to reduce interpretation drift."
+        ]
+      },
+      {
+        "heading": "Review process and update cadence",
+        "paragraphs": [
+          "Major content sections are reviewed during release cycles and updated when model behavior, UX flows, or policy language changes. Reviewed timestamps are shown so readers can confirm freshness.",
+          "When a page includes high-intent care guidance, we prioritize readability and contradiction checks with adjacent pages such as FAQ, methodology, and safety content.",
+          "We also review pages that receive high search traffic or generate support queries, ensuring that popular landing pages remain clear and current."
+        ]
+      },
+      {
+        "heading": "Medical framing boundaries",
+        "paragraphs": [
+          "Editorial content must not diagnose conditions, prescribe treatment, or imply replacement of clinical consultation. We clearly communicate that image-based output is supportive triage.",
+          "Pages discussing symptoms or comparisons, such as nits versus dandruff, include caution language about overlap and uncertainty. This prevents false confidence from single-image interpretation.",
+          "Where urgency may exist, content must include escalation guidance to qualified professionals."
+        ]
+      },
+      {
+        "heading": "Quality controls before publishing",
+        "paragraphs": [
+          "Every page is checked for factual consistency, plain-English clarity, metadata completeness, and schema alignment. We also verify that each page includes core CTA pathways: scan first, clinic second.",
+          "Internal linking is reviewed so users can move from educational reading to practical action without dead ends. Related guides are included where they add decision value.",
+          "Broken links, outdated references, or contradictory statements are treated as release blockers for content updates."
+        ]
+      },
+      {
+        "heading": "Corrections and transparency",
+        "paragraphs": [
+          "If material errors are discovered, we correct them promptly and update page timestamps. For significant corrections, associated pages are cross-checked to prevent repeated inconsistencies.",
+          "Users can submit feedback through contact channels, and recurring confusion themes inform future revisions and FAQ updates.",
+          "Transparency is central to long-term trust: what this tool can do, what it cannot do, and when professional support is the right next step."
+        ]
+      },
+      {
+        "heading": "SEO and reader value standards",
+        "paragraphs": [
+          "SEO is used to improve discovery, not to inflate claims. We target intent-focused topics that answer real parent questions and provide clear navigation to action pages.",
+          "Pages are built with structured headings, concise summaries, FAQ support, and metadata that accurately reflect page content.",
+          "Authority is earned through consistency, usefulness, and safety-first guidance rather than artificial claims of institutional age or guarantees."
+        ]
+      },
+      {
+        "heading": "Content governance for long-term authority",
+        "paragraphs": [
+          "To maintain durable authority, we treat educational content as product infrastructure. Pages are versioned through normal release workflows, reviewed for consistency with current platform behavior, and updated when user feedback indicates misunderstanding.",
+          "Editorial updates are also linked to search intent clusters so families can navigate from high-level questions to actionable pathways without dead ends. This includes direct links to symptom guides, methodology details, location pages, and clinic follow-up tools.",
+          "The objective is practical reliability: content should remain useful after repeated visits, across different entry pages, and during real household decision moments where clarity matters most."
+        ]
+      },
+      {
+        "heading": "Reader-first structure and accessibility",
+        "paragraphs": [
+          "Editorial pages are structured for high-stress readers who need rapid comprehension. We use clear section headings, concise summaries, and practical actions rather than jargon-heavy explanations that increase cognitive load.",
+          "Accessibility and readability checks are included in publishing workflows so guidance remains understandable on mobile devices, where most families first engage with screening tools.",
+          "By prioritizing structure and clarity, we improve both search relevance and real-world usefulness."
+        ]
+      },
+      {
+        "heading": "Quality assurance before publication",
+        "paragraphs": [
+          "Before publication, pages are checked for factual alignment with product behavior, metadata completeness, internal link integrity, and non-diagnostic wording standards. This review process helps maintain trust as content volume expands."
+        ]
+      },
+      {
+        "heading": "Maintaining consistency at scale",
+        "paragraphs": [
+          "As page volume grows, we use shared standards for headings, disclaimers, and CTA structure so users get a predictable experience across every guide."
+        ]
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Who writes and reviews content?",
+        "answer": "Content is produced by the Head Lice Checker editorial team and reviewed against internal methodology and safety standards before publication."
+      },
+      {
+        "question": "Do you update old pages?",
+        "answer": "Yes. Pages are reviewed and refreshed when workflows, policies, or high-traffic guidance needs change."
+      },
+      {
+        "question": "Why include disclaimers so often?",
+        "answer": "Because consistent non-diagnostic framing is essential for user safety and clear decision-making."
+      },
+      {
+        "question": "Can users report confusing content?",
+        "answer": "Yes. Feedback from users is part of the improvement loop and helps prioritize clarifications."
+      }
+    ]
+  }
+]
