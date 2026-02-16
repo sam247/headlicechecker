@@ -139,6 +139,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   const [stage, setStage] = useState<Stage>("upload");
   const [progress, setProgress] = useState(0);
   const [preview, setPreview] = useState<string | null>(null);
+  const [scanPreview, setScanPreview] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -150,6 +151,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   const [showMarkers, setShowMarkers] = useState(true);
   const [markerFilter, setMarkerFilter] = useState<DetectionFilter>("all");
   const [previewMeta, setPreviewMeta] = useState<{ width: number; height: number } | null>(null);
+  const [scanPreviewMeta, setScanPreviewMeta] = useState<{ width: number; height: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const selectedClinicName = useMemo(() => {
     if (!selectedClinicId) return undefined;
@@ -160,7 +162,12 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
     setStage("upload");
     setProgress(0);
     setPreview(null);
+    setScanPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
     setPreviewMeta(null);
+    setScanPreviewMeta(null);
     setPendingFile(null);
     setScanResult(null);
     setScanError(null);
@@ -178,6 +185,12 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
     const t = setTimeout(() => setRetryCooldown((v) => Math.max(0, v - 1)), 1000);
     return () => clearTimeout(t);
   }, [retryCooldown]);
+
+  useEffect(() => {
+    return () => {
+      if (scanPreview) URL.revokeObjectURL(scanPreview);
+    };
+  }, [scanPreview]);
 
   const resizeToLongEdge = useCallback((file: File, longEdge: number): Promise<Blob> => {
     return new Promise((resolve) => {
@@ -239,6 +252,18 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
 
       try {
         const blob = await resizeToLongEdge(file, TARGET_LONG_EDGE_PX);
+        const scanUrl = URL.createObjectURL(blob);
+        setScanPreview((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return scanUrl;
+        });
+        const scanImg = new Image();
+        scanImg.onload = () => {
+          setScanPreviewMeta({ width: scanImg.naturalWidth, height: scanImg.naturalHeight });
+        };
+        scanImg.onerror = () => setScanPreviewMeta(null);
+        scanImg.src = scanUrl;
+
         const form = new FormData();
         form.append("image", blob, "image.jpg");
 
@@ -321,7 +346,8 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   }, [initialFile, onFileConsumed, processFile]);
 
   const resultCopy = scanResult ? nextStepCopy(scanResult.label) : null;
-  const overlayMeta = scanResult?.imageMeta ?? previewMeta;
+  const displayPreview = scanPreview ?? preview;
+  const overlayMeta = scanResult?.imageMeta ?? scanPreviewMeta ?? previewMeta;
   const allDetections = useMemo(() => scanResult?.detections ?? [], [scanResult?.detections]);
   const coordinateMode = useMemo(() => inferCoordinateMode(allDetections, overlayMeta), [allDetections, overlayMeta]);
   const markerFilterEnabled = OVERLAY_UI_ENABLED && allDetections.length > 0;
@@ -442,9 +468,9 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
             {stage === "scanning" && (
               <Card>
                 <CardContent className="p-6 text-center md:p-8">
-                  {preview && (
+                  {displayPreview && (
                     <NextImage
-                      src={preview}
+                      src={displayPreview}
                       alt="Uploaded preview"
                       width={112}
                       height={112}
@@ -480,15 +506,15 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                     </>
                   ) : scanResult && resultCopy ? (
                     <>
-                      {preview && (
+                      {displayPreview && (
                         <div className="mx-auto mb-5 w-full max-w-[560px]">
                           <div className="rounded-2xl border border-border/80 bg-muted/40 p-3">
                             <div className="relative mx-auto w-fit overflow-hidden rounded-xl bg-card">
                               <NextImage
-                                src={preview}
+                                src={displayPreview}
                                 alt="Uploaded scalp preview"
-                                width={scanResult.imageMeta?.width ?? 1024}
-                                height={scanResult.imageMeta?.height ?? 1024}
+                                width={overlayMeta?.width ?? 1024}
+                                height={overlayMeta?.height ?? 1024}
                                 unoptimized
                                 className="block max-h-[320px] w-auto max-w-full rounded-xl"
                               />

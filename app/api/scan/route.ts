@@ -256,6 +256,7 @@ type RoboflowPrediction = {
   class_name?: unknown;
   label?: unknown;
   confidence?: unknown;
+  parent_id?: unknown;
   x?: unknown;
   y?: unknown;
   width?: unknown;
@@ -369,6 +370,9 @@ function imageMetaFromCandidates(candidates: unknown[]): { width: number; height
 function detectionsFromPredictions(predictions: RoboflowPrediction[]): DetectionItem[] {
   const detections: DetectionItem[] = [];
   for (const p of predictions) {
+    const parentId = typeof p.parent_id === "string" ? p.parent_id : undefined;
+    if (parentId && parentId !== "image") continue;
+
     const label = normalizeDetectionLabel(p.class ?? p.class_name ?? p.label);
     const confidence = toFiniteNumber(p.confidence);
     const x = toFiniteNumber(p.x);
