@@ -6,11 +6,11 @@ import NextImage from "next/image";
 import { AlertTriangle, Camera, CheckCircle2, Loader2, Upload, RefreshCw, MapPin, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import ClinicFinder from "@/components/ClinicFinder";
-import ClinicContactForm from "@/components/site/ClinicContactForm";
 import { trackEvent } from "@/lib/data/events";
-import { getClinics, getSiteCopy } from "@/lib/data/content";
+import { getSiteCopy } from "@/lib/data/content";
 import type { DetectionItem, ScanConfidenceLevel, ScanErrorCode, ScanLabel } from "@/lib/data/types";
 
 type ScanResult = {
@@ -31,7 +31,6 @@ type ScanResult = {
 const MIN_SIDE_PX = 640;
 const TARGET_LONG_EDGE_PX = 1024;
 const SCAN_STEPS = [15, 33, 52, 70, 86, 95];
-const defaultClinic = getClinics("US")[0];
 const OVERLAY_UI_ENABLED = process.env.NEXT_PUBLIC_SCAN_OVERLAY_UI === "true";
 
 type Stage = "upload" | "confirmSize" | "scanning" | "result";
@@ -113,29 +112,23 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanErrorCode, setScanErrorCode] = useState<ScanErrorCode | null>(null);
-  const [showClinics, setShowClinics] = useState(false);
-  const [showContactForm, setShowContactForm] = useState(false);
+  const [showClinicsModal, setShowClinicsModal] = useState(false);
   const [retryCooldown, setRetryCooldown] = useState(0);
-  const [selectedClinicId, setSelectedClinicId] = useState<string | undefined>(defaultClinic?.id);
   const [showMarkers, setShowMarkers] = useState(true);
   const [markerFilter, setMarkerFilter] = useState<DetectionFilter>("all");
+  const [previewMeta, setPreviewMeta] = useState<{ width: number; height: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-
-  const selectedClinicName = useMemo(() => {
-    if (!selectedClinicId) return undefined;
-    return getClinics("ALL").find((c) => c.id === selectedClinicId)?.name;
-  }, [selectedClinicId]);
 
   const reset = useCallback(() => {
     setStage("upload");
     setProgress(0);
     setPreview(null);
+    setPreviewMeta(null);
     setPendingFile(null);
     setScanResult(null);
     setScanError(null);
     setScanErrorCode(null);
-    setShowClinics(false);
-    setShowContactForm(false);
+    setShowClinicsModal(false);
     setRetryCooldown(0);
     setShowMarkers(true);
     setMarkerFilter("all");
@@ -188,8 +181,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
       setScanError(null);
       setScanErrorCode(null);
       setScanResult(null);
-      setShowClinics(false);
-      setShowContactForm(false);
+      setShowClinicsModal(false);
       setShowMarkers(true);
       setMarkerFilter("all");
       await trackEvent({ event: "scan_start" });
@@ -223,9 +215,6 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
 
         const result = data as ScanResult;
         setScanResult(result);
-        const shouldShowClinicFlow = result.label === "lice" || result.label === "nits";
-        setShowClinics(shouldShowClinicFlow);
-        setShowContactForm(shouldShowClinicFlow);
 
         await trackEvent({
           event: "scan_result",
@@ -259,6 +248,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
         const reader = new FileReader();
         reader.onload = (event) => {
           setPreview(event.target?.result as string);
+          setPreviewMeta({ width: img.naturalWidth, height: img.naturalHeight });
           setPendingFile(file);
           if (minSide < MIN_SIDE_PX) {
             setStage("confirmSize");
@@ -271,6 +261,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
 
       img.onerror = () => {
         URL.revokeObjectURL(url);
+        setPreviewMeta(null);
         setScanError("Could not read image. Please try another file.");
         setScanErrorCode("BAD_REQUEST");
         setStage("result");
@@ -289,6 +280,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   }, [initialFile, onFileConsumed, processFile]);
 
   const resultCopy = scanResult ? nextStepCopy(scanResult.label) : null;
+  const overlayMeta = scanResult?.imageMeta ?? previewMeta;
   const allDetections = useMemo(() => scanResult?.detections ?? [], [scanResult?.detections]);
   const markerFilterEnabled = OVERLAY_UI_ENABLED && allDetections.length > 0;
   const filteredDetections = useMemo(
@@ -461,11 +453,11 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                               {OVERLAY_UI_ENABLED &&
                                 showMarkers &&
                                 filteredDetections.length > 0 &&
-                                scanResult.imageMeta?.width &&
-                                scanResult.imageMeta?.height && (
+                                overlayMeta?.width &&
+                                overlayMeta?.height && (
                                   <svg
                                     aria-hidden="true"
-                                    viewBox={`0 0 ${scanResult.imageMeta.width} ${scanResult.imageMeta.height}`}
+                                    viewBox={`0 0 ${overlayMeta.width} ${overlayMeta.height}`}
                                     className="pointer-events-none absolute inset-0 h-full w-full"
                                     preserveAspectRatio="none"
                                   >
@@ -618,7 +610,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                         className="rounded-full"
                         variant="outline"
                         onClick={async () => {
-                          setShowClinics(true);
+                          setShowClinicsModal(true);
                           await trackEvent({ event: "scan_clinic_cta_clicked", label: scanResult?.label });
                         }}
                       >
@@ -638,31 +630,29 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
               </Card>
             )}
           </div>
-
-          {stage === "result" && showContactForm && scanResult && (
-            <div className="mx-auto mt-8 max-w-2xl">
-              <ClinicContactForm
-                clinicId={selectedClinicId}
-                clinicName={selectedClinicName}
-                scanLabel={scanResult.label}
-                scanConfidenceLevel={scanResult.confidenceLevel}
-              />
-            </div>
-          )}
-
-          {stage === "result" && showClinics && (
-            <ClinicFinder
-              showHeader={false}
-              country="US"
-              onClinicSelect={(clinicId) => {
-                setSelectedClinicId(clinicId);
-                setShowContactForm(true);
-                document.getElementById("start-scan")?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-            />
-          )}
         </div>
       </div>
+
+      <Dialog open={showClinicsModal} onOpenChange={setShowClinicsModal}>
+        <DialogContent className="max-h-[85vh] max-w-6xl overflow-y-auto p-0">
+          <DialogHeader className="border-b border-border px-6 py-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <DialogTitle>Find a clinic near you</DialogTitle>
+                <DialogDescription>
+                  Search clinics by ZIP/postcode or city. You can contact any listed clinic directly.
+                </DialogDescription>
+              </div>
+              <Button asChild variant="outline" size="sm" className="rounded-full">
+                <Link href="/find-clinics?view=list&country=US">Open full page</Link>
+              </Button>
+            </div>
+          </DialogHeader>
+          <div className="px-2 pb-2 pt-0 md:px-4">
+            <ClinicFinder showHeader={false} country="US" />
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
