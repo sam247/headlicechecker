@@ -160,11 +160,11 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
         form.append("image", blob, "image.jpg");
 
         const res = await fetch("/api/scan", { method: "POST", body: form });
-        const data = (await res.json()) as ScanResult & { code?: ScanErrorCode; error?: string };
+        const data = (await res.json()) as ScanResult & { code?: ScanErrorCode; error?: string; detail?: string };
 
         if (!res.ok) {
           setScanErrorCode(data?.code ?? "UNKNOWN_ERROR");
-          setScanError(data?.error ?? "Scan failed.");
+          setScanError(data?.detail ? `${data?.error ?? "Scan failed."} (${data.detail})` : data?.error ?? "Scan failed.");
           if (data?.code === "NO_PROVIDER_CONFIGURED" || data?.code === "PROVIDER_ERROR") {
             setRetryCooldown(5);
           }

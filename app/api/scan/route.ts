@@ -297,6 +297,12 @@ export async function POST(request: NextRequest) {
     const outcome = await scanWithRoboflow(imageBase64);
     if (outcome.ok) return NextResponse.json(outcome.result);
     if (outcome.reason === "provider_error") {
+      console.error("[scan][roboflow_provider_error]", {
+        detail: outcome.detail,
+        workspace: ROBOFLOW_WORKSPACE,
+        workflowId: ROBOFLOW_WORKFLOW_ID,
+        hasModelId: !!ROBOFLOW_MODEL_ID,
+      });
       return NextResponse.json(
         { error: "Scan temporarily unavailable", code: "PROVIDER_ERROR", detail: outcome.detail },
         { status: 503 }
