@@ -67,8 +67,18 @@ export default function SiteFooter() {
         </div>
 
         <div className="mt-10 flex flex-col gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} NitNot. All rights reserved.</p>
-          <p>US-first clinic finder with UK support. Indicative AI screening only.</p>
+          <p>
+            © 2026 Head Lice Checker. All rights reserved. Site By{" "}
+            <a
+              href="https://betterranking.co.uk/#utm_source=footer&utm_medium=partner&utm_campaign=headlicechecker&utm_id=links"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-foreground"
+            >
+              Better Ranking
+            </a>
+          </p>
+          <p>Global Head Lice Clinic Finder. Indicative AI screening only</p>
         </div>
       </div>
     </footer>
