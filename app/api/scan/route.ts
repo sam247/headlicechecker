@@ -204,9 +204,10 @@ async function scanWithRoboflowModel(imageBase64: string): Promise<ProviderOutco
 }
 
 function mapRoboflowResult(data: Record<string, unknown>): ProviderOutcome {
-  const detections = extractRoboflowDetections(data);
+  const extracted = extractRoboflowDetectionBundle(data);
+  const detections = extracted.detections;
   const topDetection = detections[0];
-  const imageMeta = extractRoboflowImageMeta(data);
+  const imageMeta = extracted.imageMeta;
   const bestPrediction = extractBestRoboflowPrediction(data);
   const label = topDetection?.label ?? (bestPrediction?.label ? normalizeLabel(bestPrediction.label) : extractRoboflowLabel(data));
   const confidence =
@@ -219,6 +220,8 @@ function mapRoboflowResult(data: Record<string, unknown>): ProviderOutcome {
     detectionCount: detections.length,
     topLabel: topDetection?.label ?? label,
     topConfidence: confidence,
+    detectionSource: extracted.source,
+    imageMeta,
   });
 
   if (ROBOFLOW_DEBUG) {
@@ -230,6 +233,7 @@ function mapRoboflowResult(data: Record<string, unknown>): ProviderOutcome {
       fallbackLabel: extractRoboflowLabel(data),
       fallbackConfidence: extractRoboflowConfidence(data),
       imageMeta,
+      detectionSource: extracted.source,
       summary,
     });
   }
@@ -345,10 +349,25 @@ function collectRoboflowPredictions(data: Record<string, unknown>): RoboflowPred
   return combined;
 }
 
-function extractRoboflowDetections(data: Record<string, unknown>): DetectionItem[] {
-  const predictions = collectRoboflowPredictions(data);
-  const detections: DetectionItem[] = [];
+function asPredictionArray(value: unknown): RoboflowPrediction[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is RoboflowPrediction => isRecord(item));
+}
 
+function imageMetaFromCandidates(candidates: unknown[]): { width: number; height: number } | null {
+  for (const candidate of candidates) {
+    if (!isRecord(candidate)) continue;
+    const width = toFiniteNumber(candidate.width);
+    const height = toFiniteNumber(candidate.height);
+    if (width != null && height != null && width > 0 && height > 0) {
+      return { width, height };
+    }
+  }
+  return null;
+}
+
+function detectionsFromPredictions(predictions: RoboflowPrediction[]): DetectionItem[] {
+  const detections: DetectionItem[] = [];
   for (const p of predictions) {
     const label = normalizeDetectionLabel(p.class ?? p.class_name ?? p.label);
     const confidence = toFiniteNumber(p.confidence);
@@ -370,9 +389,93 @@ function extractRoboflowDetections(data: Record<string, unknown>): DetectionItem
       height,
     });
   }
-
   detections.sort((a, b) => b.confidence - a.confidence);
   return detections;
+}
+
+function extractFromRoot(
+  root: Record<string, unknown>,
+  sourcePrefix: string
+): { detections: DetectionItem[]; imageMeta: { width: number; height: number } | null; source: string } | null {
+  const outputV2 = isRecord(root.output_predictions_v2) ? (root.output_predictions_v2 as Record<string, unknown>) : null;
+  const outputV2PredsObj = outputV2 && isRecord(outputV2.predictions) ? (outputV2.predictions as Record<string, unknown>) : null;
+
+  // Primary workflow path: output_predictions_v2.predictions.predictions[]
+  if (outputV2PredsObj) {
+    const workflowPreds = asPredictionArray(outputV2PredsObj.predictions);
+    if (workflowPreds.length > 0) {
+      return {
+        detections: detectionsFromPredictions(workflowPreds),
+        imageMeta: imageMetaFromCandidates([outputV2PredsObj.image, outputV2?.image]),
+        source: `${sourcePrefix}.output_predictions_v2.predictions.predictions`,
+      };
+    }
+  }
+
+  // Alternate workflow path: output_predictions_v2.predictions[]
+  if (outputV2 && Array.isArray(outputV2.predictions)) {
+    const workflowPreds = asPredictionArray(outputV2.predictions);
+    if (workflowPreds.length > 0) {
+      return {
+        detections: detectionsFromPredictions(workflowPreds),
+        imageMeta: imageMetaFromCandidates([outputV2.image]),
+        source: `${sourcePrefix}.output_predictions_v2.predictions`,
+      };
+    }
+  }
+
+  // Direct model path: predictions[]
+  const directPreds = asPredictionArray(root.predictions);
+  if (directPreds.length > 0) {
+    return {
+      detections: detectionsFromPredictions(directPreds),
+      imageMeta: imageMetaFromCandidates([root.image]),
+      source: `${sourcePrefix}.predictions`,
+    };
+  }
+
+  // Nested direct path: predictions.predictions[]
+  const nestedPredsObj = isRecord(root.predictions) ? (root.predictions as Record<string, unknown>) : null;
+  if (nestedPredsObj) {
+    const nestedPreds = asPredictionArray(nestedPredsObj.predictions);
+    if (nestedPreds.length > 0) {
+      return {
+        detections: detectionsFromPredictions(nestedPreds),
+        imageMeta: imageMetaFromCandidates([nestedPredsObj.image]),
+        source: `${sourcePrefix}.predictions.predictions`,
+      };
+    }
+  }
+
+  return null;
+}
+
+function extractRoboflowDetectionBundle(data: Record<string, unknown>): {
+  detections: DetectionItem[];
+  imageMeta: { width: number; height: number } | null;
+  source: string;
+} {
+  const orderedRoots: Array<{ root: Record<string, unknown>; sourcePrefix: string }> = [];
+  if (isRecord(data.outputs)) orderedRoots.push({ root: data.outputs as Record<string, unknown>, sourcePrefix: "outputs" });
+  orderedRoots.push({ root: data, sourcePrefix: "data" });
+  if (isRecord(data.result)) orderedRoots.push({ root: data.result as Record<string, unknown>, sourcePrefix: "result" });
+
+  for (const candidate of orderedRoots) {
+    const extracted = extractFromRoot(candidate.root, candidate.sourcePrefix);
+    if (!extracted) continue;
+    if (extracted.detections.length > 0) return extracted;
+  }
+
+  // Fallback for unknown future response shapes.
+  return {
+    detections: extractRoboflowDetections(data),
+    imageMeta: extractRoboflowImageMeta(data),
+    source: "generic_recursive",
+  };
+}
+
+function extractRoboflowDetections(data: Record<string, unknown>): DetectionItem[] {
+  return detectionsFromPredictions(collectRoboflowPredictions(data));
 }
 
 function extractRoboflowImageMeta(data: Record<string, unknown>): { width: number; height: number } | null {
