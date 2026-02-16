@@ -114,3 +114,34 @@
     @apply text-base leading-relaxed text-muted-foreground md:text-lg;
   }
 }
+
+@keyframes scan-ring-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scan-legend-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.scan-ring-reveal {
+  transform-origin: center;
+  animation: scan-ring-pop 320ms ease-out both;
+}
+
+.scan-legend-reveal {
+  animation: scan-legend-fade 260ms ease-out both;
+}

@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import NextImage from "next/image";
-import { AlertTriangle, Camera, CheckCircle2, Loader2, Upload, RefreshCw, MapPin } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, Loader2, Upload, RefreshCw, MapPin, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -11,21 +11,31 @@ import ClinicFinder from "@/components/ClinicFinder";
 import ClinicContactForm from "@/components/site/ClinicContactForm";
 import { trackEvent } from "@/lib/data/events";
 import { getClinics, getSiteCopy } from "@/lib/data/content";
-import type { ScanConfidenceLevel, ScanErrorCode, ScanLabel } from "@/lib/data/types";
+import type { DetectionItem, ScanConfidenceLevel, ScanErrorCode, ScanLabel } from "@/lib/data/types";
 
 type ScanResult = {
   label: ScanLabel;
   confidence: number;
   explanation?: string;
   confidenceLevel?: ScanConfidenceLevel;
+  detections?: DetectionItem[];
+  imageMeta?: { width: number; height: number };
+  summary?: {
+    totalDetections: number;
+    liceCount: number;
+    nitsCount: number;
+    strongestLabel?: Exclude<ScanLabel, "clear">;
+  };
 };
 
 const MIN_SIDE_PX = 640;
 const TARGET_LONG_EDGE_PX = 1024;
 const SCAN_STEPS = [15, 33, 52, 70, 86, 95];
 const defaultClinic = getClinics("US")[0];
+const OVERLAY_UI_ENABLED = process.env.NEXT_PUBLIC_SCAN_OVERLAY_UI === "true";
 
 type Stage = "upload" | "confirmSize" | "scanning" | "result";
+type DetectionFilter = "all" | Exclude<ScanLabel, "clear">;
 
 interface PhotoCheckerProps {
   initialFile?: File | null;
@@ -61,6 +71,40 @@ function nextStepCopy(label: ScanLabel): { title: string; description: string; s
   };
 }
 
+function confidenceLabel(level?: ScanConfidenceLevel): string {
+  if (!level) return "Medium";
+  return level.charAt(0).toUpperCase() + level.slice(1);
+}
+
+function markerClasses(label: Exclude<ScanLabel, "clear">): { stroke: string; fill: string; badge: string } {
+  if (label === "lice") return { stroke: "stroke-[#e45a2a]", fill: "fill-[#e45a2a]/20", badge: "fill-[#e45a2a]" };
+  if (label === "nits") return { stroke: "stroke-[#d89a1a]", fill: "fill-[#d89a1a]/20", badge: "fill-[#d89a1a]" };
+  if (label === "dandruff") return { stroke: "stroke-[#2779c7]", fill: "fill-[#2779c7]/20", badge: "fill-[#2779c7]" };
+  return { stroke: "stroke-[#b13b62]", fill: "fill-[#b13b62]/20", badge: "fill-[#b13b62]" };
+}
+
+function nextStepsForLabel(label: ScanLabel): string[] {
+  if (label === "lice" || label === "nits") {
+    return [
+      "Arrange a professional confirmation as soon as possible.",
+      "Avoid sharing brushes, hats, and bedding until checked.",
+      "Check close household contacts in bright light.",
+    ];
+  }
+  if (label === "dandruff" || label === "psoriasis") {
+    return [
+      "Monitor symptoms over the next few days.",
+      "If irritation persists, speak with a GP or dermatologist.",
+      "Re-scan with a clearer close-up if symptoms change.",
+    ];
+  }
+  return [
+    "Continue routine scalp checks during the week.",
+    "If symptoms persist, re-scan with sharper focus near the roots.",
+    "Seek professional advice if itching or irritation continues.",
+  ];
+}
+
 export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheckerProps) {
   const [stage, setStage] = useState<Stage>("upload");
   const [progress, setProgress] = useState(0);
@@ -73,6 +117,8 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   const [showContactForm, setShowContactForm] = useState(false);
   const [retryCooldown, setRetryCooldown] = useState(0);
   const [selectedClinicId, setSelectedClinicId] = useState<string | undefined>(defaultClinic?.id);
+  const [showMarkers, setShowMarkers] = useState(true);
+  const [markerFilter, setMarkerFilter] = useState<DetectionFilter>("all");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const selectedClinicName = useMemo(() => {
@@ -91,6 +137,8 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
     setShowClinics(false);
     setShowContactForm(false);
     setRetryCooldown(0);
+    setShowMarkers(true);
+    setMarkerFilter("all");
   }, []);
 
   useEffect(() => {
@@ -142,6 +190,8 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
       setScanResult(null);
       setShowClinics(false);
       setShowContactForm(false);
+      setShowMarkers(true);
+      setMarkerFilter("all");
       await trackEvent({ event: "scan_start" });
 
       let index = 0;
@@ -181,6 +231,9 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
           event: "scan_result",
           label: result.label,
           confidenceLevel: result.confidenceLevel,
+          detectionCount: result.detections?.length,
+          topDetectionLabel: result.summary?.strongestLabel,
+          topDetectionConfidenceLevel: result.detections?.[0]?.confidenceLevel,
         });
       } catch (error) {
         setScanErrorCode("UNKNOWN_ERROR");
@@ -236,6 +289,23 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   }, [initialFile, onFileConsumed, processFile]);
 
   const resultCopy = scanResult ? nextStepCopy(scanResult.label) : null;
+  const allDetections = useMemo(() => scanResult?.detections ?? [], [scanResult?.detections]);
+  const markerFilterEnabled = OVERLAY_UI_ENABLED && allDetections.length > 0;
+  const filteredDetections = useMemo(
+    () => allDetections.filter((d) => markerFilter === "all" || d.label === markerFilter),
+    [allDetections, markerFilter]
+  );
+  const detectionCounts = useMemo(
+    () =>
+      allDetections.reduce(
+        (acc, d) => {
+          acc[d.label] += 1;
+          return acc;
+        },
+        { lice: 0, nits: 0, dandruff: 0, psoriasis: 0 }
+      ),
+    [allDetections]
+  );
 
   return (
     <section id="start-scan" className="section-shell bg-muted/40">
@@ -359,17 +429,6 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
             {stage === "result" && (
               <Card>
                 <CardContent className="p-6 text-center md:p-8">
-                  {preview && (
-                    <NextImage
-                      src={preview}
-                      alt="Uploaded preview"
-                      width={96}
-                      height={96}
-                      unoptimized
-                      className="mx-auto mb-5 h-24 w-24 rounded-xl object-cover"
-                    />
-                  )}
-
                   {scanError ? (
                     <>
                       <AlertTriangle className="mx-auto h-8 w-8 text-destructive" />
@@ -387,15 +446,154 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                     </>
                   ) : scanResult && resultCopy ? (
                     <>
+                      {preview && (
+                        <div className="mx-auto mb-5 w-full max-w-[560px]">
+                          <div className="rounded-2xl border border-border/80 bg-muted/40 p-3">
+                            <div className="relative overflow-hidden rounded-xl bg-card">
+                              <NextImage
+                                src={preview}
+                                alt="Uploaded scalp preview"
+                                width={scanResult.imageMeta?.width ?? 1024}
+                                height={scanResult.imageMeta?.height ?? 1024}
+                                unoptimized
+                                className="mx-auto max-h-[320px] w-full rounded-xl object-contain"
+                              />
+                              {OVERLAY_UI_ENABLED &&
+                                showMarkers &&
+                                filteredDetections.length > 0 &&
+                                scanResult.imageMeta?.width &&
+                                scanResult.imageMeta?.height && (
+                                  <svg
+                                    aria-hidden="true"
+                                    viewBox={`0 0 ${scanResult.imageMeta.width} ${scanResult.imageMeta.height}`}
+                                    className="pointer-events-none absolute inset-0 h-full w-full"
+                                    preserveAspectRatio="none"
+                                  >
+                                    {filteredDetections.map((det, index) => {
+                                      const marker = markerClasses(det.label);
+                                      return (
+                                        <g
+                                          key={det.id}
+                                          className={`scan-ring-reveal ${marker.stroke} ${marker.fill}`}
+                                          style={{ animationDelay: `${index * 100}ms` }}
+                                        >
+                                          <ellipse
+                                            cx={det.x}
+                                            cy={det.y}
+                                            rx={Math.max(det.width / 2, 8)}
+                                            ry={Math.max(det.height / 2, 8)}
+                                            strokeWidth={2}
+                                          />
+                                          <circle cx={det.x + det.width / 2} cy={det.y - det.height / 2} r={13} className={marker.badge} />
+                                          <text
+                                            x={det.x + det.width / 2}
+                                            y={det.y - det.height / 2 + 4}
+                                            textAnchor="middle"
+                                            className="fill-white text-[12px] font-bold"
+                                          >
+                                            {index + 1}
+                                          </text>
+                                        </g>
+                                      );
+                                    })}
+                                  </svg>
+                                )}
+                            </div>
+
+                            {markerFilterEnabled && (
+                              <>
+                                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="rounded-full"
+                                    onClick={async () => {
+                                      const next = !showMarkers;
+                                      setShowMarkers(next);
+                                      await trackEvent({ event: "scan_overlay_toggled", enabled: next });
+                                    }}
+                                  >
+                                    {showMarkers ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+                                    {showMarkers ? "Hide markers" : "Show markers"}
+                                  </Button>
+                                </div>
+                                <div className="scan-legend-reveal mt-3 flex flex-wrap items-center justify-center gap-2">
+                                  {(
+                                    [
+                                      { key: "all", label: "All", count: allDetections.length },
+                                      { key: "lice", label: "Lice", count: detectionCounts.lice },
+                                      { key: "nits", label: "Nits", count: detectionCounts.nits },
+                                      { key: "dandruff", label: "Dandruff", count: detectionCounts.dandruff },
+                                      { key: "psoriasis", label: "Psoriasis", count: detectionCounts.psoriasis },
+                                    ] as const
+                                  )
+                                    .filter((item) => item.key === "all" || item.count > 0)
+                                    .map((item) => (
+                                      <button
+                                        key={item.key}
+                                        type="button"
+                                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                                          markerFilter === item.key
+                                            ? "border-primary bg-primary/10 text-primary"
+                                            : "border-border bg-background text-muted-foreground hover:text-foreground"
+                                        }`}
+                                        onClick={async () => {
+                                          setMarkerFilter(item.key);
+                                          await trackEvent({ event: "scan_legend_filter_used", filter: item.key });
+                                        }}
+                                      >
+                                        {item.label} ({item.count})
+                                      </button>
+                                    ))}
+                                </div>
+                                <p className="sr-only">
+                                  Detected {allDetections.length} likely regions. Current filter: {markerFilter}.
+                                </p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
                         <CheckCircle2 className="h-6 w-6 text-primary" />
                       </div>
                       <h3 className="text-xl font-semibold">{resultCopy.title}</h3>
                       <p className="mt-2 text-sm text-muted-foreground">{scanResult.explanation ?? resultCopy.description}</p>
+
+                      {OVERLAY_UI_ENABLED && scanResult.summary && (
+                        <div className="mx-auto mt-4 grid max-w-lg gap-2 sm:grid-cols-2">
+                          <div className="rounded-xl border border-border bg-background px-3 py-2 text-left">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">What we found</p>
+                            <p className="mt-1 text-sm font-semibold">
+                              {scanResult.summary.totalDetections} likely indicator
+                              {scanResult.summary.totalDetections === 1 ? "" : "s"}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-border bg-background px-3 py-2 text-left">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Confidence</p>
+                            <p className="mt-1 text-sm font-semibold">{confidenceLabel(scanResult.confidenceLevel)}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="mx-auto mt-4 max-w-lg rounded-xl border border-border bg-background p-4 text-left">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">What to do now</p>
+                        <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                          {nextStepsForLabel(scanResult.label).map((tip) => (
+                            <li key={tip}>• {tip}</li>
+                          ))}
+                        </ul>
+                      </div>
+
                       {scanResult.confidenceLevel === "low" && (
-                        <p className="mt-3 text-sm text-amber-700">
-                          Confidence is low for this image. Re-upload a sharper close-up for a better signal.
-                        </p>
+                        <div className="mx-auto mt-4 max-w-lg rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-left text-sm text-amber-800">
+                          <p className="font-semibold">Low confidence image quality tip</p>
+                          <p className="mt-1">
+                            Re-upload a sharper close-up in bright light, with hair parted to show the roots clearly.
+                          </p>
+                        </div>
                       )}
                     </>
                   ) : null}
@@ -416,7 +614,14 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                       </Button>
                     )}
                     {(scanResult?.label === "lice" || scanResult?.label === "nits") && (
-                      <Button className="rounded-full" variant="outline" onClick={() => setShowClinics(true)}>
+                      <Button
+                        className="rounded-full"
+                        variant="outline"
+                        onClick={async () => {
+                          setShowClinics(true);
+                          await trackEvent({ event: "scan_clinic_cta_clicked", label: scanResult?.label });
+                        }}
+                      >
                         <MapPin className="mr-2 h-4 w-4" />
                         View clinics
                       </Button>

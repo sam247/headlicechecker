@@ -6,6 +6,25 @@ export type ScanResult = {
   confidence: number;
   explanation?: string;
   confidenceLevel?: "high" | "medium" | "low";
+  detections?: DetectionItem[];
+  imageMeta?: { width: number; height: number };
+  summary?: {
+    totalDetections: number;
+    liceCount: number;
+    nitsCount: number;
+    strongestLabel?: "lice" | "nits" | "dandruff" | "psoriasis";
+  };
+};
+
+type DetectionItem = {
+  id: string;
+  label: "lice" | "nits" | "dandruff" | "psoriasis";
+  confidence: number;
+  confidenceLevel: "high" | "medium" | "low";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 };
 
 type ProviderOutcome =
@@ -23,6 +42,7 @@ const ROBOFLOW_MODEL_ID = process.env.ROBOFLOW_MODEL_ID;
 const ROBOFLOW_BASE = "https://detect.roboflow.com";
 const ROBOFLOW_SERVERLESS_BASE = "https://serverless.roboflow.com";
 const ROBOFLOW_DEBUG = process.env.ROBOFLOW_DEBUG === "true";
+const ROBOFLOW_MIN_DETECTION_CONFIDENCE = 0.2;
 
 const VALID_LABELS: ScanResult["label"][] = ["lice", "nits", "dandruff", "psoriasis", "clear"];
 
@@ -44,6 +64,12 @@ function parseConfidenceLevel(s: unknown): "high" | "medium" | "low" {
   const v = s.toLowerCase().trim();
   if (v === "high" || v === "medium" || v === "low") return v;
   return "medium";
+}
+
+function confidenceLevelFromConfidence(v: number): "high" | "medium" | "low" {
+  if (v >= 0.8) return "high";
+  if (v >= 0.55) return "medium";
+  return "low";
 }
 
 const STRUCTURED_PROMPT = `You are a cautious assistant. This image shows hair or scalp (possibly close-up).
@@ -178,18 +204,33 @@ async function scanWithRoboflowModel(imageBase64: string): Promise<ProviderOutco
 }
 
 function mapRoboflowResult(data: Record<string, unknown>): ProviderOutcome {
+  const detections = extractRoboflowDetections(data);
+  const topDetection = detections[0];
+  const imageMeta = extractRoboflowImageMeta(data);
   const bestPrediction = extractBestRoboflowPrediction(data);
-  const label = bestPrediction?.label ? normalizeLabel(bestPrediction.label) : extractRoboflowLabel(data);
+  const label = topDetection?.label ?? (bestPrediction?.label ? normalizeLabel(bestPrediction.label) : extractRoboflowLabel(data));
   const confidence =
-    typeof bestPrediction?.confidence === "number" ? bestPrediction.confidence : extractRoboflowConfidence(data);
+    topDetection?.confidence ??
+    (typeof bestPrediction?.confidence === "number" ? bestPrediction.confidence : extractRoboflowConfidence(data));
+  const confidenceLevel = confidenceLevelFromConfidence(typeof confidence === "number" ? confidence : 0.85);
+  const summary = buildDetectionSummary(detections);
+
+  console.info("[scan][roboflow_summary]", {
+    detectionCount: detections.length,
+    topLabel: topDetection?.label ?? label,
+    topConfidence: confidence,
+  });
 
   if (ROBOFLOW_DEBUG) {
     console.log("[scan][roboflow_mapped_result]", {
       bestPrediction,
+      topDetection,
       mappedLabel: label,
       mappedConfidence: confidence,
       fallbackLabel: extractRoboflowLabel(data),
       fallbackConfidence: extractRoboflowConfidence(data),
+      imageMeta,
+      summary,
     });
   }
 
@@ -198,6 +239,10 @@ function mapRoboflowResult(data: Record<string, unknown>): ProviderOutcome {
     result: {
       label,
       confidence: typeof confidence === "number" ? confidence : 0.85,
+      confidenceLevel,
+      detections,
+      imageMeta: imageMeta ?? undefined,
+      summary,
     },
   };
 }
@@ -207,6 +252,10 @@ type RoboflowPrediction = {
   class_name?: unknown;
   label?: unknown;
   confidence?: unknown;
+  x?: unknown;
+  y?: unknown;
+  width?: unknown;
+  height?: unknown;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -242,6 +291,37 @@ function pushPredictionArray(
 }
 
 function extractBestRoboflowPrediction(data: Record<string, unknown>): { label?: string; confidence?: number } | null {
+  const predictions = collectRoboflowPredictions(data);
+  let best: { label?: string; confidence?: number } | null = null;
+  for (const p of predictions) {
+    const labelCandidate =
+      typeof p.class === "string"
+        ? p.class
+        : typeof p.class_name === "string"
+          ? p.class_name
+          : typeof p.label === "string"
+            ? p.label
+            : undefined;
+    const conf = typeof p.confidence === "number" ? p.confidence : undefined;
+    if (!labelCandidate && conf == null) continue;
+    if (!best || (conf ?? -Infinity) > (best.confidence ?? -Infinity)) {
+      best = { label: labelCandidate, confidence: conf };
+    }
+  }
+  return best;
+}
+
+function normalizeDetectionLabel(value: unknown): DetectionItem["label"] | null {
+  const normalized = normalizeLabel(value);
+  if (normalized === "clear") return null;
+  return normalized;
+}
+
+function toFiniteNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function collectRoboflowPredictions(data: Record<string, unknown>): RoboflowPrediction[] {
   const roots: unknown[] = [data];
   if ("outputs" in data) roots.push((data as Record<string, unknown>).outputs);
   if ("result" in data) roots.push((data as Record<string, unknown>).result);
@@ -252,33 +332,90 @@ function extractBestRoboflowPrediction(data: Record<string, unknown>): { label?:
     pushPredictionArray(root, predictionArrays, seen);
   }
 
-  let best: { label?: string; confidence?: number } | null = null;
+  const combined: RoboflowPrediction[] = [];
+  const fingerprints = new Set<string>();
   for (const arr of predictionArrays) {
     for (const p of arr) {
-      const labelCandidate =
-        typeof p.class === "string"
-          ? p.class
-          : typeof p.class_name === "string"
-            ? p.class_name
-            : typeof p.label === "string"
-              ? p.label
-              : undefined;
-      const conf = typeof p.confidence === "number" ? p.confidence : undefined;
+      const fingerprint = `${String(p.class)}|${String(p.class_name)}|${String(p.label)}|${String(p.confidence)}|${String(p.x)}|${String(p.y)}|${String(p.width)}|${String(p.height)}`;
+      if (fingerprints.has(fingerprint)) continue;
+      fingerprints.add(fingerprint);
+      combined.push(p);
+    }
+  }
+  return combined;
+}
 
-      if (!labelCandidate && conf == null) continue;
-      if (!best) {
-        best = { label: labelCandidate, confidence: conf };
-        continue;
+function extractRoboflowDetections(data: Record<string, unknown>): DetectionItem[] {
+  const predictions = collectRoboflowPredictions(data);
+  const detections: DetectionItem[] = [];
+
+  for (const p of predictions) {
+    const label = normalizeDetectionLabel(p.class ?? p.class_name ?? p.label);
+    const confidence = toFiniteNumber(p.confidence);
+    const x = toFiniteNumber(p.x);
+    const y = toFiniteNumber(p.y);
+    const width = toFiniteNumber(p.width);
+    const height = toFiniteNumber(p.height);
+    if (!label || confidence == null || x == null || y == null || width == null || height == null) continue;
+    if (confidence < ROBOFLOW_MIN_DETECTION_CONFIDENCE) continue;
+
+    detections.push({
+      id: `det-${detections.length + 1}`,
+      label,
+      confidence,
+      confidenceLevel: confidenceLevelFromConfidence(confidence),
+      x,
+      y,
+      width,
+      height,
+    });
+  }
+
+  detections.sort((a, b) => b.confidence - a.confidence);
+  return detections;
+}
+
+function extractRoboflowImageMeta(data: Record<string, unknown>): { width: number; height: number } | null {
+  const roots: unknown[] = [data];
+  if ("outputs" in data) roots.push((data as Record<string, unknown>).outputs);
+  if ("result" in data) roots.push((data as Record<string, unknown>).result);
+
+  for (const root of roots) {
+    if (!isRecord(root)) continue;
+    const imageCandidates: unknown[] = [];
+    if (isRecord(root.image)) imageCandidates.push(root.image);
+    if (isRecord(root.predictions) && isRecord(root.predictions.image)) imageCandidates.push(root.predictions.image);
+    if (isRecord(root.output_predictions_v2)) {
+      const v2 = root.output_predictions_v2 as Record<string, unknown>;
+      if (isRecord(v2.image)) imageCandidates.push(v2.image);
+      if (isRecord(v2.predictions) && isRecord((v2.predictions as Record<string, unknown>).image)) {
+        imageCandidates.push((v2.predictions as Record<string, unknown>).image);
       }
-      const current = best.confidence ?? -Infinity;
-      const candidate = conf ?? -Infinity;
-      if (candidate > current) {
-        best = { label: labelCandidate, confidence: conf };
+    }
+
+    for (const candidate of imageCandidates) {
+      if (!isRecord(candidate)) continue;
+      const width = toFiniteNumber(candidate.width);
+      const height = toFiniteNumber(candidate.height);
+      if (width != null && height != null && width > 0 && height > 0) {
+        return { width, height };
       }
     }
   }
 
-  return best;
+  return null;
+}
+
+function buildDetectionSummary(detections: DetectionItem[]): ScanResult["summary"] | undefined {
+  if (detections.length === 0) return undefined;
+  const liceCount = detections.filter((d) => d.label === "lice").length;
+  const nitsCount = detections.filter((d) => d.label === "nits").length;
+  return {
+    totalDetections: detections.length,
+    liceCount,
+    nitsCount,
+    strongestLabel: detections[0]?.label,
+  };
 }
 
 function debugRoboflowWorkflowShape(data: Record<string, unknown>): void {
@@ -376,12 +513,14 @@ async function scanWithDetectionApi(imageBase64: string): Promise<ProviderOutcom
     }
 
     const data = (await res.json()) as { label?: unknown; confidence?: number; explanation?: string };
+    const confidence = typeof data.confidence === "number" ? data.confidence : 0.85;
     return {
       ok: true,
       result: {
         label: normalizeLabel(data.label),
-        confidence: typeof data.confidence === "number" ? data.confidence : 0.85,
+        confidence,
         explanation: typeof data.explanation === "string" ? data.explanation : undefined,
+        confidenceLevel: confidenceLevelFromConfidence(confidence),
       },
     };
   } catch (e) {

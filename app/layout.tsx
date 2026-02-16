@@ -20,11 +20,16 @@ export const metadata: Metadata = {
     title: "NitNot | Head Lice Checker and Clinic Finder",
     description: "Fast, private head lice screening with clear next steps and clinic support.",
     type: "website",
-    images: [{ url: "/images/logo_colour.png" }],
+    images: [{ url: "/logo_new.png" }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["/images/logo_colour.png"],
+    images: ["/logo_new.png"],
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
 };
 

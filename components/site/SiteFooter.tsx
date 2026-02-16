@@ -40,11 +40,11 @@ export default function SiteFooter() {
         <div className="grid gap-10 md:grid-cols-4">
           <div>
             <Image
-              src="/images/logo_colour.png"
+              src="/logo_new.png"
               alt="NitNot"
-              width={112}
-              height={32}
-              className="mb-4 h-8 w-auto"
+              width={152}
+              height={44}
+              className="mb-4 h-9 w-auto"
             />
             <p className="text-sm text-muted-foreground">{copy.tagline}</p>
             <p className="mt-3 text-xs text-muted-foreground">{copy.medicalDisclaimer}</p>

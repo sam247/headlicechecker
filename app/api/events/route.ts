@@ -16,6 +16,33 @@ const scanResultSchema = z
     timestamp: z.string().optional(),
     label: z.enum(["lice", "nits", "dandruff", "psoriasis", "clear"]),
     confidenceLevel: z.enum(["high", "medium", "low"]).optional(),
+    detectionCount: z.number().int().min(0).optional(),
+    topDetectionLabel: z.enum(["lice", "nits", "dandruff", "psoriasis"]).optional(),
+    topDetectionConfidenceLevel: z.enum(["high", "medium", "low"]).optional(),
+  })
+  .strict();
+
+const overlayToggleSchema = z
+  .object({
+    event: z.literal("scan_overlay_toggled"),
+    timestamp: z.string().optional(),
+    enabled: z.boolean(),
+  })
+  .strict();
+
+const legendFilterSchema = z
+  .object({
+    event: z.literal("scan_legend_filter_used"),
+    timestamp: z.string().optional(),
+    filter: z.enum(["all", "lice", "nits", "dandruff", "psoriasis", "clear"]),
+  })
+  .strict();
+
+const clinicCtaSchema = z
+  .object({
+    event: z.literal("scan_clinic_cta_clicked"),
+    timestamp: z.string().optional(),
+    label: z.enum(["lice", "nits", "dandruff", "psoriasis", "clear"]).optional(),
   })
   .strict();
 
@@ -27,12 +54,22 @@ const clinicSubmitSchema = z
   })
   .strict();
 
-const schema = z.discriminatedUnion("event", [scanStartSchema, scanResultSchema, clinicSubmitSchema]);
+const schema = z.discriminatedUnion("event", [
+  scanStartSchema,
+  scanResultSchema,
+  clinicSubmitSchema,
+  overlayToggleSchema,
+  legendFilterSchema,
+  clinicCtaSchema,
+]);
 
 const counters: Record<string, number> = {
   scan_start: 0,
   scan_result: 0,
   clinic_contact_submit: 0,
+  scan_overlay_toggled: 0,
+  scan_legend_filter_used: 0,
+  scan_clinic_cta_clicked: 0,
 };
 
 export async function POST(request: NextRequest) {

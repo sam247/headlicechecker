@@ -2,6 +2,17 @@ export type ScanLabel = "lice" | "nits" | "dandruff" | "psoriasis" | "clear";
 
 export type ScanConfidenceLevel = "high" | "medium" | "low";
 
+export interface DetectionItem {
+  id: string;
+  label: Exclude<ScanLabel, "clear">;
+  confidence: number;
+  confidenceLevel: ScanConfidenceLevel;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export type ScanErrorCode =
   | "PROVIDER_ERROR"
   | "NO_PROVIDER_CONFIGURED"
