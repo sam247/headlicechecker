@@ -17,10 +17,13 @@ interface ClinicFinderProps {
   onClinicSelect?: (clinicId: string) => void;
   mode?: "page" | "modal";
   hideDirectContact?: boolean;
+  hideClinicContactDetails?: boolean;
   onContactClinic?: (clinicId: string) => void;
 }
 
 const initialClinics = getClinics("ALL");
+
+const MAP_DELTA = 0.02;
 
 function buildMapSrc(clinics: Clinic[]): string {
   if (clinics.length === 0) {
@@ -37,12 +40,21 @@ function buildMapSrc(clinics: Clinic[]): string {
   return `https://www.openstreetmap.org/export/embed.html?bbox=${minLng},${minLat},${maxLng},${maxLat}&layer=mapnik`;
 }
 
+function buildMapSrcForClinic(clinic: Clinic): string {
+  const minLng = clinic.lng - MAP_DELTA;
+  const maxLng = clinic.lng + MAP_DELTA;
+  const minLat = clinic.lat - MAP_DELTA;
+  const maxLat = clinic.lat + MAP_DELTA;
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${minLng},${minLat},${maxLng},${maxLat}&layer=mapnik`;
+}
+
 export default function ClinicFinder({
   showHeader = true,
-  country = "US",
+  country = "ALL",
   onClinicSelect,
   mode = "page",
   hideDirectContact = false,
+  hideClinicContactDetails = false,
   onContactClinic,
 }: ClinicFinderProps) {
   const searchParams = useSearchParams();
@@ -57,6 +69,7 @@ export default function ClinicFinder({
     isModalMode ? country : ((searchParams.get("country") as "US" | "UK" | "ALL") ?? country)
   );
   const [copiedClinicId, setCopiedClinicId] = useState<string | null>(null);
+  const [mapFocusClinicId, setMapFocusClinicId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isModalMode) return;
@@ -72,6 +85,10 @@ export default function ClinicFinder({
       router.replace(`${pathname}?${next}`, { scroll: false });
     }
   }, [isModalMode, query, showMap, selectedCountry, pathname, router, searchParams]);
+
+  useEffect(() => {
+    setMapFocusClinicId(null);
+  }, [query, selectedCountry]);
 
   const clinics = useMemo(() => {
     const source =
@@ -93,7 +110,13 @@ export default function ClinicFinder({
     return sortClinicsByNearest(filtered, origin);
   }, [query, selectedCountry]);
 
-  const mapSrc = useMemo(() => buildMapSrc(clinics), [clinics]);
+  const mapSrc = useMemo(() => {
+    if (mapFocusClinicId) {
+      const focused = clinics.find((c) => c.id === mapFocusClinicId);
+      if (focused) return buildMapSrcForClinic(focused);
+    }
+    return buildMapSrc(clinics);
+  }, [clinics, mapFocusClinicId]);
   const origin = useMemo(() => findOriginFromQuery(initialClinics, query), [query]);
 
   const handleCopy = async (clinic: Clinic) => {
@@ -126,9 +149,9 @@ export default function ClinicFinder({
           className="h-10 rounded-md border border-input bg-background px-3 text-sm"
           aria-label="Choose country scope"
         >
-          <option value="US">US clinics</option>
-          <option value="UK">UK clinics</option>
-          <option value="ALL">US + UK</option>
+          <option value="UK">UK</option>
+          <option value="US">US</option>
+          <option value="ALL">Global</option>
         </select>
 
         <Button variant="outline" className="rounded-full" onClick={() => setQuery("")}>
@@ -174,23 +197,35 @@ export default function ClinicFinder({
               const miles = origin ? Math.round(distanceMiles(origin.lat, origin.lng, clinic.lat, clinic.lng)) : null;
 
               return (
-                <Card key={clinic.id} className="border-border/80">
+                <Card
+                  key={clinic.id}
+                  className="cursor-pointer border-border/80 transition-colors hover:border-primary/50"
+                  onClick={() => setMapFocusClinicId(clinic.id)}
+                >
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-3">
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                           {clinic.country} · {clinic.region}
                         </p>
                         <h3 className="mt-1 text-lg font-semibold text-foreground">{clinic.name}</h3>
                         <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                          <p className="flex items-start gap-2">
-                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                            <span>
-                              {clinic.address1}
-                              {clinic.address2 ? `, ${clinic.address2}` : ""}, {clinic.city} {clinic.postcode}
-                            </span>
-                          </p>
-                          {!hideDirectContact && (
+                          {!(hideClinicContactDetails || hideDirectContact) && (
+                            <p className="flex items-start gap-2">
+                              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                              <span>
+                                {clinic.address1}
+                                {clinic.address2 ? `, ${clinic.address2}` : ""}, {clinic.city} {clinic.postcode}
+                              </span>
+                            </p>
+                          )}
+                          {(hideClinicContactDetails || hideDirectContact) && (
+                            <p className="flex items-start gap-2">
+                              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                              <span>{clinic.city} {clinic.postcode}</span>
+                            </p>
+                          )}
+                          {!hideDirectContact && !hideClinicContactDetails && (
                             <p className="flex items-center gap-2">
                               <Phone className="h-4 w-4 shrink-0 text-primary" />
                               <a href={`tel:${clinic.phone}`} className="hover:text-foreground">
@@ -198,7 +233,7 @@ export default function ClinicFinder({
                               </a>
                             </p>
                           )}
-                          {!hideDirectContact && clinic.email && (
+                          {!hideDirectContact && !hideClinicContactDetails && clinic.email && (
                             <p className="flex items-center gap-2">
                               <Mail className="h-4 w-4 shrink-0 text-primary" />
                               <a href={`mailto:${clinic.email}`} className="hover:text-foreground">
@@ -210,7 +245,10 @@ export default function ClinicFinder({
                         </div>
                       </div>
 
-                      <div className="flex shrink-0 flex-col gap-2">
+                      <div
+                        className="flex shrink-0 flex-col gap-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         {hideDirectContact ? (
                           <Button
                             size="sm"
@@ -234,27 +272,12 @@ export default function ClinicFinder({
                           </Button>
                         )}
 
-                        {!hideDirectContact && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="rounded-full"
-                            onClick={() => {
-                              if (onClinicSelect) {
-                                onClinicSelect(clinic.id);
-                                return;
-                              }
-                              router.push(`/contact?clinicId=${encodeURIComponent(clinic.id)}`);
-                            }}
-                          >
-                            Request callback
-                          </Button>
-                        )}
-
                         <Button asChild size="sm" variant="outline" className="rounded-full">
                           <a
                             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                              `${clinic.address1}, ${clinic.city} ${clinic.postcode}`
+                              hideClinicContactDetails
+                                ? `${clinic.city} ${clinic.postcode}`
+                                : `${clinic.address1}, ${clinic.city} ${clinic.postcode}`
                             )}`}
                             target="_blank"
                             rel="noreferrer"
@@ -263,7 +286,7 @@ export default function ClinicFinder({
                           </a>
                         </Button>
 
-                        {!hideDirectContact && (
+                        {!hideDirectContact && !hideClinicContactDetails && (
                           <Button size="sm" variant="ghost" className="rounded-full" onClick={() => handleCopy(clinic)}>
                             {copiedClinicId === clinic.id ? (
                               <>

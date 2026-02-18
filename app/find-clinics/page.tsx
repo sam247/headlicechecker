@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import ClinicFinder from "@/components/ClinicFinder";
+import FindClinicsSection from "@/components/site/FindClinicsSection";
 import ClinicContactForm from "@/components/site/ClinicContactForm";
 import { Card, CardContent } from "@/components/ui/card";
 import { getClinics, getSiteCopy } from "@/lib/data/content";
@@ -46,7 +46,7 @@ export default function FindClinicsPage({ searchParams }: FindClinicsPageProps) 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
-      <ClinicFinder country="US" />
+      <FindClinicsSection clinics={clinics} />
 
       <section className="section-shell pt-8">
         <div className="container mx-auto max-w-4xl px-4">
