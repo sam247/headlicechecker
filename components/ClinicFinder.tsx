@@ -102,9 +102,7 @@ export default function ClinicFinder({
       setIsGeocoding(true);
       try {
         const params = new URLSearchParams({ q: trimmed });
-        if (selectedCountry === "UK" || selectedCountry === "US") {
-          params.set("country", selectedCountry);
-        }
+        params.set("country", selectedCountry);
         const res = await fetch(`/api/geocode?${params.toString()}`);
         const data = (await res.json()) as { lat?: number; lng?: number; error?: string };
         if (res.ok && typeof data.lat === "number" && typeof data.lng === "number") {
@@ -226,20 +224,18 @@ export default function ClinicFinder({
           <option value="ALL">Global</option>
         </select>
 
-        {query.trim().length >= 2 && (
-          <select
-            value={radiusMiles}
-            onChange={(e) => setRadiusMiles(Number(e.target.value) as (typeof radiusOptions)[number])}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-            aria-label="Within miles"
-          >
-            {radiusOptions.map((m) => (
-              <option key={m} value={m}>
-                Within {m} miles
-              </option>
-            ))}
-          </select>
-        )}
+        <select
+          value={radiusMiles}
+          onChange={(e) => setRadiusMiles(Number(e.target.value) as (typeof radiusOptions)[number])}
+          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          aria-label="Within miles"
+        >
+          {radiusOptions.map((m) => (
+            <option key={m} value={m}>
+              Within {m} miles
+            </option>
+          ))}
+        </select>
 
         <Button variant="outline" className="rounded-full" onClick={() => setQuery("")}>
           Reset search
@@ -317,14 +313,12 @@ export default function ClinicFinder({
                                   <>
                                     {clinic.address1}
                                     {clinic.address2 ? `, ${clinic.address2}` : ""}, {clinic.city}
-                                    <br />
-                                    {clinic.postcode}
+                                    <span className="block">{clinic.postcode}</span>
                                   </>
                                 ) : (
                                   <>
-                                    {clinic.city}
-                                    <br />
-                                    {clinic.postcode}
+                                    <span className="block">{clinic.city}</span>
+                                    <span className="block">{clinic.postcode}</span>
                                   </>
                                 )}
                               </span>
@@ -334,9 +328,8 @@ export default function ClinicFinder({
                             <p className="flex items-start gap-2">
                               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                               <span className="block">
-                                {clinic.city}
-                                <br />
-                                {clinic.postcode}
+                                <span className="block">{clinic.city}</span>
+                                <span className="block">{clinic.postcode}</span>
                               </span>
                             </p>
                           )}

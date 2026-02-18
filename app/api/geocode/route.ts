@@ -22,9 +22,10 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Mapbox uses ISO 3166-1 alpha-2; bias results to selected country for partial postcodes (e.g. hp1 -> UK)
+  // Mapbox uses ISO 3166-1 alpha-2; bias so partial postcodes (e.g. hp) resolve correctly
+  // When Global/ALL, restrict to GB,US so "hp" resolves to UK not US
   const countryCode =
-    countryParam === "UK" ? "GB" : countryParam === "US" ? "US" : null;
+    countryParam === "UK" ? "GB" : countryParam === "US" ? "US" : countryParam === "ALL" || !countryParam ? "GB,US" : null;
   const countryQ = countryCode ? `&country=${countryCode}` : "";
 
   const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&limit=1&types=postcode,place,address${countryQ}`;
