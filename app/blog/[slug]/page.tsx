@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,6 +37,7 @@ export function generateMetadata({ params }: BlogDetailPageProps): Metadata {
 }
 
 const relatedGuides = [
+  { href: "/", label: "Head lice check" },
   { href: "/head-lice-symptoms", label: "Head Lice Symptoms" },
   { href: "/nits-vs-dandruff", label: "Nits vs Dandruff" },
   { href: "/how-it-works", label: "How It Works" },
@@ -64,10 +66,33 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
         <h1 className="mt-2 text-3xl font-bold md:text-4xl">{post.title}</h1>
         <p className="mt-3 text-base text-muted-foreground">{post.description}</p>
 
-        <div className="mt-8 space-y-4 text-base leading-7 text-foreground">
-          {post.body.map((paragraph, index) => (
-            <p key={`${post.slug}-${index}`}>{paragraph}</p>
-          ))}
+        {post.image && (
+          <figure className="mt-8">
+            <Image
+              src={post.image}
+              alt=""
+              width={1200}
+              height={630}
+              className="rounded-lg border object-cover w-full h-auto"
+              priority
+            />
+          </figure>
+        )}
+
+        <div className="mt-8 space-y-4 text-base leading-7 text-foreground prose prose-neutral max-w-none">
+          {post.body.map((block, index) => {
+            const key = `${post.slug}-${index}`;
+            if (block.startsWith("## ")) {
+              return (
+                <h2 key={key} className="mt-8 mb-3 text-xl font-semibold md:text-2xl scroll-mt-6">
+                  {block.slice(3)}
+                </h2>
+              );
+            }
+            return (
+              <p key={key} dangerouslySetInnerHTML={{ __html: block }} />
+            );
+          })}
         </div>
 
         <Card className="mt-8">

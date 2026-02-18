@@ -56,6 +56,7 @@ export interface BlogPost {
   keywords: string[];
   isPublished: boolean;
   body: string[];
+  image?: string;
 }
 
 export interface SiteCopy {

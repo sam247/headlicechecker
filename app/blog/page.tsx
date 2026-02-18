@@ -36,6 +36,9 @@ export default function BlogPage() {
         </p>
 
         <div className="mt-6 flex flex-wrap gap-4 text-sm">
+          <Link href="/blog/head-lice-treatment-for-adults" className="text-primary hover:underline">
+            Head lice treatment for adults
+          </Link>
           <Link href="/head-lice-symptoms" className="text-primary hover:underline">
             Head lice symptoms
           </Link>

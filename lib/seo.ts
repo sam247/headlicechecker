@@ -85,7 +85,7 @@ export function faqJsonLd(items: Array<{ question: string; answer: string }>) {
 }
 
 export function articleJsonLd(post: BlogPost) {
-  return {
+  const base: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: post.title,
@@ -107,6 +107,10 @@ export function articleJsonLd(post: BlogPost) {
       },
     },
   };
+  if (post.image) {
+    base.image = canonical(post.image);
+  }
+  return base;
 }
 
 export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>) {
