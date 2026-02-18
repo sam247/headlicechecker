@@ -97,6 +97,12 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
 
       <div className="container mx-auto max-w-4xl px-4">
+        <Link
+          href="/blog"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4"
+        >
+          <span aria-hidden>←</span> Back to Blog
+        </Link>
         <p className="text-xs text-muted-foreground">
           {formatDate(post.publishedAt)} · Updated {formatDate(post.updatedAt)} · {post.readMinutes} min read
         </p>
