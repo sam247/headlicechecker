@@ -46,10 +46,10 @@ export default function FindClinicsPage({ searchParams }: FindClinicsPageProps) 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
-      <FindClinicsSection clinics={clinics} />
+      <div className="mx-auto max-w-6xl px-4">
+        <FindClinicsSection clinics={clinics} containerClassName="max-w-6xl" />
 
-      <section className="section-shell pt-8">
-        <div className="container mx-auto max-w-4xl px-4">
+        <section className="section-shell pt-8">
           <Card>
             <CardContent className="p-6">
               <h2 className="text-2xl font-bold">Before contacting a clinic</h2>
@@ -70,75 +70,13 @@ export default function FindClinicsPage({ searchParams }: FindClinicsPageProps) 
             </CardContent>
           </Card>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold">How to choose a clinic</h3>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  Compare location, response speed, and appointment availability. Families usually get the best outcome by prioritizing earliest suitable confirmation rather than waiting for a perfect slot.
-                </p>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  Include symptom duration and scan context in your enquiry so clinic teams can triage efficiently.
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold">What happens after submission</h3>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  After you submit, your request is routed through our contact pipeline with a reference ID. Keep that reference for follow-up if you need to resend or update details.
-                </p>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  If symptoms are persistent and you do not receive a timely response, select another nearby clinic and submit again.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold">Planning before appointments</h3>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  If you are booking for multiple children, group checks by household and document what was seen in each scalp zone. This reduces repeated calls and helps clinics understand urgency across contacts.
-                </p>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  Bring practical details to follow-up: symptom duration, recent school exposure notices, and whether attached particles were observed repeatedly near the scalp.
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold">Choosing between nearby options</h3>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  Start with practical criteria first: travel time, earliest available slot, and response reliability. Families often get faster resolution by choosing a nearby provider with clear availability rather than waiting for a specific clinic brand.
-                </p>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  Location guides can also help you expand the search area if your first results are limited in peak periods.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="mt-4">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold">Clinic finder best-practice checklist</h3>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-muted-foreground">
-                <li>Run a clear scan before submitting contact requests so your enquiry includes better context.</li>
-                <li>Submit one complete enquiry per preferred clinic instead of fragmented messages across channels.</li>
-                <li>Track your reference ID for follow-up visibility and faster support if details need updating.</li>
-                <li>Escalate quickly when symptoms persist or spread, even if earlier checks were inconclusive.</li>
-              </ul>
-            </CardContent>
-          </Card>
-
           <div className="mt-8">
             <ClinicContactForm clinicId={selectedClinic?.id} clinicName={selectedClinic?.name} />
           </div>
 
           <p className="mt-4 text-xs text-muted-foreground">{copy.medicalDisclaimer}</p>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

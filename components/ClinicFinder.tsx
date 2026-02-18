@@ -12,6 +12,7 @@ import { findOriginFromQuery, sortClinicsByNearest, distanceMiles } from "@/lib/
 import type { Clinic } from "@/lib/data/types";
 
 const GEOCODE_DEBOUNCE_MS = 450;
+const FINDER_PANEL_HEIGHT_PX = 480;
 
 interface ClinicFinderProps {
   showHeader?: boolean;
@@ -21,6 +22,7 @@ interface ClinicFinderProps {
   hideDirectContact?: boolean;
   hideClinicContactDetails?: boolean;
   onContactClinic?: (clinicId: string) => void;
+  containerClassName?: string;
 }
 
 const initialClinics = getClinics("ALL");
@@ -65,6 +67,7 @@ export default function ClinicFinder({
   hideDirectContact = false,
   hideClinicContactDetails = false,
   onContactClinic,
+  containerClassName,
 }: ClinicFinderProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -81,6 +84,13 @@ export default function ClinicFinder({
   const [mapFocusClinicId, setMapFocusClinicId] = useState<string | null>(null);
   const [geocodedOrigin, setGeocodedOrigin] = useState<{ lat: number; lng: number } | null>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [radiusMiles, setRadiusMiles] = useState<number>(() => {
+    if (isModalMode) return 25;
+    const r = searchParams.get("radius");
+    const n = r ? parseInt(r, 10) : 25;
+    return [10, 25, 50, 100].includes(n) ? n : 25;
+  });
+  const radiusOptions = [10, 25, 50, 100] as const;
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -119,12 +129,14 @@ export default function ClinicFinder({
 
     params.set("view", showMap ? "map" : "list");
     params.set("country", selectedCountry);
+    if (radiusMiles !== 25) params.set("radius", String(radiusMiles));
+    else params.delete("radius");
     const next = params.toString();
     const current = searchParams.toString();
     if (next !== current) {
       router.replace(`${pathname}?${next}`, { scroll: false });
     }
-  }, [isModalMode, query, showMap, selectedCountry, pathname, router, searchParams]);
+  }, [isModalMode, query, showMap, selectedCountry, radiusMiles, pathname, router, searchParams]);
 
   useEffect(() => {
     setMapFocusClinicId(null);
@@ -151,8 +163,14 @@ export default function ClinicFinder({
     const filtered =
       textFiltered.length === 0 && geocodedOrigin ? source : textFiltered;
     const sorted = sortClinicsByNearest(filtered, originPoint);
-    return { clinics: sorted, origin: originPoint };
-  }, [query, selectedCountry, geocodedOrigin]);
+    const withinRadius =
+      originPoint && radiusMiles
+        ? sorted.filter(
+            (c) => distanceMiles(originPoint.lat, originPoint.lng, c.lat, c.lng) <= radiusMiles
+          )
+        : sorted;
+    return { clinics: withinRadius, origin: originPoint };
+  }, [query, selectedCountry, geocodedOrigin, radiusMiles]);
 
   const mapSrc = useMemo(() => {
     if (mapFocusClinicId) {
@@ -179,7 +197,7 @@ export default function ClinicFinder({
 
   const body = (
     <>
-      <div className={isModalMode ? "mb-4 grid gap-3 md:grid-cols-[1fr_auto_auto]" : "mb-6 grid gap-3 md:grid-cols-[1fr_auto_auto]"}>
+      <div className={isModalMode ? "mb-4 grid gap-3 md:grid-cols-[1fr_auto_auto]" : "mb-6 grid gap-3 md:grid-cols-[1fr_auto_auto_auto]"}>
         <div>
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -207,6 +225,21 @@ export default function ClinicFinder({
           <option value="US">US</option>
           <option value="ALL">Global</option>
         </select>
+
+        {query.trim().length >= 2 && (
+          <select
+            value={radiusMiles}
+            onChange={(e) => setRadiusMiles(Number(e.target.value) as (typeof radiusOptions)[number])}
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            aria-label="Within miles"
+          >
+            {radiusOptions.map((m) => (
+              <option key={m} value={m}>
+                Within {m} miles
+              </option>
+            ))}
+          </select>
+        )}
 
         <Button variant="outline" className="rounded-full" onClick={() => setQuery("")}>
           Reset search
@@ -236,13 +269,25 @@ export default function ClinicFinder({
         </div>
       )}
 
-      <div className={isModalMode ? "grid min-h-0 flex-1 gap-4 lg:grid-cols-2" : "grid gap-6 lg:grid-cols-2"}>
+      <div
+        className={isModalMode ? "grid min-h-0 flex-1 gap-4 lg:grid-cols-2" : "grid gap-6 lg:grid-cols-2"}
+        style={isModalMode ? undefined : { height: FINDER_PANEL_HEIGHT_PX }}
+      >
         {(!isMobile || !showMap) && (
-          <div className={isModalMode ? "min-h-0 space-y-3 overflow-y-auto pr-1" : "space-y-3"}>
+          <div
+            className={
+              isModalMode
+                ? "min-h-0 space-y-3 overflow-y-auto pr-1"
+                : "min-h-0 space-y-3 overflow-y-auto pr-1"
+            }
+            style={isModalMode ? undefined : { maxHeight: FINDER_PANEL_HEIGHT_PX }}
+          >
             {clinics.length === 0 && (
               <Card>
                 <CardContent className="p-5 text-sm text-muted-foreground">
-                  No clinics matched your search. Try a nearby city, state, or ZIP prefix.
+                  {origin
+                    ? `No clinics within ${radiusMiles} miles. Try a larger radius or different location.`
+                    : "No clinics matched your search. Try a nearby city, state, or ZIP prefix."}
                 </CardContent>
               </Card>
             )}
@@ -267,14 +312,20 @@ export default function ClinicFinder({
                           {!(hideClinicContactDetails || hideDirectContact) && (
                             <p className="flex items-start gap-2">
                               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                              <span>
+                              <span className="block">
                                 {clinic.address1 ? (
                                   <>
                                     {clinic.address1}
-                                    {clinic.address2 ? `, ${clinic.address2}` : ""}, {clinic.city} {clinic.postcode}
+                                    {clinic.address2 ? `, ${clinic.address2}` : ""}, {clinic.city}
+                                    <br />
+                                    {clinic.postcode}
                                   </>
                                 ) : (
-                                  `${clinic.city} ${clinic.postcode}`
+                                  <>
+                                    {clinic.city}
+                                    <br />
+                                    {clinic.postcode}
+                                  </>
                                 )}
                               </span>
                             </p>
@@ -282,7 +333,11 @@ export default function ClinicFinder({
                           {(hideClinicContactDetails || hideDirectContact) && (
                             <p className="flex items-start gap-2">
                               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                              <span>{clinic.city} {clinic.postcode}</span>
+                              <span className="block">
+                                {clinic.city}
+                                <br />
+                                {clinic.postcode}
+                              </span>
                             </p>
                           )}
                           {!hideDirectContact && !hideClinicContactDetails && clinic.phone && (
@@ -369,11 +424,18 @@ export default function ClinicFinder({
         )}
 
         {(!isMobile || showMap) && (
-          <div className={isModalMode ? "min-h-0 overflow-hidden rounded-2xl border border-border/80 shadow-sm" : "overflow-hidden rounded-2xl border border-border/80 shadow-sm"}>
+          <div
+            className={
+              isModalMode
+                ? "min-h-0 overflow-hidden rounded-2xl border border-border/80 shadow-sm"
+                : "h-full min-h-0 overflow-hidden rounded-2xl border border-border/80 shadow-sm"
+            }
+            style={isModalMode ? undefined : { height: FINDER_PANEL_HEIGHT_PX }}
+          >
             <iframe
               title="Clinic locations"
               src={mapSrc}
-              className={isModalMode ? "h-full min-h-[320px] w-full border-0" : "h-[420px] w-full border-0 md:h-[560px]"}
+              className={isModalMode ? "h-full min-h-[320px] w-full border-0" : "h-full w-full border-0"}
               loading="lazy"
             />
           </div>
@@ -384,7 +446,13 @@ export default function ClinicFinder({
 
   return (
     <section id="clinic-finder" className={isModalMode ? "h-full min-h-0" : "section-shell"}>
-      <div className={isModalMode ? "flex h-full min-h-0 flex-col" : "container mx-auto px-4"}>
+      <div
+        className={
+          isModalMode
+            ? "flex h-full min-h-0 flex-col"
+            : `container mx-auto px-4 ${containerClassName ?? ""}`.trim()
+        }
+      >
         {showHeader && (
           <div className="mb-8 text-center md:mb-10">
             <h2 className="section-title">Find a clinic near you</h2>

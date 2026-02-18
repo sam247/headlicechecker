@@ -13,9 +13,10 @@ import type { Clinic } from "@/lib/data/types";
 
 interface FindClinicsSectionProps {
   clinics: Clinic[];
+  containerClassName?: string;
 }
 
-export default function FindClinicsSection({ clinics }: FindClinicsSectionProps) {
+export default function FindClinicsSection({ clinics, containerClassName }: FindClinicsSectionProps) {
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [contactClinicId, setContactClinicId] = useState<string | null>(null);
 
@@ -35,6 +36,7 @@ export default function FindClinicsSection({ clinics }: FindClinicsSectionProps)
         hideDirectContact
         hideClinicContactDetails
         onContactClinic={handleContactClinic}
+        containerClassName={containerClassName}
       />
       <Dialog open={contactModalOpen} onOpenChange={setContactModalOpen}>
         <DialogContent className="max-w-lg">
