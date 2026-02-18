@@ -11,7 +11,7 @@ import { getFaqs, getSiteCopy } from "@/lib/data/content";
 const faqs = getFaqs().slice(0, 3);
 const copy = getSiteCopy();
 
-const HERO_DEMO_INTERVAL_MS = 1250;
+const HERO_DEMO_INTERVAL_MS = 1750;
 
 export default function HomePageClient() {
   const [heroFile, setHeroFile] = useState<File | null>(null);
@@ -113,8 +113,10 @@ export default function HomePageClient() {
                   </>
                 )}
                 {effectiveDemoPhase === 1 && (
-                  <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-                    <ImageIcon className="mx-auto h-12 w-12 text-primary" />
+                  <div className="relative flex min-h-[4rem] flex-col items-center justify-center">
+                    <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-lg border-2 border-primary/30 bg-muted/60 shadow-sm animate-in fade-in slide-in-from-right-8 duration-[600ms]">
+                      <ImageIcon className="h-7 w-7 text-primary" />
+                    </div>
                     <p className="mt-2 text-xs text-muted-foreground">Photo added</p>
                   </div>
                 )}
