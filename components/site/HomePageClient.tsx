@@ -16,7 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import PhotoChecker from "@/components/PhotoChecker";
-import type { FaqItem, HomePageContent, SiteCopy } from "@/lib/data/types";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import type { HomePageContent, SiteCopy } from "@/lib/data/types";
 
 const HERO_DEMO_INTERVAL_MS = 1750;
 
@@ -31,7 +32,6 @@ interface LatestGuideItem {
 
 interface HomePageClientProps {
   content: HomePageContent;
-  faqs: FaqItem[];
   latestGuides: LatestGuideItem[];
   siteCopy: SiteCopy;
 }
@@ -44,7 +44,7 @@ function readableDate(value: string): string {
   });
 }
 
-export default function HomePageClient({ content, faqs, latestGuides, siteCopy }: HomePageClientProps) {
+export default function HomePageClient({ content, latestGuides, siteCopy }: HomePageClientProps) {
   const [heroFile, setHeroFile] = useState<File | null>(null);
   const [heroDemoPhase, setHeroDemoPhase] = useState<0 | 1 | 2 | 3>(0);
   const [cardHovered, setCardHovered] = useState(false);
@@ -76,6 +76,8 @@ export default function HomePageClient({ content, faqs, latestGuides, siteCopy }
   const consumeHeroFile = useCallback(() => setHeroFile(null), []);
 
   const reviewedAt = useMemo(() => readableDate(content.reviewedAt), [content.reviewedAt]);
+  const leftFaqs = useMemo(() => content.faq.items.slice(0, 4), [content.faq.items]);
+  const rightFaqs = useMemo(() => content.faq.items.slice(4, 8), [content.faq.items]);
 
   return (
     <div>
@@ -181,37 +183,33 @@ export default function HomePageClient({ content, faqs, latestGuides, siteCopy }
 
       <section className="section-shell pt-0">
         <div className="container mx-auto px-4">
-          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-            <Card>
-              <CardContent className="p-6 md:p-7">
-                <h2 className="text-2xl font-bold md:text-3xl">{content.quickDecide.heading}</h2>
-                <div className="mt-4 space-y-4 text-sm leading-7 text-muted-foreground md:text-base">
-                  {content.quickDecide.paragraphs.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
+            <div>
+              <h2 className="text-2xl font-bold md:text-3xl">{content.quickDecide.heading}</h2>
+              <div className="mt-4 space-y-4 text-sm leading-7 text-muted-foreground md:text-base">
+                {content.quickDecide.paragraphs.map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
+              </div>
+            </div>
 
-            <Card className="h-full">
-              <CardContent className="p-6 md:p-7">
-                <h3 className="text-lg font-semibold">Practical boundaries that protect decision quality</h3>
-                <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                  <li>• {siteCopy.medicalDisclaimer}</li>
-                  <li>• {siteCopy.privacyClaim}</li>
-                  <li>• Strong image quality increases confidence and reduces re-check noise.</li>
-                  <li>• Escalation support is available through the clinic finder when risk is elevated.</li>
-                </ul>
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <Button asChild className="rounded-full" size="sm">
-                    <Link href="#start-scan">{siteCopy.primaryCta}</Link>
-                  </Button>
-                  <Button asChild variant="outline" className="rounded-full" size="sm">
-                    <Link href="/how-it-works">How It Works</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="border-l-2 border-primary/30 pl-4 md:pl-6">
+              <h3 className="text-lg font-semibold">Practical boundaries that protect decision quality</h3>
+              <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
+                <li>• {siteCopy.medicalDisclaimer}</li>
+                <li>• {siteCopy.privacyClaim}</li>
+                <li>• Strong image quality increases confidence and reduces re-check noise.</li>
+                <li>• Escalation support is available through the clinic finder when risk is elevated.</li>
+              </ul>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Button asChild className="rounded-full" size="sm">
+                  <Link href="#start-scan">{siteCopy.primaryCta}</Link>
+                </Button>
+                <Button asChild variant="outline" className="rounded-full" size="sm">
+                  <Link href="/how-it-works">How It Works</Link>
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -325,35 +323,33 @@ export default function HomePageClient({ content, faqs, latestGuides, siteCopy }
 
       <section className="section-shell pt-0">
         <div className="container mx-auto px-4">
-          <div className="rounded-2xl border border-border bg-card p-6 md:p-8">
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div className="max-w-3xl">
-                <h2 className="text-2xl font-bold md:text-3xl">{content.trust.heading}</h2>
-                <p className="mt-3 section-copy">{content.trust.intro}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm">
-                <p className="inline-flex items-center gap-2 font-medium text-foreground">
-                  <CalendarDays className="h-4 w-4 text-primary" />
-                  Last reviewed {reviewedAt}
-                </p>
-                <p className="mt-2 text-xs text-muted-foreground">Indicative screening guidance only. Professional confirmation is recommended when risk appears elevated.</p>
-              </div>
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div className="max-w-3xl">
+              <h2 className="text-2xl font-bold md:text-3xl">{content.trust.heading}</h2>
+              <p className="mt-3 section-copy">{content.trust.intro}</p>
             </div>
+            <div className="text-sm">
+              <p className="inline-flex items-center gap-2 font-medium text-foreground">
+                <CalendarDays className="h-4 w-4 text-primary" />
+                Last reviewed {reviewedAt}
+              </p>
+              <p className="mt-2 max-w-xs text-xs text-muted-foreground">
+                Indicative screening guidance only. Professional confirmation is recommended when risk appears elevated.
+              </p>
+            </div>
+          </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              {content.trust.links.map((item) => (
-                <Card key={item.href}>
-                  <CardContent className="p-5">
-                    <h3 className="font-semibold">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.copy}</p>
-                    <Link href={item.href} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
-                      {item.label}
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
+            {content.trust.links.map((item) => (
+              <div key={item.href} className="border-b border-border pb-5">
+                <h3 className="font-semibold">{item.title}</h3>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.copy}</p>
+                <Link href={item.href} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                  {item.label}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -441,15 +437,32 @@ export default function HomePageClient({ content, faqs, latestGuides, siteCopy }
             </Button>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {faqs.map((faq) => (
-              <Card key={faq.id}>
-                <CardContent className="p-5">
-                  <h3 className="font-semibold">{faq.question}</h3>
-                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{faq.answer}</p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="grid gap-6 md:grid-cols-2">
+            <Accordion type="single" collapsible className="w-full">
+              {leftFaqs.map((faq, index) => (
+                <AccordionItem key={faq.question} value={`left-${index}`} className="border-border">
+                  <AccordionTrigger className="text-left text-base font-semibold hover:no-underline">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm leading-7 text-muted-foreground">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+
+            <Accordion type="single" collapsible className="w-full">
+              {rightFaqs.map((faq, index) => (
+                <AccordionItem key={faq.question} value={`right-${index}`} className="border-border">
+                  <AccordionTrigger className="text-left text-base font-semibold hover:no-underline">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm leading-7 text-muted-foreground">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-4 text-sm">

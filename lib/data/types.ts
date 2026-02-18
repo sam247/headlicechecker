@@ -133,6 +133,7 @@ export interface HomePageContent {
   faq: {
     heading: string;
     intro: string;
+    items: ContentFaq[];
   };
   lowerCta: {
     title: string;

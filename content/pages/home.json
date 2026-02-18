@@ -2,11 +2,11 @@
   "reviewedAt": "2026-02-18",
   "hero": {
     "badge": "Calm, private, parent-first head lice checker guidance",
-    "title": "Head Lice Checker: Check Scalp Photos in Seconds",
+    "title": "Head Lice Checker",
     "emphasis": "Get Clear Next Steps for Nits and Head Lice",
     "paragraphs": [
-      "Use this head lice checker for a fast first check when you spot itching, scalp irritation, or possible nits. Upload a clear close-up photo and get an indicative result with practical guidance for what to do next at home.",
-      "Head Lice Checker is built for parents, caregivers, schools, and adults who need quick direction under pressure. Results are non-diagnostic and should be followed by professional confirmation when risk appears elevated or symptoms continue."
+      "Use this head lice checker for a fast first check when you spot itching, scalp irritation, or possible nits. Upload a clear close-up photo and get an indicative result with practical guidance for what to do at home.",
+      "This scan provides non-diagnostic support. If risk appears elevated or symptoms continue, use the clinic pathway for professional confirmation."
     ],
     "highlights": [
       "Indicative head lice check in seconds",
@@ -144,7 +144,41 @@
   },
   "faq": {
     "heading": "Expanded FAQ",
-    "intro": "These quick answers cover high-intent questions families ask before they decide whether to monitor, rescan, or book professional confirmation."
+    "intro": "These quick answers cover high-intent questions families ask before they decide whether to monitor, rescan, or book professional confirmation.",
+    "items": [
+      {
+        "question": "Is this tool a medical diagnosis?",
+        "answer": "No. It provides an indicative head lice screening result only. For diagnosis and treatment decisions, speak with a clinician."
+      },
+      {
+        "question": "What photo gives the best head lice check result?",
+        "answer": "Use bright light, part hair close to the scalp, and keep the image sharply focused. Clear close-up photos improve confidence."
+      },
+      {
+        "question": "Do you store uploaded scalp photos?",
+        "answer": "No. Images are processed in-memory for the request and are not stored by this app. Third-party providers may have separate policies."
+      },
+      {
+        "question": "What should I do if lice or nits are detected?",
+        "answer": "Use the result as a triage signal, then arrange professional confirmation promptly so treatment decisions are based on clinical advice."
+      },
+      {
+        "question": "Can schools and childcare teams use this checker?",
+        "answer": "Yes. Schools can use scan guidance and clinic pathways to reduce uncertainty while keeping communication non-diagnostic and practical."
+      },
+      {
+        "question": "Can a clear result still miss head lice?",
+        "answer": "A clear result is reassuring but not absolute. If symptoms persist, repeat with better image quality and seek professional follow-up."
+      },
+      {
+        "question": "When should I move from monitoring to a clinic visit?",
+        "answer": "Escalate when signs repeat, attached ovals appear near the scalp across checks, or multiple household contacts report similar symptoms."
+      },
+      {
+        "question": "How often should households re-check during exposure periods?",
+        "answer": "During active exposure windows, run consistent checks every few days using the same process so changes are easier to interpret."
+      }
+    ]
   },
   "lowerCta": {
     "title": "Need quick expert support after your check?",

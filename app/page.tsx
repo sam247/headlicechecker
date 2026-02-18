@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import HomePageClient from "@/components/site/HomePageClient";
-import { getBlogPosts, getFaqs, getHomePageContent, getSiteCopy } from "@/lib/data/content";
+import { getBlogPosts, getHomePageContent, getSiteCopy } from "@/lib/data/content";
 import { canonical, faqJsonLd, medicalWebPageJsonLd, organizationJsonLd, serviceJsonLd, websiteJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -38,7 +38,6 @@ export const metadata: Metadata = {
 
 export default function Home() {
   const homeContent = getHomePageContent();
-  const faqs = getFaqs().slice(0, 5);
   const siteCopy = getSiteCopy();
   const latestGuides = getBlogPosts().slice(0, 2).map((post) => ({
     slug: post.slug,
@@ -49,7 +48,9 @@ export default function Home() {
     readMinutes: post.readMinutes,
   }));
 
-  const homepageFaqJsonLd = faqJsonLd(faqs.map((item) => ({ question: item.question, answer: item.answer })));
+  const homepageFaqJsonLd = faqJsonLd(
+    homeContent.faq.items.map((item) => ({ question: item.question, answer: item.answer }))
+  );
   const medicalWebPage = medicalWebPageJsonLd({
     name: "Head Lice Checker",
     path: "/",
@@ -70,7 +71,7 @@ export default function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(homepageFaqJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(medicalWebPage) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
-      <HomePageClient content={homeContent} faqs={faqs} latestGuides={latestGuides} siteCopy={siteCopy} />
+      <HomePageClient content={homeContent} latestGuides={latestGuides} siteCopy={siteCopy} />
     </>
   );
 }
