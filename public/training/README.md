@@ -15,3 +15,9 @@ pip3 install ultralytics
 Output: `runs/detect/train/weights/best.pt`. Use that in `inference/` via `SCAN_MODEL_PATH` and set `DETECTION_API_URL` in the app.
 
 **Note:** If you add new images in the top-level `public/training/` folder (as from Makesense export), copy the matching `.jpg` and `.txt` into `images/train/` and `labels/train/` so they are used for training.
+
+### Improving detection
+
+- **More data:** The model was trained on very few images. Add many more (50–200+) with nits and lice on different hair colours and lighting; include “clear” examples too. Retrain and replace `best.pt`.
+- **Sensitivity:** If the model returns “clear” but you see nits, it may be outputting low-confidence boxes that get filtered out. Lower thresholds: set `SCAN_MIN_CONFIDENCE=0.2` (or lower) on Render, and/or reduce `DETECTION_API_MIN_CONFIDENCE` in the scan route. Check Render logs for `raw_boxes` vs `returned` to see if boxes are being dropped.
+- **Image quality:** Ensure uploads are close-up, well lit, and at least 640px on the shortest side so the model gets usable input.

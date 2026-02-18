@@ -17,8 +17,8 @@ from pydantic import BaseModel, Field
 
 # Optional: set to path to your trained best.pt; else uses pretrained for structure
 MODEL_PATH = os.environ.get("SCAN_MODEL_PATH", "yolov8n.pt")
-# Minimum confidence (0–1) for a box to be returned; reduces false positives
-MIN_CONFIDENCE = float(os.environ.get("SCAN_MIN_CONFIDENCE", "0.4"))
+# Minimum confidence (0–1) for a box to be returned. Lower = more sensitive, more false positives.
+MIN_CONFIDENCE = float(os.environ.get("SCAN_MIN_CONFIDENCE", "0.25"))
 
 # Class names from your trained model must map to these labels (index or name)
 VALID_LABELS = ("lice", "nits", "dandruff", "psoriasis")

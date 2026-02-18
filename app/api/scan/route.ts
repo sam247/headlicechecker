@@ -35,8 +35,8 @@ type ProviderOutcome =
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_API_BASE = process.env.DEEPSEEK_API_BASE ?? "https://api.deepseek.com";
 const DETECTION_API_URL = process.env.DETECTION_API_URL;
-/** Minimum confidence for detections from DETECTION_API_URL (your YOLO service); reduces noise. */
-const DETECTION_API_MIN_CONFIDENCE = 0.35;
+/** Minimum confidence for detections from DETECTION_API_URL; lower = more sensitive. */
+const DETECTION_API_MIN_CONFIDENCE = 0.25;
 
 const VALID_LABELS: ScanResult["label"][] = ["lice", "nits", "dandruff", "psoriasis", "clear"];
 
