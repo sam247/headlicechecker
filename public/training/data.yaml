@@ -1,0 +1,12 @@
+# YOLO dataset config (Ultralytics). Run from repo root:
+#   yolo detect train data=public/training/data.yaml model=yolov8n.pt epochs=50
+
+# path is relative to cwd when you run from repo root
+path: public/training
+train: images/train
+val: images/train
+
+nc: 2
+names:
+  0: lice
+  1: nits
