@@ -95,7 +95,7 @@ export default function HomePageClient() {
               </div>
               <p className="mt-2 text-sm text-muted-foreground">This sends the image directly into your free scan.</p>
               <div
-                className="mt-5 flex min-h-[7.5rem] cursor-pointer flex-col items-center justify-center rounded-2xl border border-border bg-muted/40 p-8"
+                className="mt-5 flex h-[10.5rem] cursor-pointer flex-col items-center justify-center rounded-2xl border border-border bg-muted/40 p-8"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.preventDefault();
@@ -113,7 +113,7 @@ export default function HomePageClient() {
                   </>
                 )}
                 {effectiveDemoPhase === 1 && (
-                  <div className="relative flex min-h-[4rem] flex-col items-center justify-center">
+                  <div className="flex flex-col items-center justify-center">
                     <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-lg border-2 border-primary/30 bg-muted/60 shadow-sm animate-in fade-in slide-in-from-right-8 duration-[600ms]">
                       <ImageIcon className="h-7 w-7 text-primary" />
                     </div>
@@ -127,10 +127,13 @@ export default function HomePageClient() {
                   </div>
                 )}
                 {effectiveDemoPhase === 3 && (
-                  <div className="animate-in fade-in duration-300">
-                    <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
-                    <p className="mt-2 text-sm font-medium">Indicative: lice detected</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Scroll down to run your own scan.</p>
+                  <div className="flex flex-col items-center gap-2 animate-in fade-in duration-300">
+                    <CheckCircle2 className="h-12 w-12 text-primary" />
+                    <p className="text-sm font-medium">Indicative: lice detected</p>
+                    <p className="text-xs text-muted-foreground">Scroll down to run your own scan.</p>
+                    <Button asChild size="sm" className="mt-1 rounded-full">
+                      <Link href="/find-clinics">View Closest Clinics</Link>
+                    </Button>
                   </div>
                 )}
               </div>
