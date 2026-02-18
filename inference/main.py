@@ -4,8 +4,12 @@ with the contract expected by headlicechecker.com (label, confidence, detections
 """
 import base64
 import io
+import logging
 import os
 from typing import Any, Literal
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -104,13 +108,17 @@ def predict(req: PredictRequest):
     detections_out: list[DetectionOut] = []
     top_confidence = 0.0
     top_label: LabelType = "clear"
+    raw_box_count = 0
+    below_threshold_count = 0
 
     for r in results:
         if r.boxes is None:
             continue
         for box in r.boxes:
+            raw_box_count += 1
             conf = float(box.confidence[0])
             if conf < MIN_CONFIDENCE:
+                below_threshold_count += 1
                 continue
             cls_id = int(box.cls[0])
             # Model class names: use r.names if available else assume 0=lice, 1=nits, 2=dandruff, 3=psoriasis
@@ -141,6 +149,12 @@ def predict(req: PredictRequest):
 
     # Sort by confidence descending
     detections_out.sort(key=lambda d: d.confidence, reverse=True)
+
+    logger.info(
+        "predict result image=%dx%d raw_boxes=%d below_min_conf=%d min_conf=%.2f returned=%d label=%s top_conf=%.3f",
+        w, h, raw_box_count, below_threshold_count, MIN_CONFIDENCE, len(detections_out),
+        top_label if detections_out else "clear", top_confidence,
+    )
 
     return PredictResponse(
         label=top_label if detections_out else "clear",

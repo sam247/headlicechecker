@@ -281,6 +281,7 @@ async function scanWithDetectionApi(
 
     if (!res.ok) {
       const text = await res.text();
+      console.warn("[scan][detection_api] inference non-OK", { status: res.status, detail: text.slice(0, 200) });
       return { ok: false, reason: "provider_error", detail: text.slice(0, 200) };
     }
 
@@ -296,12 +297,20 @@ async function scanWithDetectionApi(
 
     const confidence = typeof data.confidence === "number" ? data.confidence : 0.85;
     const normalized = data.detections_normalized === true;
+    const rawDetectionCount = Array.isArray(data.detections) ? data.detections.length : 0;
     let detections: DetectionItem[] = [];
     let imageMeta: { width: number; height: number } | undefined;
     let summary: ScanResult["summary"] | undefined;
 
     if (Array.isArray(data.detections) && data.detections.length > 0 && imageDimensions) {
       detections = mapDetectionApiDetections(data.detections, imageDimensions, normalized);
+      console.info("[scan][detection_api] inference response", {
+        label: data.label,
+        confidence,
+        rawDetectionCount,
+        afterMinConfidence: detections.length,
+        imageDimensions: imageDimensions ? { w: imageDimensions.width, h: imageDimensions.height } : null,
+      });
       imageMeta =
         typeof data.image_width === "number" && typeof data.image_height === "number"
           ? { width: data.image_width, height: data.image_height }
@@ -318,6 +327,9 @@ async function scanWithDetectionApi(
     } else if (imageDimensions) {
       imageMeta = imageDimensions;
     }
+    if (rawDetectionCount === 0) {
+      console.info("[scan][detection_api] inference returned no detections", { label: data.label, confidence });
+    }
 
     return {
       ok: true,
@@ -332,6 +344,7 @@ async function scanWithDetectionApi(
       },
     };
   } catch (e) {
+    console.warn("[scan][detection_api] request failed", { error: String(e) });
     return { ok: false, reason: "provider_error", detail: String(e) };
   }
 }
@@ -395,9 +408,28 @@ export async function POST(request: NextRequest) {
       ? { width: dimensions.width, height: dimensions.height }
       : null;
 
+  console.info("[scan] request", {
+    imageWidth: imageDimensions?.width,
+    imageHeight: imageDimensions?.height,
+    hasDetectionApi: !!DETECTION_API_URL,
+    hasDeepSeek: !!DEEPSEEK_API_KEY,
+  });
+
   if (DETECTION_API_URL) {
+    console.info("[scan] using provider=detection_api", {
+      imageWidth: imageDimensions?.width,
+      imageHeight: imageDimensions?.height,
+    });
     const outcome = await scanWithDetectionApi(imageBase64, imageDimensions);
-    if (outcome.ok) return NextResponse.json(outcome.result);
+    if (outcome.ok) {
+      console.info("[scan] detection_api result", {
+        label: outcome.result.label,
+        confidence: outcome.result.confidence,
+        detectionsCount: outcome.result.detections?.length ?? 0,
+        summary: outcome.result.summary,
+      });
+      return NextResponse.json(outcome.result);
+    }
     if (outcome.reason === "provider_error") {
       return NextResponse.json(
         { error: "Scan temporarily unavailable", code: "PROVIDER_ERROR", detail: outcome.detail },

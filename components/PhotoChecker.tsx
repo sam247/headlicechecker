@@ -270,6 +270,17 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
         const res = await fetch("/api/scan", { method: "POST", body: form });
         const data = (await res.json()) as ScanResult & { code?: ScanErrorCode; error?: string; detail?: string };
 
+        console.info("[scan] response", {
+          ok: res.ok,
+          status: res.status,
+          label: data?.label,
+          confidence: data?.confidence,
+          detectionsCount: (data as ScanResult)?.detections?.length,
+          summary: (data as ScanResult)?.summary,
+          error: data?.error,
+          code: data?.code,
+        });
+
         if (!res.ok) {
           setScanErrorCode(data?.code ?? "UNKNOWN_ERROR");
           setScanError(data?.detail ? `${data?.error ?? "Scan failed."} (${data.detail})` : data?.error ?? "Scan failed.");
