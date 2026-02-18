@@ -370,18 +370,33 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   return (
     <section id="start-scan" className="section-shell bg-muted/40">
       <div className="container mx-auto px-4">
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-8 text-center">
-            <h2 className="section-title">Start a free photo scan</h2>
-            <p className="mx-auto mt-3 max-w-2xl section-copy">
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+          {/* Left: guide and info */}
+          <div>
+            <h2 className="section-title text-left">Start a free photo scan</h2>
+            <p className="mt-3 section-copy">
               Upload a clear scalp close-up for an indicative result in seconds. Designed for anxious parents on mobile.
             </p>
+            <Card className="mt-6">
+              <CardContent className="p-6">
+                <h3 className="font-semibold">How to get the best result</h3>
+                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                  <li>• Bright lighting and close to scalp</li>
+                  <li>• Hair parted to show roots</li>
+                  <li>• At least {MIN_SIDE_PX}px on the shortest side</li>
+                </ul>
+                <p className="mt-4 text-xs text-muted-foreground">
+                  This is an indicative screening only, not a diagnosis. Low-quality images can reduce confidence.
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
-          <div className="mx-auto max-w-2xl">
+          {/* Right: action area */}
+          <div className="min-w-0">
             {stage === "upload" && (
               <Card className="border-2 border-dashed border-primary/30">
-                <CardContent className="p-6 md:p-10">
+                <CardContent className="p-6 md:p-8">
                   <div
                     className="cursor-pointer text-center"
                     onDragOver={(e) => e.preventDefault()}
@@ -392,26 +407,15 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                     }}
                     onClick={() => fileRef.current?.click()}
                   >
-                    <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
                       <Camera className="h-7 w-7 text-primary" />
                     </div>
                     <p className="text-lg font-semibold">Drop a photo or tap to upload</p>
                     <p className="mt-1 text-sm text-muted-foreground">JPG, PNG, HEIC accepted</p>
-
-                    <div className="mx-auto mt-5 max-w-lg rounded-xl bg-secondary/60 p-4 text-left">
-                      <p className="text-sm font-semibold">Best photo checklist</p>
-                      <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-                        <li>Bright lighting and close to scalp</li>
-                        <li>Hair parted to show roots</li>
-                        <li>At least {MIN_SIDE_PX}px shortest side</li>
-                      </ul>
-                    </div>
-
-                    <Button className="mt-6 rounded-full">
+                    <Button className="mt-5 rounded-full">
                       <Upload className="mr-2 h-4 w-4" />
                       Upload photo
                     </Button>
-
                     <input
                       ref={fileRef}
                       type="file"
