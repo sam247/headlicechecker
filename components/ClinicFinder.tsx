@@ -6,6 +6,13 @@ import { MapPin, Phone, ExternalLink, Search, Mail, Copy, Check } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getClinics } from "@/lib/data/content";
 import { findOriginFromQuery, sortClinicsByNearest, distanceMiles } from "@/lib/data/geo";
@@ -29,9 +36,13 @@ const initialClinics = getClinics("ALL");
 
 const MAP_DELTA = 0.02;
 
+const UK_BBOX = "-8,49,2,61";
+const US_BBOX = "-124,25,-66,49";
+
 function buildMapSrc(
   clinics: Clinic[],
-  origin?: { lat: number; lng: number } | null
+  origin?: { lat: number; lng: number } | null,
+  fallbackCountry?: "US" | "UK" | "ALL"
 ): string {
   const lats = clinics.map((c) => c.lat);
   const lngs = clinics.map((c) => c.lng);
@@ -40,7 +51,8 @@ function buildMapSrc(
     lngs.push(origin.lng);
   }
   if (lats.length === 0) {
-    return "https://www.openstreetmap.org/export/embed.html?bbox=-124,25,-66,49&layer=mapnik";
+    const bbox = fallbackCountry === "UK" ? UK_BBOX : US_BBOX;
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik`;
   }
 
   const minLat = Math.min(...lats) - 1;
@@ -158,6 +170,7 @@ export default function ClinicFinder({
         : source;
 
     const originPoint = geocodedOrigin ?? findOriginFromQuery(source, query);
+    // Only use full source when we have a geocode origin (then filter by radius)
     const filtered =
       textFiltered.length === 0 && geocodedOrigin ? source : textFiltered;
     const sorted = sortClinicsByNearest(filtered, originPoint);
@@ -175,8 +188,8 @@ export default function ClinicFinder({
       const focused = clinics.find((c) => c.id === mapFocusClinicId);
       if (focused) return buildMapSrcForClinic(focused);
     }
-    return buildMapSrc(clinics, origin);
-  }, [clinics, mapFocusClinicId, origin]);
+    return buildMapSrc(clinics, origin, selectedCountry === "ALL" ? undefined : selectedCountry);
+  }, [clinics, mapFocusClinicId, origin, selectedCountry]);
 
   const handleCopy = async (clinic: Clinic) => {
     const parts = [clinic.name];
@@ -213,29 +226,35 @@ export default function ClinicFinder({
           )}
         </div>
 
-        <select
+        <Select
           value={selectedCountry}
-          onChange={(e) => setSelectedCountry(e.target.value as "US" | "UK" | "ALL")}
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-          aria-label="Choose country scope"
+          onValueChange={(v) => setSelectedCountry(v as "US" | "UK" | "ALL")}
         >
-          <option value="UK">UK</option>
-          <option value="US">US</option>
-          <option value="ALL">Global</option>
-        </select>
+          <SelectTrigger className="h-10 w-[7rem] rounded-lg border-input bg-background shadow-sm" aria-label="Choose country scope">
+            <SelectValue placeholder="Country" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="UK">UK</SelectItem>
+            <SelectItem value="US">US</SelectItem>
+            <SelectItem value="ALL">Global</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <select
-          value={radiusMiles}
-          onChange={(e) => setRadiusMiles(Number(e.target.value) as (typeof radiusOptions)[number])}
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-          aria-label="Within miles"
+        <Select
+          value={String(radiusMiles)}
+          onValueChange={(v) => setRadiusMiles(Number(v) as (typeof radiusOptions)[number])}
         >
-          {radiusOptions.map((m) => (
-            <option key={m} value={m}>
-              Within {m} miles
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="h-10 w-[9rem] rounded-lg border-input bg-background shadow-sm" aria-label="Within miles">
+            <SelectValue placeholder="Radius" />
+          </SelectTrigger>
+          <SelectContent>
+            {radiusOptions.map((m) => (
+              <SelectItem key={m} value={String(m)}>
+                Within {m} miles
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <Button variant="outline" className="rounded-full" onClick={() => setQuery("")}>
           Reset search
@@ -281,9 +300,7 @@ export default function ClinicFinder({
             {clinics.length === 0 && (
               <Card>
                 <CardContent className="p-5 text-sm text-muted-foreground">
-                  {origin
-                    ? `No clinics within ${radiusMiles} miles. Try a larger radius or different location.`
-                    : "No clinics matched your search. Try a nearby city, state, or ZIP prefix."}
+                  No clinics in your specified area. Use the mileage selector to search further afield.
                 </CardContent>
               </Card>
             )}

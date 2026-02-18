@@ -28,7 +28,11 @@ export async function GET(request: NextRequest) {
     countryParam === "UK" ? "GB" : countryParam === "US" ? "US" : countryParam === "ALL" || !countryParam ? "GB,US" : null;
   const countryQ = countryCode ? `&country=${countryCode}` : "";
 
-  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&limit=1&types=postcode,place,address${countryQ}`;
+  // Help Mapbox resolve UK partial postcodes and place names (e.g. hp1, hertfordshire)
+  const geocodeQuery =
+    countryParam === "UK" && query.length < 20 ? `${query}, United Kingdom` : query;
+
+  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(geocodeQuery)}.json?access_token=${token}&limit=1&types=postcode,place,address,region${countryQ}`;
 
   try {
     const res = await fetch(url);
