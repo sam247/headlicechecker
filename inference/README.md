@@ -100,4 +100,5 @@ Deploy the image to Fly.io, Railway, RunPod, Modal, or any host that can run Doc
 | Variable | Description |
 |----------|-------------|
 | `SCAN_MODEL_PATH` | Path to YOLO weights (e.g. `best.pt`). Default: `yolov8n.pt` (pretrained; replace with your trained model). |
+| `SCAN_MIN_CONFIDENCE` | Minimum confidence (0–1) for a detection to be returned; default `0.4`. Raise to reduce false positives (e.g. `0.5`). |
 | `PORT` | Server port (default 8000). |

@@ -114,7 +114,6 @@ export interface HomePageContent {
     paragraphs: string[];
     monitorSignals: string[];
     escalateSignals: string[];
-    framework: string[];
   };
   scenarios: {
     heading: string;

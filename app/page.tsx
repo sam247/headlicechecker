@@ -39,13 +39,14 @@ export const metadata: Metadata = {
 export default function Home() {
   const homeContent = getHomePageContent();
   const siteCopy = getSiteCopy();
-  const latestGuides = getBlogPosts().slice(0, 2).map((post) => ({
+  const latestGuides = getBlogPosts().slice(0, 3).map((post) => ({
     slug: post.slug,
     title: post.title,
     description: post.description,
     publishedAt: post.publishedAt,
     updatedAt: post.updatedAt,
     readMinutes: post.readMinutes,
+    image: post.image,
   }));
 
   const homepageFaqJsonLd = faqJsonLd(

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   CheckCircle2,
@@ -28,6 +29,7 @@ interface LatestGuideItem {
   publishedAt: string;
   updatedAt: string;
   readMinutes: number;
+  image?: string;
 }
 
 interface HomePageClientProps {
@@ -220,12 +222,10 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
           <p className="mt-3 section-copy max-w-4xl">{content.lookFor.intro}</p>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             {content.lookFor.items.map((item) => (
-              <Card key={item.title}>
-                <CardContent className="p-5">
-                  <h3 className="font-semibold">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground md:text-base">{item.copy}</p>
-                </CardContent>
-              </Card>
+              <div key={item.title} className="space-y-3">
+                <h3 className="font-semibold">{item.title}</h3>
+                <p className="text-sm leading-7 text-muted-foreground md:text-base">{item.copy}</p>
+              </div>
             ))}
           </div>
         </div>
@@ -264,16 +264,6 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
             </Card>
           </div>
 
-          <Card className="mt-4 border-primary/20">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold">4-step decision framework</h3>
-              <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-muted-foreground md:text-base">
-                {content.monitorVsClinic.framework.map((step) => (
-                  <li key={step}>{step}</li>
-                ))}
-              </ol>
-            </CardContent>
-          </Card>
         </div>
       </section>
 
@@ -385,27 +375,38 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
             </Button>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {latestGuides.map((guide) => (
               <Card key={guide.slug}>
-                <CardContent className="p-6">
-                  <p className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    <BookOpenText className="h-3.5 w-3.5 text-primary" />
-                    Updated {readableDate(guide.updatedAt)}
-                  </p>
-                  <h3 className="mt-3 text-lg font-semibold leading-snug">
-                    <Link href={`/blog/${guide.slug}`} className="hover:text-primary">
-                      {guide.title}
-                    </Link>
-                  </h3>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{guide.description}</p>
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    Published {readableDate(guide.publishedAt)} • {guide.readMinutes} min read
-                  </p>
-                  <Link href={`/blog/${guide.slug}`} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
-                    Read this practical guide
-                    <ArrowRight className="h-3.5 w-3.5" />
+                <CardContent className="overflow-hidden p-0">
+                  <Link href={`/blog/${guide.slug}`} className="relative block aspect-[16/10] w-full bg-muted">
+                    <Image
+                      src={guide.image ?? "/logo_new.png"}
+                      alt={guide.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
                   </Link>
+                  <div className="p-6">
+                    <p className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      <BookOpenText className="h-3.5 w-3.5 text-primary" />
+                      Updated {readableDate(guide.updatedAt)}
+                    </p>
+                    <h3 className="mt-3 text-lg font-semibold leading-snug">
+                      <Link href={`/blog/${guide.slug}`} className="hover:text-primary">
+                        {guide.title}
+                      </Link>
+                    </h3>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{guide.description}</p>
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Published {readableDate(guide.publishedAt)} • {guide.readMinutes} min read
+                    </p>
+                    <Link href={`/blog/${guide.slug}`} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                      Read this practical guide
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
                 </CardContent>
               </Card>
             ))}

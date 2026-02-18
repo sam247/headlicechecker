@@ -13,6 +13,8 @@ from pydantic import BaseModel, Field
 
 # Optional: set to path to your trained best.pt; else uses pretrained for structure
 MODEL_PATH = os.environ.get("SCAN_MODEL_PATH", "yolov8n.pt")
+# Minimum confidence (0–1) for a box to be returned; reduces false positives
+MIN_CONFIDENCE = float(os.environ.get("SCAN_MIN_CONFIDENCE", "0.4"))
 
 # Class names from your trained model must map to these labels (index or name)
 VALID_LABELS = ("lice", "nits", "dandruff", "psoriasis")
@@ -108,6 +110,8 @@ def predict(req: PredictRequest):
             continue
         for box in r.boxes:
             conf = float(box.confidence[0])
+            if conf < MIN_CONFIDENCE:
+                continue
             cls_id = int(box.cls[0])
             # Model class names: use r.names if available else assume 0=lice, 1=nits, 2=dandruff, 3=psoriasis
             names = getattr(r, "names", {0: "lice", 1: "nits", 2: "dandruff", 3: "psoriasis"})
