@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ClinicEnquiryForm from "@/components/site/ClinicEnquiryForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSiteCopy } from "@/lib/data/content";
@@ -117,7 +118,7 @@ export default function ForClinicsPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }} />
-      <div className="container mx-auto max-w-5xl px-4">
+      <div className="container mx-auto px-4">
         <h1 className="section-title">For clinic partners</h1>
         <p className="mt-4 section-copy">
           Receive consented, structured family enquiries through a lead-first flow designed for clearer context and stronger follow-through.
@@ -139,9 +140,9 @@ export default function ForClinicsPage() {
         </div>
 
         <div className="mt-8 rounded-2xl border border-border bg-card p-6">
-          <h2 className="text-xl font-semibold">Apply as a partner clinic</h2>
+          <h2 className="text-xl font-semibold">Are you a head lice clinic and interested in being listed?</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Share your coverage and response capacity, and we will follow up with onboarding details.
+            Submit your details and we will get back to you about being listed in our finder.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Button asChild className="rounded-full">
@@ -151,9 +152,13 @@ export default function ForClinicsPage() {
               <Link href="/find-clinics">{copy.secondaryCta}</Link>
             </Button>
             <Button asChild variant="ghost" className="rounded-full">
-              <Link href="/contact">Apply now</Link>
+              <Link href="#clinic-enquiry">Submit enquiry</Link>
             </Button>
           </div>
+        </div>
+
+        <div id="clinic-enquiry" className="mt-8">
+          <ClinicEnquiryForm />
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">{copy.medicalDisclaimer}</p>

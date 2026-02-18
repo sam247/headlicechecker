@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Shield, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, ImageIcon, Loader2, Shield, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import PhotoChecker from "@/components/PhotoChecker";
@@ -11,8 +11,31 @@ import { getFaqs, getSiteCopy } from "@/lib/data/content";
 const faqs = getFaqs().slice(0, 3);
 const copy = getSiteCopy();
 
+const HERO_DEMO_INTERVAL_MS = 1250;
+
 export default function HomePageClient() {
   const [heroFile, setHeroFile] = useState<File | null>(null);
+  const [heroDemoPhase, setHeroDemoPhase] = useState<0 | 1 | 2 | 3>(0);
+  const [cardHovered, setCardHovered] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const handler = () => setReducedMotion(mq.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    if (reducedMotion || cardHovered) return;
+    const t = setInterval(() => {
+      setHeroDemoPhase((p) => ((p + 1) % 4) as 0 | 1 | 2 | 3);
+    }, HERO_DEMO_INTERVAL_MS);
+    return () => clearInterval(t);
+  }, [reducedMotion, cardHovered]);
+
+  const effectiveDemoPhase = reducedMotion ? 0 : heroDemoPhase;
 
   const startScan = useCallback((file: File) => {
     setHeroFile(file);
@@ -56,21 +79,58 @@ export default function HomePageClient() {
             </div>
           </div>
 
-          <Card className="border-2 border-dashed border-primary/30">
+          <Card
+            className="border-2 border-dashed border-primary/30"
+            onMouseEnter={() => setCardHovered(true)}
+            onMouseLeave={() => setCardHovered(false)}
+          >
             <CardContent className="p-7 text-center">
-              <h2 className="text-xl font-semibold">Drop a photo to begin</h2>
+              <div className="flex items-center justify-center gap-2">
+                <h2 className="text-xl font-semibold">Drop a photo to begin</h2>
+                {!reducedMotion && (
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    Preview
+                  </span>
+                )}
+              </div>
               <p className="mt-2 text-sm text-muted-foreground">This sends the image directly into your free scan.</p>
               <div
-                className="mt-5 cursor-pointer rounded-2xl border border-border bg-muted/40 p-8"
+                className="mt-5 flex min-h-[7.5rem] cursor-pointer flex-col items-center justify-center rounded-2xl border border-border bg-muted/40 p-8"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.preventDefault();
                   const file = e.dataTransfer.files[0];
-                  if (file?.type.startsWith("image/")) startScan(file);
+                  if (file?.type.startsWith("image/")) {
+                    setHeroDemoPhase(0);
+                    startScan(file);
+                  }
                 }}
               >
-                <p className="text-sm font-medium">Drag and drop an image</p>
-                <p className="mt-1 text-xs text-muted-foreground">or use the upload button in scan section</p>
+                {effectiveDemoPhase === 0 && (
+                  <>
+                    <p className="text-sm font-medium">Drag and drop an image</p>
+                    <p className="mt-1 text-xs text-muted-foreground">or use the upload button in scan section</p>
+                  </>
+                )}
+                {effectiveDemoPhase === 1 && (
+                  <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+                    <ImageIcon className="mx-auto h-12 w-12 text-primary" />
+                    <p className="mt-2 text-xs text-muted-foreground">Photo added</p>
+                  </div>
+                )}
+                {effectiveDemoPhase === 2 && (
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                    <p className="text-sm font-medium">Scanning…</p>
+                  </div>
+                )}
+                {effectiveDemoPhase === 3 && (
+                  <div className="animate-in fade-in duration-300">
+                    <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
+                    <p className="mt-2 text-sm font-medium">Indicative: lice detected</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Scroll down to run your own scan.</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

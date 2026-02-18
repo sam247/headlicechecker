@@ -17,6 +17,23 @@ Next.js front end for the Head Lice Checker photo screening tool and clinic find
 - `npm run sync:clinics` — pull clinics from Google Sheet, geocode, and write JSON files
 - `npm run sync:clinics:check` — validate/mapping check only (no file writes)
 
+## Clinic Applications (Partner Onboarding)
+
+The clinic partner page includes an application form that posts to:
+
+- `POST /api/clinic-apply`
+
+Delivery routing uses the same email provider as clinic contact leads. Configure:
+
+- `LEAD_EMAIL_PROVIDER`
+- `LEAD_FROM_EMAIL`
+- `LEAD_FALLBACK_TO`
+- `CLINIC_APPLY_TO` (optional override for clinic applications)
+
+If `CLINIC_APPLY_TO` is unset, applications fall back to `LEAD_FALLBACK_TO`.
+
+The find-clinics and for-clinics pages also show a **clinic listing enquiry** form (`POST /api/clinic-enquiry`). Enquiries are sent to `CLINIC_ENQUIRY_TO` (e.g. `info@headlicechecker.com`); if unset, they fall back to `LEAD_FALLBACK_TO`.
+
 ## Clinic Data Via Google Sheet
 
 Clinics are sourced from a spreadsheet and synced into:

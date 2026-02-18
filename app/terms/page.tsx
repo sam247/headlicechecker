@@ -22,7 +22,7 @@ export default function TermsPage() {
   return (
     <section className="section-shell">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
-      <div className="container mx-auto max-w-4xl px-4">
+      <div className="container mx-auto px-4">
         <h1 className="section-title">Terms of use</h1>
         <div className="mt-5 space-y-4 text-sm text-muted-foreground">
           <p>{copy.medicalDisclaimer}</p>

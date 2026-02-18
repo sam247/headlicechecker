@@ -113,7 +113,7 @@ export default function ForSchoolsPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }} />
-      <div className="container mx-auto max-w-5xl px-4">
+      <div className="container mx-auto px-4">
         <h1 className="section-title">For schools and childcare teams</h1>
         <p className="mt-4 section-copy">
           Keep outbreak responses calm and consistent with practical parent guidance, scan-first triage, and clear clinic escalation pathways.

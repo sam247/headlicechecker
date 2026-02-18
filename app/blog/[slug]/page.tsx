@@ -96,84 +96,110 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd(post)) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
 
-      <div className="container mx-auto max-w-4xl px-4">
-        <Link
-          href="/blog"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4"
-        >
-          <span aria-hidden>←</span> Back to Blog
-        </Link>
-        <p className="text-xs text-muted-foreground">
-          {formatDate(post.publishedAt)} · Updated {formatDate(post.updatedAt)} · {post.readMinutes} min read
-        </p>
-        <h1 className="mt-2 text-3xl font-bold md:text-4xl">{post.title}</h1>
-        <p className="mt-3 text-base text-muted-foreground">{post.description}</p>
-
-        {post.image && (
-          <figure className="mt-8">
-            <Image
-              src={post.image}
-              alt=""
-              width={1200}
-              height={630}
-              className="rounded-lg border object-cover w-full h-auto"
-              priority
-            />
-          </figure>
-        )}
-
-        <div className="mt-8 space-y-4 text-base leading-7 text-foreground prose prose-neutral max-w-none">
-          {parseBodyBlocks(post.body).map((block, index) => {
-            const key = `${post.slug}-${index}`;
-            if (block.type === "h2") {
-              return (
-                <h2 key={key} className="mt-8 mb-3 text-xl font-semibold md:text-2xl scroll-mt-6">
-                  {block.text}
-                </h2>
-              );
-            }
-            if (block.type === "ul") {
-              return (
-                <ul key={key} className="my-4 ml-4 list-none space-y-2 pl-0">
-                  {block.items.map((item, j) => (
-                    <li key={j} className="flex gap-3">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
-                      <span dangerouslySetInnerHTML={{ __html: item }} />
-                    </li>
-                  ))}
-                </ul>
-              );
-            }
-            if (block.type === "ol") {
-              return (
-                <ol key={key} className="my-4 list-decimal space-y-2 pl-6">
-                  {block.items.map((item, j) => (
-                    <li key={j} dangerouslySetInnerHTML={{ __html: item }} />
-                  ))}
-                </ol>
-              );
-            }
-            return (
-              <p key={key} dangerouslySetInnerHTML={{ __html: block.html }} />
-            );
-          })}
-        </div>
-
-        <Card className="mt-8">
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold">Related guides</h2>
-            <div className="mt-4 flex flex-wrap gap-4 text-sm">
-              {relatedGuides.map((guide) => (
-                <Link key={guide.href} href={guide.href} className="text-primary hover:underline">
-                  {guide.label}
-                </Link>
-              ))}
-            </div>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Start with a free scan first, then use clinic pathways for professional confirmation.
+      <div className="container mx-auto px-4">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="min-w-0 max-w-4xl">
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4"
+            >
+              <span aria-hidden>←</span> Back to Blog
+            </Link>
+            <p className="text-xs text-muted-foreground">
+              {formatDate(post.publishedAt)} · Updated {formatDate(post.updatedAt)} · {post.readMinutes} min read
             </p>
-          </CardContent>
-        </Card>
+            <h1 className="mt-2 text-3xl font-bold md:text-4xl">{post.title}</h1>
+            <p className="mt-3 text-base text-muted-foreground">{post.description}</p>
+
+            {post.image && (
+              <figure className="mt-8">
+                <Image
+                  src={post.image}
+                  alt=""
+                  width={1200}
+                  height={630}
+                  className="rounded-lg border object-cover w-full h-auto"
+                  priority
+                />
+              </figure>
+            )}
+
+            <div className="mt-8 space-y-4 text-base leading-7 text-foreground prose prose-neutral max-w-none">
+              {parseBodyBlocks(post.body).map((block, index) => {
+                const key = `${post.slug}-${index}`;
+                if (block.type === "h2") {
+                  return (
+                    <h2 key={key} className="mt-8 mb-3 text-xl font-semibold md:text-2xl scroll-mt-6">
+                      {block.text}
+                    </h2>
+                  );
+                }
+                if (block.type === "ul") {
+                  return (
+                    <ul key={key} className="my-4 ml-4 list-none space-y-2 pl-0">
+                      {block.items.map((item, j) => (
+                        <li key={j} className="flex gap-3">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
+                          <span dangerouslySetInnerHTML={{ __html: item }} />
+                        </li>
+                      ))}
+                    </ul>
+                  );
+                }
+                if (block.type === "ol") {
+                  return (
+                    <ol key={key} className="my-4 list-decimal space-y-2 pl-6">
+                      {block.items.map((item, j) => (
+                        <li key={j} dangerouslySetInnerHTML={{ __html: item }} />
+                      ))}
+                    </ol>
+                  );
+                }
+                return (
+                  <p key={key} dangerouslySetInnerHTML={{ __html: block.html }} />
+                );
+              })}
+            </div>
+
+            <Card className="mt-8">
+              <CardContent className="p-6">
+                <h2 className="text-xl font-semibold">Related guides</h2>
+                <div className="mt-4 flex flex-wrap gap-4 text-sm">
+                  {relatedGuides.map((guide) => (
+                    <Link key={guide.href} href={guide.href} className="text-primary hover:underline">
+                      {guide.label}
+                    </Link>
+                  ))}
+                </div>
+                <p className="mt-4 text-sm text-muted-foreground">
+                  Start with a free scan first, then use clinic pathways for professional confirmation.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <aside className="space-y-4 lg:pt-0">
+            <Card>
+              <CardContent className="p-5">
+                <h3 className="font-semibold text-foreground">Find a clinic</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Search by postcode or city and contact a clinic near you.
+                </p>
+                <Link
+                  href="/find-clinics"
+                  className="mt-4 inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Find clinics
+                </Link>
+              </CardContent>
+            </Card>
+            <Card className="min-h-[250px] flex items-center justify-center">
+              <CardContent className="p-5 text-center">
+                <span className="text-xs text-muted-foreground">Advertisement</span>
+              </CardContent>
+            </Card>
+          </aside>
+        </div>
       </div>
     </article>
   );

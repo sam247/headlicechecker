@@ -97,7 +97,7 @@ export default function HowItWorksPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
-      <div className="container mx-auto max-w-5xl px-4">
+      <div className="container mx-auto px-4">
         <h1 className="section-title">How Head Lice Checker works</h1>
         <p className="mt-4 section-copy">
           A practical five-step flow: capture a better photo, run indicative screening, review evidence overlays, then choose clear next actions.

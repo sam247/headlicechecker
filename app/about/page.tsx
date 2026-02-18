@@ -91,7 +91,7 @@ export default function AboutPage() {
     <section className="section-shell">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
-      <div className="container mx-auto max-w-5xl px-4">
+      <div className="container mx-auto px-4">
         <h1 className="section-title">About Head Lice Checker</h1>
         <p className="mt-4 section-copy">
           We help families move from uncertainty to action with evidence-led, non-diagnostic photo screening and clear clinic follow-up pathways.

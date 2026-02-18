@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import FindClinicsSection from "@/components/site/FindClinicsSection";
-import ClinicContactForm from "@/components/site/ClinicContactForm";
+import ClinicEnquiryForm from "@/components/site/ClinicEnquiryForm";
 import { Card, CardContent } from "@/components/ui/card";
 import { getClinics, getSiteCopy } from "@/lib/data/content";
 import { breadcrumbJsonLd, medicalWebPageJsonLd, pageMetadata, serviceJsonLd } from "@/lib/seo";
@@ -46,8 +46,8 @@ export default function FindClinicsPage({ searchParams }: FindClinicsPageProps) 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
-      <div className="mx-auto max-w-6xl px-4">
-        <FindClinicsSection clinics={clinics} containerClassName="max-w-6xl" />
+      <div className="container mx-auto px-4">
+        <FindClinicsSection clinics={clinics} />
 
         <section className="section-shell pt-8">
           <Card>
@@ -71,7 +71,13 @@ export default function FindClinicsPage({ searchParams }: FindClinicsPageProps) 
           </Card>
 
           <div className="mt-8">
-            <ClinicContactForm clinicId={selectedClinic?.id} clinicName={selectedClinic?.name} />
+            <h2 className="text-xl font-semibold">Are you a head lice clinic and interested in being listed?</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Submit your details and we will get back to you.
+            </p>
+            <div className="mt-4">
+              <ClinicEnquiryForm />
+            </div>
           </div>
 
           <p className="mt-4 text-xs text-muted-foreground">{copy.medicalDisclaimer}</p>

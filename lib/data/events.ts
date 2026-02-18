@@ -4,9 +4,11 @@ export type AnalyticsEventName =
   | "scan_start"
   | "scan_result"
   | "clinic_contact_submit"
+  | "clinic_apply_submit"
   | "clinic_modal_opened"
   | "clinic_contact_panel_opened"
   | "clinic_contact_submitted"
+  | "clinic_apply_submitted"
   | "scan_overlay_toggled"
   | "scan_legend_filter_used"
   | "scan_clinic_cta_clicked";
@@ -57,6 +59,17 @@ interface ClinicContactSubmittedPayload extends BasePayload {
   source?: "page" | "modal";
 }
 
+interface ClinicApplySubmitPayload extends BasePayload {
+  event: "clinic_apply_submit";
+  country?: "UK" | "US";
+}
+
+interface ClinicApplySubmittedPayload extends BasePayload {
+  event: "clinic_apply_submitted";
+  country?: "UK" | "US";
+  source?: "for-clinics";
+}
+
 export type EventPayload =
   | BasePayload
   | ScanResultPayload
@@ -66,6 +79,8 @@ export type EventPayload =
   | ClinicModalOpenedPayload
   | ClinicContactPanelOpenedPayload
   | ClinicContactSubmittedPayload
+  | ClinicApplySubmitPayload
+  | ClinicApplySubmittedPayload
   | (BasePayload & { event: "clinic_contact_submit"; clinicId?: string });
 
 export async function trackEvent(payload: EventPayload): Promise<void> {

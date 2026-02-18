@@ -30,7 +30,7 @@ export default function BlogPage() {
     <section className="section-shell">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collection) }} />
-      <div className="container mx-auto max-w-6xl px-4">
+      <div className="container mx-auto px-4">
         <h1 className="section-title">Articles and guides</h1>
         <p className="mt-4 section-copy">
           Practical reading for parents, schools, and clinic teams. Each article uses non-diagnostic language and links directly to scan and clinic pathways.

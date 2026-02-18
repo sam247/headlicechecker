@@ -32,7 +32,7 @@ export default function FaqPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
-      <div className="container mx-auto max-w-5xl px-4">
+      <div className="container mx-auto px-4">
         <h1 className="section-title">Frequently asked questions</h1>
         <p className="mt-4 section-copy">
           Clear answers about image quality, confidence interpretation, privacy boundaries, and what to do after each result type.

@@ -80,10 +80,29 @@ const clinicSubmitSchema = z
   })
   .strict();
 
+const clinicApplySubmitSchema = z
+  .object({
+    event: z.literal("clinic_apply_submit"),
+    timestamp: z.string().optional(),
+    country: z.enum(["UK", "US"]).optional(),
+  })
+  .strict();
+
+const clinicApplySubmittedSchema = z
+  .object({
+    event: z.literal("clinic_apply_submitted"),
+    timestamp: z.string().optional(),
+    country: z.enum(["UK", "US"]).optional(),
+    source: z.literal("for-clinics").optional(),
+  })
+  .strict();
+
 const schema = z.discriminatedUnion("event", [
   scanStartSchema,
   scanResultSchema,
   clinicSubmitSchema,
+  clinicApplySubmitSchema,
+  clinicApplySubmittedSchema,
   overlayToggleSchema,
   legendFilterSchema,
   clinicCtaSchema,
@@ -96,6 +115,8 @@ const counters: Record<string, number> = {
   scan_start: 0,
   scan_result: 0,
   clinic_contact_submit: 0,
+  clinic_apply_submit: 0,
+  clinic_apply_submitted: 0,
   scan_overlay_toggled: 0,
   scan_legend_filter_used: 0,
   scan_clinic_cta_clicked: 0,

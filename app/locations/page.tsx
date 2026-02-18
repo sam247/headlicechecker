@@ -42,7 +42,7 @@ export default function LocationsHubPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collection) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
 
-      <div className="container mx-auto max-w-6xl px-4">
+      <div className="container mx-auto px-4">
         <h1 className="section-title">Head lice clinic location guides</h1>
         <p className="mt-4 section-copy">
           Explore city-specific guidance for parents and caregivers. Each guide covers what to check at home, when to escalate to a clinic, and how to plan nearby support.

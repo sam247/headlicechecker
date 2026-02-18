@@ -37,7 +37,7 @@ export default function ContactPage({ searchParams }: ContactPageProps) {
     <section className="section-shell">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
-      <div className="container mx-auto max-w-4xl px-4">
+      <div className="container mx-auto px-4">
         <h1 className="section-title">Contact Head Lice Checker</h1>
         <p className="mt-4 section-copy">
           Use this form for clinic follow-up enquiries, partner applications, or general support. If you already selected a clinic, we pre-fill that context below.
