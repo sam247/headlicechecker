@@ -1,0 +1,13 @@
+# Render Blueprint: inference service for head-lice scan (YOLO).
+# In Render: New → Blueprint → connect this repo to create the service.
+# Then set DETECTION_API_URL in Vercel to this service’s URL (e.g. https://scan-inference.onrender.com).
+
+services:
+  - type: web
+    name: scan-inference
+    runtime: docker
+    rootDir: inference
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health

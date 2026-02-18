@@ -40,5 +40,9 @@ dist-ssr
 # Legacy / local build
 FRONTENDBUILD/
 
+# YOLO training outputs and downloaded weights
+runs/
+yolov8n.pt
+
 # Misc
 next-temp
