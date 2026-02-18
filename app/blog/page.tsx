@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { getBlogPosts, formatDate, getSiteCopy } from "@/lib/data/content";
@@ -56,7 +57,19 @@ export default function BlogPage() {
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           {posts.map((post) => (
             <Card key={post.slug}>
-              <CardContent className="p-6">
+              <CardContent className="p-0 overflow-hidden">
+                {post.image && (
+                  <Link href={`/blog/${post.slug}`} className="block relative aspect-[16/10] w-full bg-muted">
+                    <Image
+                      src={post.image}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
+                  </Link>
+                )}
+                <div className="p-6">
                 <p className="text-xs text-muted-foreground">
                   {formatDate(post.publishedAt)} · Updated {formatDate(post.updatedAt)} · {post.readMinutes} min read
                 </p>
@@ -67,6 +80,7 @@ export default function BlogPage() {
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">{post.description}</p>
                 <div className="mt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{post.category}</div>
+                </div>
               </CardContent>
             </Card>
           ))}

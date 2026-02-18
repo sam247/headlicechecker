@@ -44,6 +44,43 @@ const relatedGuides = [
   { href: "/find-clinics", label: "Find Clinics" },
 ];
 
+type BodyBlock =
+  | { type: "h2"; text: string }
+  | { type: "p"; html: string }
+  | { type: "ul"; items: string[] }
+  | { type: "ol"; items: string[] };
+
+function parseBodyBlocks(body: string[]): BodyBlock[] {
+  const blocks: BodyBlock[] = [];
+  let i = 0;
+  const numberedRegex = /^\d+\.\s/;
+  while (i < body.length) {
+    const line = body[i];
+    if (line.startsWith("## ")) {
+      blocks.push({ type: "h2", text: line.slice(3) });
+      i += 1;
+    } else if (line.startsWith("• ")) {
+      const items: string[] = [];
+      while (i < body.length && body[i].startsWith("• ")) {
+        items.push(body[i].slice(2));
+        i += 1;
+      }
+      blocks.push({ type: "ul", items });
+    } else if (numberedRegex.test(line)) {
+      const items: string[] = [];
+      while (i < body.length && numberedRegex.test(body[i])) {
+        items.push(body[i].replace(numberedRegex, ""));
+        i += 1;
+      }
+      blocks.push({ type: "ol", items });
+    } else {
+      blocks.push({ type: "p", html: line });
+      i += 1;
+    }
+  }
+  return blocks;
+}
+
 export default function BlogDetailPage({ params }: BlogDetailPageProps) {
   const post = getBlogPostBySlug(params.slug);
   if (!post) notFound();
@@ -80,17 +117,38 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
         )}
 
         <div className="mt-8 space-y-4 text-base leading-7 text-foreground prose prose-neutral max-w-none">
-          {post.body.map((block, index) => {
+          {parseBodyBlocks(post.body).map((block, index) => {
             const key = `${post.slug}-${index}`;
-            if (block.startsWith("## ")) {
+            if (block.type === "h2") {
               return (
                 <h2 key={key} className="mt-8 mb-3 text-xl font-semibold md:text-2xl scroll-mt-6">
-                  {block.slice(3)}
+                  {block.text}
                 </h2>
               );
             }
+            if (block.type === "ul") {
+              return (
+                <ul key={key} className="my-4 ml-4 list-none space-y-2 pl-0">
+                  {block.items.map((item, j) => (
+                    <li key={j} className="flex gap-3">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
+                      <span dangerouslySetInnerHTML={{ __html: item }} />
+                    </li>
+                  ))}
+                </ul>
+              );
+            }
+            if (block.type === "ol") {
+              return (
+                <ol key={key} className="my-4 list-decimal space-y-2 pl-6">
+                  {block.items.map((item, j) => (
+                    <li key={j} dangerouslySetInnerHTML={{ __html: item }} />
+                  ))}
+                </ol>
+              );
+            }
             return (
-              <p key={key} dangerouslySetInnerHTML={{ __html: block }} />
+              <p key={key} dangerouslySetInnerHTML={{ __html: block.html }} />
             );
           })}
         </div>
