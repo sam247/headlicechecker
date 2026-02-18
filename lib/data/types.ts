@@ -27,9 +27,9 @@ export interface Clinic {
   country: "US" | "UK";
   city: string;
   postcode: string;
-  address1: string;
+  address1?: string;
   address2?: string;
-  phone: string;
+  phone?: string;
   email?: string;
   bookingUrl?: string;
   lat: number;

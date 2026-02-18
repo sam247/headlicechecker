@@ -1,18 +1,92 @@
 [
   {
+    "id": "uk-ascot-no-more-nits",
+    "name": "No More Nits",
+    "region": "Berkshire",
+    "country": "UK",
+    "city": "Ascot",
+    "postcode": "SL5 8QS",
+    "phone": "7785390540",
+    "email": "info@no-more-nits.com",
+    "bookingUrl": "https://no-more-nits.com/",
+    "lat": 51.4062463,
+    "lng": -0.6767778,
+    "services": [
+      "Screening",
+      "Removal"
+    ],
+    "active": true
+  },
+  {
+    "id": "uk-chipping-norton-nit-happens",
+    "name": "Nit Happens",
+    "region": "Oxfordshire",
+    "country": "UK",
+    "city": "Chipping Norton",
+    "postcode": "OX7 6TU",
+    "phone": "7713982012",
+    "email": "info@nithappens.co.uk",
+    "bookingUrl": "https://nithappens.co.uk/",
+    "lat": 51.9382855,
+    "lng": -1.5423957,
+    "services": [
+      "Screening",
+      "Removal"
+    ],
+    "active": true
+  },
+  {
+    "id": "uk-essex-the-nit-nurse",
+    "name": "The Nit Nurse",
+    "region": "Essex",
+    "country": "UK",
+    "city": "Essex",
+    "postcode": "IG9 6BY",
+    "address1": "Buckhurst Hill",
+    "phone": "7944227477",
+    "email": "info@nitnurse.co.uk",
+    "bookingUrl": "https://nitnurse.co.uk/",
+    "lat": 51.6259439,
+    "lng": 0.0468161,
+    "services": [
+      "Screening",
+      "Removal"
+    ],
+    "active": true
+  },
+  {
     "id": "uk-richmond-nitnot-clinic",
     "name": "NitNOT Clinic",
     "region": "London",
     "country": "UK",
     "city": "Richmond",
     "postcode": "TW12 1AG",
-    "address1": "Flat 8 Chapter Way",
+    "address1": "Chapter Way",
     "address2": "Hampton",
     "phone": "7835356251",
     "email": "anica@nitnot.com",
     "bookingUrl": "https://nitnotclinic.com/",
     "lat": 51.4314516,
     "lng": -0.3743448,
+    "services": [
+      "Screening",
+      "Removal"
+    ],
+    "active": true
+  },
+  {
+    "id": "uk-yorkshire-york-head-lice-clinic",
+    "name": "York Head Lice Clinic",
+    "region": "Yorkshire",
+    "country": "UK",
+    "city": "Yorkshire",
+    "postcode": "YO32",
+    "address2": "Strensall",
+    "phone": "7830193302",
+    "email": "redgem85@gmail.com",
+    "bookingUrl": "https://yorkheadliceclinic.co.uk/",
+    "lat": 54.0367761,
+    "lng": -1.0380357,
     "services": [
       "Screening",
       "Removal"

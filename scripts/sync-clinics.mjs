@@ -229,14 +229,12 @@ async function run() {
     const email = getCell(row, indexByHeader, "Email");
     const websiteRaw = getCell(row, indexByHeader, "Website");
 
+    // Only Postcode and County are required; other address fields are optional
     const requiredChecks = [
       ["Name", name],
-      ["Address 1", address1],
-      ["Town", town],
       ["County", county],
       ["Postcode", postcode],
       ["Country", countryRaw],
-      ["Telephone", telephone],
     ];
     const missingFields = requiredChecks.filter(([, value]) => !value).map(([field]) => field);
     if (missingFields.length > 0) {
@@ -271,7 +269,9 @@ async function run() {
       continue;
     }
 
-    const id = slugify(`${country}-${town}-${name}`);
+    // Use town if available, otherwise fall back to county for ID generation
+    const cityForId = town || county;
+    const id = slugify(`${country}-${cityForId}-${name}`);
     if (!id) {
       const message = `Row ${rowNum}: could not create clinic id`;
       if (strictMode) {
@@ -326,11 +326,11 @@ async function run() {
       name,
       region: county,
       country,
-      city: town,
+      city: town || county, // Use county as fallback if town is missing
       postcode,
-      address1,
+      ...(address1 ? { address1 } : {}),
       ...(address2 ? { address2 } : {}),
-      phone: telephone,
+      ...(telephone ? { phone: telephone } : {}),
       ...(email ? { email } : {}),
       ...(bookingUrl ? { bookingUrl } : {}),
       lat: coords.lat,

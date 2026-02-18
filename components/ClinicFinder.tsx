@@ -163,7 +163,11 @@ export default function ClinicFinder({
   }, [clinics, mapFocusClinicId, origin]);
 
   const handleCopy = async (clinic: Clinic) => {
-    const text = `${clinic.name} | ${clinic.phone} | ${clinic.address1}, ${clinic.city} ${clinic.postcode}`;
+    const parts = [clinic.name];
+    if (clinic.phone) parts.push(clinic.phone);
+    const address = clinic.address1 ? `${clinic.address1}, ${clinic.city} ${clinic.postcode}` : `${clinic.city} ${clinic.postcode}`;
+    parts.push(address);
+    const text = parts.join(" | ");
     try {
       await navigator.clipboard.writeText(text);
       setCopiedClinicId(clinic.id);
@@ -264,8 +268,14 @@ export default function ClinicFinder({
                             <p className="flex items-start gap-2">
                               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                               <span>
-                                {clinic.address1}
-                                {clinic.address2 ? `, ${clinic.address2}` : ""}, {clinic.city} {clinic.postcode}
+                                {clinic.address1 ? (
+                                  <>
+                                    {clinic.address1}
+                                    {clinic.address2 ? `, ${clinic.address2}` : ""}, {clinic.city} {clinic.postcode}
+                                  </>
+                                ) : (
+                                  `${clinic.city} ${clinic.postcode}`
+                                )}
                               </span>
                             </p>
                           )}
@@ -275,7 +285,7 @@ export default function ClinicFinder({
                               <span>{clinic.city} {clinic.postcode}</span>
                             </p>
                           )}
-                          {!hideDirectContact && !hideClinicContactDetails && (
+                          {!hideDirectContact && !hideClinicContactDetails && clinic.phone && (
                             <p className="flex items-center gap-2">
                               <Phone className="h-4 w-4 shrink-0 text-primary" />
                               <a href={`tel:${clinic.phone}`} className="hover:text-foreground">
@@ -325,7 +335,7 @@ export default function ClinicFinder({
                         <Button asChild size="sm" variant="outline" className="rounded-full">
                           <a
                             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                              hideClinicContactDetails
+                              hideClinicContactDetails || !clinic.address1
                                 ? `${clinic.city} ${clinic.postcode}`
                                 : `${clinic.address1}, ${clinic.city} ${clinic.postcode}`
                             )}`}
