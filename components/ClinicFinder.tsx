@@ -11,6 +11,8 @@ import { getClinics } from "@/lib/data/content";
 import { findOriginFromQuery, sortClinicsByNearest, distanceMiles } from "@/lib/data/geo";
 import type { Clinic } from "@/lib/data/types";
 
+const GEOCODE_DEBOUNCE_MS = 450;
+
 interface ClinicFinderProps {
   showHeader?: boolean;
   country?: "US" | "UK" | "ALL";
@@ -25,13 +27,20 @@ const initialClinics = getClinics("ALL");
 
 const MAP_DELTA = 0.02;
 
-function buildMapSrc(clinics: Clinic[]): string {
-  if (clinics.length === 0) {
+function buildMapSrc(
+  clinics: Clinic[],
+  origin?: { lat: number; lng: number } | null
+): string {
+  const lats = clinics.map((c) => c.lat);
+  const lngs = clinics.map((c) => c.lng);
+  if (origin) {
+    lats.push(origin.lat);
+    lngs.push(origin.lng);
+  }
+  if (lats.length === 0) {
     return "https://www.openstreetmap.org/export/embed.html?bbox=-124,25,-66,49&layer=mapnik";
   }
 
-  const lats = clinics.map((c) => c.lat);
-  const lngs = clinics.map((c) => c.lng);
   const minLat = Math.min(...lats) - 1;
   const maxLat = Math.max(...lats) + 1;
   const minLng = Math.min(...lngs) - 1;
@@ -70,6 +79,33 @@ export default function ClinicFinder({
   );
   const [copiedClinicId, setCopiedClinicId] = useState<string | null>(null);
   const [mapFocusClinicId, setMapFocusClinicId] = useState<string | null>(null);
+  const [geocodedOrigin, setGeocodedOrigin] = useState<{ lat: number; lng: number } | null>(null);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
+      setGeocodedOrigin(null);
+      return;
+    }
+    const t = setTimeout(async () => {
+      setIsGeocoding(true);
+      try {
+        const res = await fetch(`/api/geocode?q=${encodeURIComponent(trimmed)}`);
+        const data = (await res.json()) as { lat?: number; lng?: number; error?: string };
+        if (res.ok && typeof data.lat === "number" && typeof data.lng === "number") {
+          setGeocodedOrigin({ lat: data.lat, lng: data.lng });
+        } else {
+          setGeocodedOrigin(null);
+        }
+      } catch {
+        setGeocodedOrigin(null);
+      } finally {
+        setIsGeocoding(false);
+      }
+    }, GEOCODE_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [query]);
 
   useEffect(() => {
     if (isModalMode) return;
@@ -90,34 +126,37 @@ export default function ClinicFinder({
     setMapFocusClinicId(null);
   }, [query, selectedCountry]);
 
-  const clinics = useMemo(() => {
+  const { clinics, origin } = useMemo(() => {
     const source =
       selectedCountry === "ALL"
         ? initialClinics
         : initialClinics.filter((clinic) => clinic.country === selectedCountry);
 
     const normalized = query.trim().toLowerCase();
-    const filtered = normalized
-      ? source.filter(
-          (clinic) =>
-            clinic.city.toLowerCase().includes(normalized) ||
-            clinic.postcode.toLowerCase().includes(normalized) ||
-            clinic.region.toLowerCase().includes(normalized)
-        )
-      : source;
+    const textFiltered =
+      normalized
+        ? source.filter(
+            (clinic) =>
+              clinic.city.toLowerCase().includes(normalized) ||
+              clinic.postcode.toLowerCase().includes(normalized) ||
+              clinic.region.toLowerCase().includes(normalized)
+          )
+        : source;
 
-    const origin = findOriginFromQuery(source, query);
-    return sortClinicsByNearest(filtered, origin);
-  }, [query, selectedCountry]);
+    const originPoint = geocodedOrigin ?? findOriginFromQuery(source, query);
+    const filtered =
+      textFiltered.length === 0 && geocodedOrigin ? source : textFiltered;
+    const sorted = sortClinicsByNearest(filtered, originPoint);
+    return { clinics: sorted, origin: originPoint };
+  }, [query, selectedCountry, geocodedOrigin]);
 
   const mapSrc = useMemo(() => {
     if (mapFocusClinicId) {
       const focused = clinics.find((c) => c.id === mapFocusClinicId);
       if (focused) return buildMapSrcForClinic(focused);
     }
-    return buildMapSrc(clinics);
-  }, [clinics, mapFocusClinicId]);
-  const origin = useMemo(() => findOriginFromQuery(initialClinics, query), [query]);
+    return buildMapSrc(clinics, origin);
+  }, [clinics, mapFocusClinicId, origin]);
 
   const handleCopy = async (clinic: Clinic) => {
     const text = `${clinic.name} | ${clinic.phone} | ${clinic.address1}, ${clinic.city} ${clinic.postcode}`;
@@ -133,14 +172,21 @@ export default function ClinicFinder({
   const body = (
     <>
       <div className={isModalMode ? "mb-4 grid gap-3 md:grid-cols-[1fr_auto_auto]" : "mb-6 grid gap-3 md:grid-cols-[1fr_auto_auto]"}>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Enter ZIP, postcode, or city"
-            className="pl-10"
-          />
+        <div>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Enter ZIP, postcode, or city"
+              className="pl-10"
+            />
+          </div>
+          {isGeocoding && (
+            <p className="mt-1 text-xs text-muted-foreground" aria-live="polite">
+              Searching…
+            </p>
+          )}
         </div>
 
         <select
