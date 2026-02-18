@@ -68,6 +68,78 @@ export interface SiteCopy {
   secondaryCta: string;
 }
 
+export interface HomeHeroContent {
+  badge: string;
+  title: string;
+  emphasis: string;
+  paragraphs: string[];
+  highlights: string[];
+}
+
+export interface HomeSectionContent {
+  heading: string;
+  paragraphs: string[];
+}
+
+export interface HomeLookForItem {
+  title: string;
+  copy: string;
+}
+
+export interface HomeScenarioCard {
+  audience: string;
+  title: string;
+  copy: string;
+  points: string[];
+}
+
+export interface HomeTrustLink {
+  href: string;
+  label: string;
+  title: string;
+  copy: string;
+}
+
+export interface HomePageContent {
+  reviewedAt: string;
+  hero: HomeHeroContent;
+  quickDecide: HomeSectionContent;
+  lookFor: {
+    heading: string;
+    intro: string;
+    items: HomeLookForItem[];
+  };
+  monitorVsClinic: {
+    heading: string;
+    paragraphs: string[];
+    monitorSignals: string[];
+    escalateSignals: string[];
+    framework: string[];
+  };
+  scenarios: {
+    heading: string;
+    intro: string;
+    cards: HomeScenarioCard[];
+  };
+  trust: {
+    heading: string;
+    intro: string;
+    links: HomeTrustLink[];
+  };
+  guides: {
+    heading: string;
+    intro: string;
+  };
+  faq: {
+    heading: string;
+    intro: string;
+  };
+  lowerCta: {
+    title: string;
+    copy: string;
+  };
+}
+
 export interface LeadSubmissionResult {
   ok: boolean;
   referenceId?: string;

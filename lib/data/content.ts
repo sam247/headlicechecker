@@ -6,7 +6,17 @@ import siteCopy from "@/content/site-copy.json";
 import evergreenPages from "@/content/pages/evergreen.json";
 import locationPages from "@/content/pages/locations.json";
 import trustPages from "@/content/pages/trust.json";
-import type { BlogPost, Clinic, EvergreenPage, FaqItem, LocationSeoPage, SiteCopy, TrustPage } from "@/lib/data/types";
+import homePageContent from "@/content/pages/home.json";
+import type {
+  BlogPost,
+  Clinic,
+  EvergreenPage,
+  FaqItem,
+  HomePageContent,
+  LocationSeoPage,
+  SiteCopy,
+  TrustPage,
+} from "@/lib/data/types";
 
 export function getClinics(country: "US" | "UK" | "ALL" = "US"): Clinic[] {
   const all = [...(usClinics as Clinic[]), ...(ukClinics as Clinic[])].filter((c) => c.active);
@@ -63,4 +73,8 @@ export function getTrustPages(): TrustPage[] {
 
 export function getTrustPageBySlug(slug: string): TrustPage | undefined {
   return getTrustPages().find((page) => page.slug === slug);
+}
+
+export function getHomePageContent(): HomePageContent {
+  return homePageContent as HomePageContent;
 }

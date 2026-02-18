@@ -1,0 +1,153 @@
+{
+  "reviewedAt": "2026-02-18",
+  "hero": {
+    "badge": "Calm, private, parent-first head lice checker guidance",
+    "title": "Head Lice Checker: Check Scalp Photos in Seconds",
+    "emphasis": "Get Clear Next Steps for Nits and Head Lice",
+    "paragraphs": [
+      "Use this head lice checker for a fast first check when you spot itching, scalp irritation, or possible nits. Upload a clear close-up photo and get an indicative result with practical guidance for what to do next at home.",
+      "Head Lice Checker is built for parents, caregivers, schools, and adults who need quick direction under pressure. Results are non-diagnostic and should be followed by professional confirmation when risk appears elevated or symptoms continue."
+    ],
+    "highlights": [
+      "Indicative head lice check in seconds",
+      "Built for mobile parent and caregiver use",
+      "Direct pathway to clinic follow-up"
+    ]
+  },
+  "quickDecide": {
+    "heading": "How this head lice checker helps you decide quickly",
+    "paragraphs": [
+      "Most families do not need a long technical explanation in minute one. They need a clear process that lowers panic and helps them avoid guesswork. This page is designed around that reality: check for likely indicators, understand confidence boundaries, and move to the right next step without delay.",
+      "The scan is an evidence-led triage tool, not a diagnosis. It helps you prioritize action when you are trying to separate likely head lice activity from common lookalikes such as dandruff, dry scalp flakes, or product residue. By keeping language practical and non-alarmist, the checker supports calm decisions even when symptoms appear suddenly before school or work.",
+      "When a result suggests possible risk, you can move straight to clinic pathways for professional confirmation. When risk appears low or unclear, you receive re-check guidance focused on better image capture and symptom monitoring. That balance matters: it reduces unnecessary treatment while helping households escalate quickly when signs become more consistent."
+    ]
+  },
+  "lookFor": {
+    "heading": "What to look for: head lice, nits, and lookalikes",
+    "intro": "Head lice checking is easier when you know what patterns are meaningful and which signs are easy to misread in poor lighting. Use these comparison points as a practical checklist before and after your scan.",
+    "items": [
+      {
+        "title": "Head lice indicators",
+        "copy": "Live lice are small moving insects that stay close to the scalp and are often seen near the nape or behind the ears. Confirmed movement and repeat sightings across checks usually increase concern more than one uncertain visual speck."
+      },
+      {
+        "title": "Nits and attached ovals",
+        "copy": "Nits are typically oval and fixed to one side of the hair shaft. Unlike loose flakes, they are hard to flick away. Repeatedly seeing attached ovals near the scalp in several sections is a stronger signal than finding one isolated particle."
+      },
+      {
+        "title": "Dandruff and dry scalp overlap",
+        "copy": "Dandruff flakes are usually irregular and mobile. They can look similar to nits at a glance, especially in rushed evening checks. If particles slide away easily, the finding is often less consistent with active nit attachment."
+      },
+      {
+        "title": "Scalp irritation and symptom context",
+        "copy": "Itching, redness, and restlessness can support concern but are not definitive by themselves. Symptoms should be interpreted together with visual evidence, exposure context, and whether findings repeat over time."
+      }
+    ]
+  },
+  "monitorVsClinic": {
+    "heading": "When to monitor at home vs when to contact a clinic",
+    "paragraphs": [
+      "A useful head lice check is not just about detection. It is about making the next action obvious. Families often get stuck between overreacting and waiting too long. This framework is intended to reduce that friction and keep decision quality high.",
+      "If results are reassuring and symptoms are mild, a structured monitor-and-recheck approach is usually reasonable. If indicators repeat, symptoms persist, or multiple contacts report issues, move promptly toward professional confirmation. Early escalation in the right cases can shorten disruption for the whole household.",
+      "Use the same process each time so you can compare like for like: clear lighting, parted hair, close-up images, and a consistent log of what was observed. Repeatability matters more than a single rushed check."
+    ],
+    "monitorSignals": [
+      "No clear indicators after a high-quality photo check",
+      "Mild or intermittent symptoms without household spread",
+      "Particles appear loose and brush away easily",
+      "No recent known exposure and no symptom progression",
+      "Improvement after routine scalp care and observation"
+    ],
+    "escalateSignals": [
+      "Repeated likely indicators across more than one check",
+      "Attached ovals near the scalp in multiple zones",
+      "Persistent itching, irritation, or sleep disruption",
+      "Recent school or close-contact exposure plus symptoms",
+      "More than one household member reporting similar signs"
+    ],
+    "framework": [
+      "Capture 2 to 3 clear close-up scalp photos with hair parted near roots.",
+      "Run a quick head lice checker scan and review the confidence context.",
+      "If risk appears elevated or uncertainty persists, contact a clinic for confirmation.",
+      "Use one household action plan so checks, communication, and follow-up stay consistent."
+    ]
+  },
+  "scenarios": {
+    "heading": "Built for real family and school scenarios",
+    "intro": "Head lice concerns do not show up in ideal conditions. They show up during busy evenings, before school drop-off, and across mixed households with different routines. The product and content are designed for those real moments.",
+    "cards": [
+      {
+        "audience": "Parents and caregivers",
+        "title": "Fast triage when stress is high",
+        "copy": "Parents often need a same-day decision on whether to monitor, recheck, or escalate. The checker gives a clear first signal and practical language you can share with partners or co-parents so everyone follows the same next step.",
+        "points": [
+          "Clear first-step head lice check at home",
+          "Calm wording that avoids panic escalation",
+          "Direct clinic pathway when follow-up is needed"
+        ]
+      },
+      {
+        "audience": "Schools and childcare teams",
+        "title": "Consistent communication during outbreaks",
+        "copy": "School and childcare teams need repeatable guidance that supports families without making diagnostic claims. Head Lice Checker provides practical education pages and scan-first triage language that can reduce mixed messaging during high-contact periods.",
+        "points": [
+          "Parent-first, non-diagnostic guidance",
+          "Useful for exposure notice follow-up workflows",
+          "Supports faster escalation when symptoms persist"
+        ]
+      },
+      {
+        "audience": "Adults and shared households",
+        "title": "Practical checks beyond childcare contexts",
+        "copy": "Adults can also need fast direction, especially in shared homes or close-contact settings. The same structured process applies: identify likely signs, avoid over-treatment from uncertain checks, and seek professional confirmation when repeat indicators appear.",
+        "points": [
+          "Evidence-led nits and head lice checking",
+          "Designed for both individual and household use",
+          "Supports clear follow-up decisions with less guesswork"
+        ]
+      }
+    ]
+  },
+  "trust": {
+    "heading": "Why families trust Head Lice Checker",
+    "intro": "Trust comes from clarity, boundaries, and consistency. We keep outputs non-diagnostic, show practical next actions, and maintain transparent documentation for methodology, clinical safety, and editorial standards.",
+    "links": [
+      {
+        "href": "/methodology",
+        "label": "Methodology",
+        "title": "How detections and confidence tiers are produced",
+        "copy": "See how image evidence is processed, normalized, and translated into parent-facing guidance without overconfident medical claims."
+      },
+      {
+        "href": "/clinical-safety",
+        "label": "Clinical Safety",
+        "title": "Safety boundaries and escalation triggers",
+        "copy": "Review known limitations, uncertainty factors, and when we recommend moving from home checks to professional support."
+      },
+      {
+        "href": "/editorial-policy",
+        "label": "Editorial Policy",
+        "title": "How content quality and updates are governed",
+        "copy": "Understand how we maintain clear language, consistent disclaimers, and practical guidance as pages and workflows evolve."
+      },
+      {
+        "href": "/about",
+        "label": "About",
+        "title": "Who we build for and how we improve",
+        "copy": "Learn how families, schools, and clinic pathways shaped this product and why we prioritize useful guidance over hype."
+      }
+    ]
+  },
+  "guides": {
+    "heading": "Latest practical guides",
+    "intro": "Read focused guidance on first signs, treatment pathways, and common misreads, then return to the scan when you are ready to take action."
+  },
+  "faq": {
+    "heading": "Expanded FAQ",
+    "intro": "These quick answers cover high-intent questions families ask before they decide whether to monitor, rescan, or book professional confirmation."
+  },
+  "lowerCta": {
+    "title": "Need quick expert support after your check?",
+    "copy": "Use the clinic finder to compare nearby options and submit a structured enquiry in under a minute."
+  }
+}
