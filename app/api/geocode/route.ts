@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
   }
 
   const q = request.nextUrl.searchParams.get("q");
+  const countryParam = request.nextUrl.searchParams.get("country");
   const query = typeof q === "string" ? q.trim() : "";
   if (query.length < MIN_QUERY_LENGTH || query.length > MAX_QUERY_LENGTH) {
     return NextResponse.json(
@@ -21,7 +22,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&limit=1&types=postcode,place,address`;
+  // Mapbox uses ISO 3166-1 alpha-2; bias results to selected country for partial postcodes (e.g. hp1 -> UK)
+  const countryCode =
+    countryParam === "UK" ? "GB" : countryParam === "US" ? "US" : null;
+  const countryQ = countryCode ? `&country=${countryCode}` : "";
+
+  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&limit=1&types=postcode,place,address${countryQ}`;
 
   try {
     const res = await fetch(url);

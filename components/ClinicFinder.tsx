@@ -91,7 +91,11 @@ export default function ClinicFinder({
     const t = setTimeout(async () => {
       setIsGeocoding(true);
       try {
-        const res = await fetch(`/api/geocode?q=${encodeURIComponent(trimmed)}`);
+        const params = new URLSearchParams({ q: trimmed });
+        if (selectedCountry === "UK" || selectedCountry === "US") {
+          params.set("country", selectedCountry);
+        }
+        const res = await fetch(`/api/geocode?${params.toString()}`);
         const data = (await res.json()) as { lat?: number; lng?: number; error?: string };
         if (res.ok && typeof data.lat === "number" && typeof data.lng === "number") {
           setGeocodedOrigin({ lat: data.lat, lng: data.lng });
@@ -105,7 +109,7 @@ export default function ClinicFinder({
       }
     }, GEOCODE_DEBOUNCE_MS);
     return () => clearTimeout(t);
-  }, [query]);
+  }, [query, selectedCountry]);
 
   useEffect(() => {
     if (isModalMode) return;
