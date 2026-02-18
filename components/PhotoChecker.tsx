@@ -370,30 +370,25 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   return (
     <section id="start-scan" className="section-shell bg-muted/40">
       <div className="container mx-auto px-4">
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-          {/* Left: guide and info */}
+        <div className="grid gap-x-16 gap-y-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+          {/* Left: h1, intro, bullets (including size restraint) */}
           <div>
-            <h2 className="section-title text-left">Start a free photo scan</h2>
+            <h1 className="section-title text-left">Start a free photo scan</h1>
             <p className="mt-3 section-copy">
-              Upload a clear scalp close-up for an indicative result in seconds. Designed for anxious parents on mobile.
+              Upload a clear scalp close-up for an indicative result in seconds. Photos that don’t meet the size requirement below are rejected.
             </p>
-            <Card className="mt-6">
-              <CardContent className="p-6">
-                <h3 className="font-semibold">How to get the best result</h3>
-                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                  <li>• Bright lighting and close to scalp</li>
-                  <li>• Hair parted to show roots</li>
-                  <li>• At least {MIN_SIDE_PX}px on the shortest side</li>
-                </ul>
-                <p className="mt-4 text-xs text-muted-foreground">
-                  This is an indicative screening only, not a diagnosis. Low-quality images can reduce confidence.
-                </p>
-              </CardContent>
-            </Card>
+            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+              <li>• Bright lighting and close to scalp</li>
+              <li>• Hair parted to show roots</li>
+              <li>• Shortest side at least {MIN_SIDE_PX}px (smaller images are rejected)</li>
+            </ul>
+            <p className="mt-4 text-xs text-muted-foreground">
+              Indicative screening only, not a diagnosis.
+            </p>
           </div>
 
-          {/* Right: action area */}
-          <div className="min-w-0">
+          {/* Right: action area, aligned with left content */}
+          <div className="min-w-0 lg:pt-0">
             {stage === "upload" && (
               <Card className="border-2 border-dashed border-primary/30">
                 <CardContent className="p-6 md:p-8">
@@ -445,26 +440,13 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                   <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
                     <AlertTriangle className="h-5 w-5 text-amber-700" />
                   </div>
-                  <p className="text-lg font-semibold">Photo may be too small for strong confidence</p>
+                  <p className="text-lg font-semibold">Photo too small</p>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    You can continue, but a closer image usually improves reliability.
+                    Shortest side must be at least {MIN_SIDE_PX}px. This image doesn’t meet the requirement and was rejected.
                   </p>
-                  <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
-                    <Button variant="outline" className="rounded-full" onClick={reset}>
-                      Choose another photo
-                    </Button>
-                    <Button
-                      className="rounded-full"
-                      onClick={() => {
-                        if (pendingFile) {
-                          runScan(pendingFile);
-                          setPendingFile(null);
-                        }
-                      }}
-                    >
-                      Continue anyway
-                    </Button>
-                  </div>
+                  <Button variant="outline" className="mt-5 rounded-full" onClick={reset}>
+                    Choose another photo
+                  </Button>
                 </CardContent>
               </Card>
             )}
