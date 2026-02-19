@@ -36,13 +36,21 @@ const footerColumns = [
       { label: "Terms", href: "/terms" },
     ],
   },
+  {
+    title: "Downloads",
+    links: [
+      { label: "Parent Notice Template", href: "/for-schools#downloads" },
+      { label: "Classroom Response Checklist", href: "/for-schools#downloads" },
+      { label: "School Head Lice Guide", href: "/for-schools#downloads" },
+    ],
+  },
 ];
 
 export default function SiteFooter() {
   return (
     <footer className="border-t border-border bg-card">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid gap-10 md:grid-cols-4">
+        <div className="grid gap-10 md:grid-cols-5 md:gap-8">
           <div>
             <Image
               src="/logo_new.png"

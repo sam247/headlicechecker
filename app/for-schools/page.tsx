@@ -168,7 +168,7 @@ export default function ForSchoolsPage() {
   const rightFaqs = faqs.slice(midpoint);
 
   return (
-    <section className="section-shell">
+    <section className="section-shell pb-[72px] md:pb-24">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }} />
@@ -191,9 +191,6 @@ export default function ForSchoolsPage() {
               <Button asChild variant="outline" className="rounded-full" size="lg">
                 <Link href="/find-clinics">{copy.secondaryCta}</Link>
               </Button>
-              <Button asChild variant="ghost" className="rounded-full" size="lg">
-                <Link href="/contact">Contact school support</Link>
-              </Button>
             </div>
           </div>
 
@@ -212,7 +209,7 @@ export default function ForSchoolsPage() {
       </div>
 
       <div className="container mx-auto px-4">
-        <div className="mt-9 flex flex-wrap gap-3 text-sm">
+        <div className="mt-4 flex flex-wrap gap-3 text-sm">
           {hubNav.map((item) => (
             <Link key={item.href} href={item.href} className="rounded-full border border-border bg-muted/20 px-3 py-1.5 font-medium hover:bg-muted/40">
               {item.label}
