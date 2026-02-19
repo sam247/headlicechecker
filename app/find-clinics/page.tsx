@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import FindClinicsSection from "@/components/site/FindClinicsSection";
 import ClinicEnquiryForm from "@/components/site/ClinicEnquiryForm";
-import { Card, CardContent } from "@/components/ui/card";
 import { getClinics, getSiteCopy } from "@/lib/data/content";
 import { breadcrumbJsonLd, medicalWebPageJsonLd, pageMetadata, serviceJsonLd } from "@/lib/seo";
 
@@ -50,26 +48,6 @@ export default function FindClinicsPage({ searchParams }: FindClinicsPageProps) 
         <FindClinicsSection clinics={clinics} />
 
         <section className="section-shell pt-8">
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-2xl font-bold">Before contacting a clinic</h2>
-              <p className="mt-3 text-sm text-muted-foreground md:text-base">
-                For the strongest outcome, start with a clear close-up scan and note symptom timing. This gives your clinic enquiry better context and helps teams triage quickly.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-4 text-sm">
-                <Link href="/#start-scan" className="text-primary hover:underline">
-                  {copy.primaryCta}
-                </Link>
-                <Link href="/head-lice-symptoms" className="text-primary hover:underline">
-                  Head lice symptoms guide
-                </Link>
-                <Link href="/locations" className="text-primary hover:underline">
-                  City location guides
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-
           <div className="mt-8">
             <h2 className="text-xl font-semibold">Are you a head lice clinic and interested in being listed?</h2>
             <p className="mt-1 text-sm text-muted-foreground">

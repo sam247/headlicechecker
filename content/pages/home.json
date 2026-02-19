@@ -42,28 +42,6 @@
       }
     ]
   },
-  "monitorVsClinic": {
-    "heading": "When to monitor at home vs when to contact a clinic",
-    "paragraphs": [
-      "A useful head lice check is not just about detection. It is about making the next action obvious. Families often get stuck between overreacting and waiting too long. This framework is intended to reduce that friction and keep decision quality high.",
-      "If results are reassuring and symptoms are mild, a structured monitor-and-recheck approach is usually reasonable. If indicators repeat, symptoms persist, or multiple contacts report issues, move promptly toward professional confirmation. Early escalation in the right cases can shorten disruption for the whole household.",
-      "Use the same process each time so you can compare like for like: clear lighting, parted hair, close-up images, and a consistent log of what was observed. Repeatability matters more than a single rushed check."
-    ],
-    "monitorSignals": [
-      "No clear indicators after a high-quality photo check",
-      "Mild or intermittent symptoms without household spread",
-      "Particles appear loose and brush away easily",
-      "No recent known exposure and no symptom progression",
-      "Improvement after routine scalp care and observation"
-    ],
-    "escalateSignals": [
-      "Repeated likely indicators across more than one check",
-      "Attached ovals near the scalp in multiple zones",
-      "Persistent itching, irritation, or sleep disruption",
-      "Recent school or close-contact exposure plus symptoms",
-      "More than one household member reporting similar signs"
-    ]
-  },
   "scenarios": {
     "heading": "Built for real family and school scenarios",
     "intro": "Head lice concerns do not show up in ideal conditions. They show up during busy evenings, before school drop-off, and across mixed households with different routines. The product and content are designed for those real moments.",
@@ -96,6 +74,16 @@
           "Evidence-led nits and head lice checking",
           "Designed for both individual and household use",
           "Supports clear follow-up decisions with less guesswork"
+        ]
+      },
+      {
+        "audience": "Clinic follow-up planning",
+        "title": "Prepare better for professional confirmation",
+        "copy": "When signals repeat, organized follow-up helps clinics confirm risk faster and reduce duplicate checks. Capture what you saw, when symptoms started, and what changed between scans so the next conversation is focused and practical.",
+        "points": [
+          "Bring a short timeline of symptoms and re-checks",
+          "Share clear photos that show where findings appeared",
+          "Use the clinic finder quickly when concern remains elevated"
         ]
       }
     ]

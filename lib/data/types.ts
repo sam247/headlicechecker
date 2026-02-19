@@ -109,12 +109,6 @@ export interface HomePageContent {
     intro: string;
     items: HomeLookForItem[];
   };
-  monitorVsClinic: {
-    heading: string;
-    paragraphs: string[];
-    monitorSignals: string[];
-    escalateSignals: string[];
-  };
   scenarios: {
     heading: string;
     intro: string;

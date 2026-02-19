@@ -110,9 +110,9 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
                 <Link href="/find-clinics">{siteCopy.secondaryCta}</Link>
               </Button>
             </div>
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <div className="mt-6 flex gap-3 overflow-x-auto pb-1">
               {content.hero.highlights.map((item) => (
-                <div key={item} className="rounded-xl border border-border/80 bg-card px-3 py-2 text-sm">
+                <div key={item} className="shrink-0 rounded-xl border border-border/80 bg-card px-3 py-2 text-sm">
                   <CheckCircle2 className="mr-2 inline h-4 w-4 text-primary" />
                   {item}
                 </div>
@@ -231,68 +231,13 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
         </div>
       </section>
 
-      <section className="section-shell pt-0">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold md:text-3xl">{content.monitorVsClinic.heading}</h2>
-          <div className="mt-4 max-w-4xl space-y-4 text-sm leading-7 text-muted-foreground md:text-base">
-            {content.monitorVsClinic.paragraphs.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
-          </div>
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold">Usually reasonable to monitor at home</h3>
-                <ul className="mt-4 space-y-2 text-sm text-muted-foreground md:text-base">
-                  {content.monitorVsClinic.monitorSignals.map((item) => (
-                    <li key={item}>• {item}</li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold">Move to clinic confirmation promptly</h3>
-                <ul className="mt-4 space-y-2 text-sm text-muted-foreground md:text-base">
-                  {content.monitorVsClinic.escalateSignals.map((item) => (
-                    <li key={item}>• {item}</li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-
-        </div>
-      </section>
-
-      <section className="section-shell pt-0">
-        <div className="container mx-auto px-4">
-          <div className="rounded-2xl border border-border bg-card p-6 md:p-8">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">Run your head lice checker scan now</h2>
-                <p className="mt-2 text-sm text-muted-foreground md:text-base">
-                  Upload a sharp close-up image for an indicative result. This tool supports triage and next-step planning, but does not replace clinical diagnosis.
-                </p>
-              </div>
-              <Button asChild className="rounded-full" size="lg">
-                <Link href="#start-scan">{siteCopy.primaryCta}</Link>
-              </Button>
-            </div>
-            <p className="mt-4 text-xs text-muted-foreground">{siteCopy.privacyClaim}</p>
-          </div>
-        </div>
-      </section>
-
       <PhotoChecker initialFile={heroFile} onFileConsumed={consumeHeroFile} />
 
       <section className="section-shell pt-0 bg-muted/20">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold md:text-3xl">{content.scenarios.heading}</h2>
           <p className="mt-3 section-copy max-w-4xl">{content.scenarios.intro}</p>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
             {content.scenarios.cards.map((card) => (
               <Card key={card.title}>
                 <CardContent className="p-5">
