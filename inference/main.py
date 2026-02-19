@@ -138,13 +138,18 @@ def predict(req: PredictRequest):
     below_threshold_count = 0
 
     all_confidences = []
+    all_classes = []
     for r in results:
         if r.boxes is None:
+            logger.warning("results.boxes is None - model returned no detections")
             continue
+        logger.info("results has %d boxes", len(r.boxes))
         for box in r.boxes:
             raw_box_count += 1
             conf = float(box.confidence[0])
+            cls_id = int(box.cls[0])
             all_confidences.append(conf)
+            all_classes.append(cls_id)
             if conf < MIN_CONFIDENCE:
                 below_threshold_count += 1
                 continue
@@ -178,11 +183,11 @@ def predict(req: PredictRequest):
     # Sort by confidence descending
     detections_out.sort(key=lambda d: d.confidence, reverse=True)
 
-    top_confidences = sorted(all_confidences, reverse=True)[:5] if all_confidences else []
+    top_confidences = sorted(all_confidences, reverse=True)[:10] if all_confidences else []
     logger.info(
-        "predict result image=%dx%d raw_boxes=%d below_min_conf=%d min_conf=%.2f returned=%d label=%s top_conf=%.3f top5_conf=%s",
+        "predict result image=%dx%d raw_boxes=%d below_min_conf=%d min_conf=%.2f returned=%d label=%s top_conf=%.3f top10_conf=%s classes=%s",
         w, h, raw_box_count, below_threshold_count, MIN_CONFIDENCE, len(detections_out),
-        top_label if detections_out else "clear", top_confidence, [f"{c:.3f}" for c in top_confidences],
+        top_label if detections_out else "clear", top_confidence, [f"{c:.3f}" for c in top_confidences], all_classes[:10] if all_classes else [],
     )
 
     return PredictResponse(
