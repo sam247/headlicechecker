@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+/** Prevent static generation at build time (avoids fetching Render during build). */
+export const dynamic = "force-dynamic";
+
 const DETECTION_API_URL = process.env.DETECTION_API_URL;
 
 export async function GET() {
