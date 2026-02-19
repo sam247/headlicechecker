@@ -36,7 +36,7 @@ type ProviderOutcome =
 
 const DETECTION_API_URL = process.env.DETECTION_API_URL;
 /** Minimum confidence for detections from DETECTION_API_URL; lower = more sensitive. */
-const DETECTION_API_MIN_CONFIDENCE = 0.25;
+const DETECTION_API_MIN_CONFIDENCE = 0.15;
 
 const VALID_LABELS: ScanResult["label"][] = ["lice", "nits", "dandruff", "psoriasis", "clear"];
 

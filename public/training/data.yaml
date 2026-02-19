@@ -1,5 +1,5 @@
 # YOLO dataset config (Ultralytics). Run from repo root:
-#   yolo detect train data=public/training/data.yaml model=yolov8n.pt epochs=50
+#   "$HOME/Library/Python/3.9/bin/yolo" detect train data=public/training/data.yaml model=yolov8n.pt epochs=100
 
 # path is relative to cwd when you run from repo root
 path: public/training
