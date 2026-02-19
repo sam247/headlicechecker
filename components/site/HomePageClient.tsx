@@ -83,7 +83,7 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
 
   return (
     <div>
-      <section className="relative overflow-hidden section-shell pb-12 md:pb-16">
+      <section className="relative overflow-hidden section-shell pb-[72px] md:pb-24">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--secondary))_0%,transparent_45%)]" />
         <div className="container relative z-10 mx-auto grid gap-8 px-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>

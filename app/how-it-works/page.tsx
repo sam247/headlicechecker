@@ -172,7 +172,7 @@ export default function HowItWorksPage() {
       </div>
 
       <div className="container mx-auto px-4">
-        <div id="step-flow" className="mt-10">
+        <div id="step-flow" className="mt-[60px]">
           <div className="max-w-3xl">
             <h2 className="text-2xl font-bold md:text-3xl">The 6-step AI analysis sequence</h2>
             <p className="mt-3 section-copy">
