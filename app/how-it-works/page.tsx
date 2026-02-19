@@ -128,7 +128,7 @@ export default function HowItWorksPage() {
   const rightFaqs = faqs.slice(midpoint);
 
   return (
-    <section className="section-shell pb-[72px] md:pb-24">
+    <section className="section-shell pb-8 md:pb-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
@@ -172,7 +172,7 @@ export default function HowItWorksPage() {
       </div>
 
       <div className="container mx-auto px-4">
-        <div id="step-flow">
+        <div id="step-flow" className="mt-[72px] md:mt-24">
           <div className="max-w-3xl">
             <h2 className="text-2xl font-bold md:text-3xl">The 6-step AI analysis sequence</h2>
             <p className="mt-3 section-copy">
