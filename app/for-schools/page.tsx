@@ -192,19 +192,17 @@ export default function ForSchoolsPage() {
               </div>
             </div>
 
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2">
-                  <School className="h-5 w-5 text-primary" />
-                  <h2 className="text-lg font-semibold">Hub outcomes</h2>
-                </div>
-                <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                  <li>• Align all staff on one outbreak communication rhythm.</li>
-                  <li>• Give families practical scan-first instructions.</li>
-                  <li>• Route higher-risk scenarios to clinic support faster.</li>
-                </ul>
-              </CardContent>
-            </Card>
+            <div className="rounded-2xl border border-border/70 bg-card/70 p-6">
+              <div className="flex items-center gap-2">
+                <School className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold">Hub outcomes</h2>
+              </div>
+              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                <li>• Align all staff on one outbreak communication rhythm.</li>
+                <li>• Give families practical scan-first instructions.</li>
+                <li>• Route higher-risk scenarios to clinic support faster.</li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -329,7 +327,7 @@ export default function ForSchoolsPage() {
           </div>
         </section>
 
-        <section id="faq" className="mt-10 rounded-2xl border border-border bg-card p-6 md:p-8">
+        <section id="faq" className="mt-10">
           <h2 className="text-2xl font-bold">FAQ</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             {faqs.map((item) => (

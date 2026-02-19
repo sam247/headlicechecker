@@ -149,22 +149,20 @@ export default function HowItWorksPage() {
               </div>
             </div>
 
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold">At-a-glance outcomes</h2>
-                <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                  {heroHighlights.map((item) => (
-                    <li key={item} className="flex items-start gap-2">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-4 text-xs text-muted-foreground">
-                  The same non-diagnostic safety boundaries apply across scan results, guidance content, and clinic escalation pathways.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="rounded-2xl border border-border/70 bg-card/70 p-6">
+              <h2 className="text-lg font-semibold">At-a-glance outcomes</h2>
+              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                {heroHighlights.map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-xs text-muted-foreground">
+                The same non-diagnostic safety boundaries apply across scan results, guidance content, and clinic escalation pathways.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -222,7 +220,7 @@ export default function HowItWorksPage() {
           </div>
         </div>
 
-        <div className="mt-10 rounded-2xl border border-border bg-card p-6 md:p-8">
+        <div className="mt-10">
           <h2 className="text-2xl font-bold">Expanded FAQ</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             {faqs.map((item) => (

@@ -200,19 +200,17 @@ export default function ForClinicsPage() {
               </div>
             </div>
 
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-primary" />
-                  <h2 className="text-lg font-semibold">Partner outcomes</h2>
-                </div>
-                <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                  <li>• Improve lead quality with confirmation-gated intake.</li>
-                  <li>• Standardize response windows and handoff language.</li>
-                  <li>• Scale coverage with operational consistency.</li>
-                </ul>
-              </CardContent>
-            </Card>
+            <div className="rounded-2xl border border-border/70 bg-card/70 p-6">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold">Partner outcomes</h2>
+              </div>
+              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                <li>• Improve lead quality with confirmation-gated intake.</li>
+                <li>• Standardize response windows and handoff language.</li>
+                <li>• Scale coverage with operational consistency.</li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -355,7 +353,7 @@ export default function ForClinicsPage() {
           </div>
         </section>
 
-        <section className="mt-10 rounded-2xl border border-border bg-card p-6 md:p-8">
+        <section className="mt-10">
           <h2 className="text-2xl font-bold">FAQ</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             {faqs.map((item) => (
