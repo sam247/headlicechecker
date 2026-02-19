@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRight, Download, School } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSiteCopy } from "@/lib/data/content";
@@ -10,88 +11,141 @@ const copy = getSiteCopy();
 export const metadata: Metadata = pageMetadata({
   title: "For Schools and Childcare Teams",
   description:
-    "Head lice outbreak guidance for schools and childcare teams, including communication steps, parent triage, and clinic referral workflows.",
+    "A schools hub for head lice communication playbooks, curated guidance, implementation resources, and practical escalation pathways.",
   path: "/for-schools",
 });
 
-const sections = [
+const hubNav = [
+  { href: "#overview", label: "Overview" },
+  { href: "#playbooks", label: "Playbooks" },
+  { href: "#curated-articles", label: "Curated articles" },
+  { href: "#guides", label: "Guides" },
+  { href: "#downloads", label: "Downloads" },
+  { href: "#faq", label: "FAQ" },
+];
+
+const playbooks = [
   {
-    heading: "A calm response framework for schools",
-    body: [
-      "Schools need practical, low-friction workflows when reports increase. The priority is calm communication, consistent home-check instructions, and quick escalation pathways where needed.",
-      "A standardized process reduces rumor-driven panic and helps families understand exactly what to do tonight, tomorrow morning, and if symptoms persist.",
-      "Head Lice Checker supports this with clear guidance language and simple scan-first triage steps for parents."
+    title: "Outbreak communication cadence",
+    copy: "Use one parent notice, one follow-up reminder, and one escalation touchpoint. This keeps guidance calm, repeatable, and easier for families to act on.",
+    points: [
+      "Issue same-day neutral language updates",
+      "Schedule one clear reminder window",
+      "Standardize escalation wording across staff",
     ],
   },
   {
-    heading: "Communication guidance for parent notices",
-    body: [
-      "Effective notices are factual and non-stigmatizing. They explain that head lice concerns are manageable, outline what to check at home, and avoid singling out children or classrooms.",
-      "Include practical instructions: inspect in bright light, part hair in sections, focus behind ears and at the nape, and seek confirmation if signs remain unclear.",
-      "Messaging should always include the non-diagnostic boundary and point families to professional advice for persistent symptoms."
+    title: "Parent notice structure",
+    copy: "Notices should explain what to check, how to check, and when to seek confirmation. Avoid stigmatizing language and avoid classroom-specific identifiers.",
+    points: [
+      "Include practical home check instructions",
+      "State non-diagnostic boundaries clearly",
+      "Link scan-first and clinic follow-up routes",
     ],
   },
   {
-    heading: "How scan triage can support school workflows",
-    body: [
-      "Parent-led photo triage can reduce decision delay between notice and action. Families can run a quick indicative scan and decide whether to monitor, recapture, or contact a clinic.",
-      "This creates a cleaner handoff to professional support and can reduce unnecessary treatment cycles based on uncertain visual checks.",
-      "Schools benefit because communications become action-oriented instead of ambiguous."
+    title: "Escalation criteria and timing",
+    copy: "Escalate quickly when symptoms persist, indicators repeat, or multiple household contacts report concerns. A time-bound policy reduces uncertainty.",
+    points: [
+      "Escalate repeated likely indicators",
+      "Escalate persistent symptom windows",
+      "Use clinic referral language without delay",
     ],
   },
   {
-    heading: "Escalation pathways and timing",
-    body: [
-      "If families report persistent symptoms, repeated likely indicators, or household spread, guidance should move quickly toward clinic confirmation.",
-      "Schools can share neutral escalation language: if uncertainty remains after careful checking, seek professional confirmation rather than repeating low-quality checks.",
-      "A clear escalation policy improves confidence for parents and staff alike."
+    title: "Weekly monitoring framework",
+    copy: "Review notice outcomes weekly and update template language where confusion appears. Continuous small refinements improve parent response quality over time.",
+    points: [
+      "Track basic response milestones only",
+      "Identify recurring parent uncertainty themes",
+      "Tighten copy each cycle for clarity",
     ],
   },
+];
+
+const curatedArticles = [
   {
-    heading: "Implementation checklist for school teams",
-    body: [
-      "Define one communication template, one follow-up reminder schedule, and one referral route. This prevents mixed messages and fragmented action.",
-      "Track only operational essentials, such as notice sent dates and generalized response milestones. Avoid collecting unnecessary sensitive information.",
-      "Review playbooks each term and adjust wording based on parent feedback and support ticket themes."
-    ],
+    href: "/blog/what-are-the-first-signs-of-head-lice",
+    title: "First Signs of Head Lice",
+    description: "Early signal guidance for parents and caregivers.",
+    relevance: "Why this matters for schools: better early pattern recognition reduces rumor-led escalation.",
   },
   {
-    heading: "Sample weekly monitoring cadence",
-    body: [
-      "A lightweight cadence helps teams stay proactive: issue a clear notice when needed, send one follow-up reminder, and provide one escalation route for uncertain cases.",
-      "Keep communications short and repeatable so parents can act quickly without interpreting multiple versions of guidance.",
-      "At the end of each week, review where confusion occurred and refine your template language for the next cycle."
-    ],
+    href: "/head-lice-symptoms",
+    title: "Head Lice Symptoms Guide",
+    description: "Practical symptom interpretation and what to check first.",
+    relevance: "Why this matters for schools: supports consistent parent messaging during active exposure windows.",
   },
   {
-    heading: "Partnering with Head Lice Checker",
-    body: [
-      "Schools and childcare teams can use Head Lice Checker as a parent-support companion to existing health policies.",
-      "The platform provides practical education pages, scan triage, and clinic finder pathways that can be shared in notices and parent resources.",
-      "For structured rollout support, contact our team and we can help define a simple implementation workflow."
-    ],
+    href: "/nits-vs-dandruff",
+    title: "Nits vs Dandruff",
+    description: "Clear visual comparison guidance to reduce false alarms.",
+    relevance: "Why this matters for schools: lowers unnecessary panic and improves communication quality.",
+  },
+  {
+    href: "/how-it-works",
+    title: "How the AI Process Works",
+    description: "Transparent scan-to-confirmation workflow.",
+    relevance: "Why this matters for schools: helps teams explain decision boundaries and escalation order.",
+  },
+];
+
+const guides = [
+  {
+    href: "/clinical-safety",
+    title: "Clinical Safety",
+    description: "Risk boundaries and escalation triggers for non-diagnostic workflows.",
+  },
+  {
+    href: "/editorial-policy",
+    title: "Editorial Policy",
+    description: "Content standards for consistent, practical guidance language.",
+  },
+  {
+    href: "/methodology",
+    title: "Methodology",
+    description: "How detections and confidence tiers are produced and governed.",
+  },
+];
+
+const downloads = [
+  {
+    title: "Parent notice template",
+    format: "DOCX",
+    copy: "A standardized non-stigmatizing notice format for outbreak communication.",
+  },
+  {
+    title: "Classroom response checklist",
+    format: "PDF",
+    copy: "A practical checklist for same-day school response and follow-up timing.",
+  },
+  {
+    title: "Escalation log sheet",
+    format: "XLSX",
+    copy: "A lightweight log for tracking notices, reminders, and escalation milestones.",
   },
 ];
 
 const faqs = [
   {
-    question: "Should schools diagnose head lice cases?",
+    question: "Should schools make diagnostic claims?",
     answer:
-      "No. Schools should provide clear guidance and encourage professional confirmation when needed, while avoiding diagnostic claims.",
+      "No. Schools should provide practical guidance and direct families toward professional confirmation when risk remains elevated.",
   },
   {
-    question: "How should schools reduce stigma in communication?",
+    question: "What is the recommended action order for families?",
     answer:
-      "Use neutral, factual language and avoid identifying students. Focus on routine checks and practical next steps for all families.",
+      "Scan first with strong image quality, review output and symptoms, then escalate to clinic support if indicators repeat or uncertainty persists.",
   },
   {
-    question: "Can this tool replace school health policy?",
+    question: "How can schools reduce mixed messaging during outbreaks?",
     answer:
-      "No. It supports parent triage and communication clarity but should complement existing school and healthcare policies.",
+      "Use one shared notice template, one follow-up schedule, and one escalation policy so staff and families receive the same guidance flow.",
   },
   {
-    question: "What is the recommended CTA order for parents?",
-    answer: "Start with scan guidance first, then offer clinic support pathways if risk remains elevated.",
+    question: "What operational data should schools track?",
+    answer:
+      "Track only minimal operational milestones like notice dates and follow-up completion. Avoid collecting unnecessary sensitive data.",
   },
 ];
 
@@ -102,10 +156,10 @@ export default function ForSchoolsPage() {
   ]);
 
   const webpage = medicalWebPageJsonLd({
-    name: "Head lice guidance for schools",
+    name: "Schools and childcare head lice hub",
     path: "/for-schools",
-    description: "Outbreak communication and escalation guidance for schools and childcare teams.",
-    reviewedAt: "2026-02-16",
+    description: "Playbooks, curated resources, and implementation guidance for school and childcare teams.",
+    reviewedAt: "2026-02-19",
   });
 
   return (
@@ -113,40 +167,193 @@ export default function ForSchoolsPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }} />
-      <div className="container mx-auto px-4">
-        <h1 className="section-title">For schools and childcare teams</h1>
-        <p className="mt-4 section-copy">
-          Keep outbreak responses calm and consistent with practical parent guidance, scan-first triage, and clear clinic escalation pathways.
-        </p>
 
-        <div className="mt-8 space-y-4">
-          {sections.map((section) => (
-            <Card key={section.heading}>
+      <div className="container mx-auto px-4">
+        <div className="rounded-3xl border border-border bg-[radial-gradient(circle_at_top_left,hsl(var(--secondary))_0%,hsl(var(--card))_52%)] p-6 md:p-10">
+          <div className="grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Schools Hub</p>
+              <h1 className="mt-3 text-3xl font-bold leading-tight md:text-5xl">
+                Operational head lice guidance for schools and childcare teams
+              </h1>
+              <p className="mt-4 section-copy max-w-3xl">
+                This hub is designed for real school workflows: calm communications, repeatable parent instructions, and structured clinic escalation when needed. Use it as a centralized reference for staff, notices, and family support pathways.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Button asChild className="rounded-full" size="lg">
+                  <Link href="/#start-scan">{copy.primaryCta}</Link>
+                </Button>
+                <Button asChild variant="outline" className="rounded-full" size="lg">
+                  <Link href="/find-clinics">{copy.secondaryCta}</Link>
+                </Button>
+                <Button asChild variant="ghost" className="rounded-full" size="lg">
+                  <Link href="/contact">Contact school support</Link>
+                </Button>
+              </div>
+            </div>
+
+            <Card>
               <CardContent className="p-6">
-                <h2 className="text-xl font-semibold">{section.heading}</h2>
-                <div className="mt-3 space-y-3 text-sm leading-7 text-muted-foreground md:text-base">
-                  {section.body.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
-                  ))}
+                <div className="flex items-center gap-2">
+                  <School className="h-5 w-5 text-primary" />
+                  <h2 className="text-lg font-semibold">Hub outcomes</h2>
                 </div>
+                <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                  <li>• Align all staff on one outbreak communication rhythm.</li>
+                  <li>• Give families practical scan-first instructions.</li>
+                  <li>• Route higher-risk scenarios to clinic support faster.</li>
+                </ul>
               </CardContent>
             </Card>
-          ))}
+          </div>
         </div>
 
-        <div className="mt-8 rounded-2xl border border-border bg-card p-6">
-          <h2 className="text-xl font-semibold">Need implementation support?</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Contact our team for a practical school rollout framework and parent communication guidance.
+        <div className="mt-6 rounded-2xl border border-border bg-card p-4">
+          <div className="flex flex-wrap gap-3 text-sm">
+            {hubNav.map((item) => (
+              <Link key={item.href} href={item.href} className="rounded-full border border-border bg-muted/20 px-3 py-1.5 font-medium hover:bg-muted/40">
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <section id="overview" className="mt-10">
+          <h2 className="text-2xl font-bold md:text-3xl">Overview</h2>
+          <div className="mt-4 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+            <Card>
+              <CardContent className="p-6">
+                <p className="text-sm leading-7 text-muted-foreground md:text-base">
+                  Schools need consistency more than complexity. During exposure periods, uncertainty spreads faster than reliable guidance. This hub concentrates the highest-impact workflows in one place so teams can move from alert to action without rewriting processes each time.
+                </p>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground md:text-base">
+                  The core model is simple: issue calm communication, give practical home-check instructions, and escalate uncertain or persistent cases quickly to professional confirmation. This reduces avoidable panic while still protecting family decision quality.
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold">School workflow guardrails</h3>
+                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                  <li>• Non-diagnostic language in every communication.</li>
+                  <li>• One template, one cadence, one escalation route.</li>
+                  <li>• Keep records operational and minimal.</li>
+                  <li>• Review copy weekly during high-contact periods.</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        <section id="playbooks" className="mt-10">
+          <h2 className="text-2xl font-bold md:text-3xl">Operational playbooks</h2>
+          <p className="mt-3 section-copy max-w-4xl">
+            Use these playbooks to standardize team behavior and reduce improvisation when parents need immediate direction.
           </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Button asChild className="rounded-full">
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {playbooks.map((playbook) => (
+              <Card key={playbook.title}>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold">{playbook.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground md:text-base">{playbook.copy}</p>
+                  <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                    {playbook.points.map((point) => (
+                      <li key={point}>• {point}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section id="curated-articles" className="mt-10">
+          <h2 className="text-2xl font-bold md:text-3xl">Curated articles for school teams</h2>
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {curatedArticles.map((article) => (
+              <Card key={article.href}>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold">{article.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{article.description}</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{article.relevance}</p>
+                  <Link href={article.href} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                    Open resource
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section id="guides" className="mt-10">
+          <h2 className="text-2xl font-bold md:text-3xl">Policy and methodology guides</h2>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {guides.map((guide) => (
+              <Card key={guide.href}>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold">{guide.title}</h3>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{guide.description}</p>
+                  <Link href={guide.href} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                    Read guide
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section id="downloads" className="mt-10">
+          <h2 className="text-2xl font-bold md:text-3xl">Downloads</h2>
+          <p className="mt-3 section-copy">Resource downloads are in production. Preview the planned toolkit below.</p>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {downloads.map((item) => (
+              <Card key={item.title}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-primary">{item.format}</p>
+                    <span className="rounded-full border border-border bg-muted/30 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                      Coming soon
+                    </span>
+                  </div>
+                  <h3 className="mt-3 text-lg font-semibold">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.copy}</p>
+                  <p className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Download className="h-4 w-4" />
+                    Not available yet
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section id="faq" className="mt-10 rounded-2xl border border-border bg-card p-6 md:p-8">
+          <h2 className="text-2xl font-bold">FAQ</h2>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {faqs.map((item) => (
+              <div key={item.question} className="rounded-xl border border-border/70 bg-muted/20 p-4">
+                <h3 className="font-semibold">{item.question}</h3>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.answer}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div className="mt-10 rounded-2xl border border-border bg-card p-6 md:p-8">
+          <h2 className="text-2xl font-bold">Need rollout support?</h2>
+          <p className="mt-2 text-sm text-muted-foreground md:text-base">
+            Use this hub as your operational base, then contact our team for implementation support tailored to your school or childcare workflow.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Button asChild className="rounded-full" size="lg">
               <Link href="/#start-scan">{copy.primaryCta}</Link>
             </Button>
-            <Button asChild variant="outline" className="rounded-full">
+            <Button asChild variant="outline" className="rounded-full" size="lg">
               <Link href="/find-clinics">{copy.secondaryCta}</Link>
             </Button>
-            <Button asChild variant="ghost" className="rounded-full">
+            <Button asChild variant="ghost" className="rounded-full" size="lg">
               <Link href="/contact">Contact school support</Link>
             </Button>
           </div>

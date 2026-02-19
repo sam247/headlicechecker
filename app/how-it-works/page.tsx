@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSiteCopy } from "@/lib/data/content";
@@ -10,68 +11,97 @@ const copy = getSiteCopy();
 export const metadata: Metadata = pageMetadata({
   title: "How Head Lice Checker Works",
   description:
-    "Understand the complete Head Lice Checker workflow from photo capture to confidence tiers, overlays, and clinic follow-up guidance.",
+    "Understand the full AI screening flow from evidence-quality photo capture through confirmation gating and clinic finder follow-up.",
   path: "/how-it-works",
 });
 
-const sections = [
+const heroHighlights = [
+  "Evidence-first AI analysis in under a minute",
+  "Confidence tiers with visible detection overlays",
+  "Clinic finder appears after confirmation gating",
+];
+
+const steps = [
   {
-    heading: "Step 1: Capture an evidence-quality photo",
-    body: [
-      "The scan quality starts with the image. Part hair close to the scalp, use strong natural or direct indoor light, and keep the camera steady. We recommend multiple close-ups instead of one distant image.",
-      "Good photos improve confidence and help avoid ambiguous outcomes. Poorly lit or blurry images are a common reason for low-confidence screening, so taking an extra 20 seconds at capture usually improves decisions.",
-      "If the result is unclear, the best next action is not repeated random uploads. It is a cleaner recapture with improved focus and lighting."
-    ],
+    title: "Capture a quality scalp photo",
+    body: "Part hair near the scalp, use strong direct light, and take close shots from multiple angles. This reduces false uncertainty before analysis begins.",
+    output: "Output: an image suitable for high-confidence screening.",
   },
   {
-    heading: "Step 2: AI screening and detection mapping",
-    body: [
-      "Uploaded images are processed through a visual detection workflow that identifies likely regions associated with lice-related indicators. Prediction classes are normalized into stable labels used across the app.",
-      "Each valid detection includes coordinates, dimensions, and confidence so the UI can display rings directly over the image. This evidence layer helps users see what the model is reacting to instead of receiving a vague score.",
-      "Malformed or low-confidence detections are filtered before rendering to preserve clarity and reduce noise."
-    ],
+    title: "Run AI analysis",
+    body: "The scan evaluates visual signals tied to lice-related indicators and returns candidate detections with class labels, confidence, and box coordinates.",
+    output: "Output: structured detection payload for interpretation.",
   },
   {
-    heading: "Step 3: Confidence tiers and summary output",
-    body: [
-      "The result card includes a top label, strongest confidence tier, and a detection summary count. We use tiered language to keep interpretation understandable and avoid false precision.",
-      "When detections are present, the strongest valid signal determines the headline outcome. When no valid detections are found, the tool returns a reassuring but non-diagnostic clear screen message.",
-      "This structure gives users both evidence and context: what was found, how strong it appears, and why the next step is being recommended."
-    ],
+    title: "Normalize and validate detections",
+    body: "Detection aliases are mapped to stable labels and malformed entries are filtered. This protects consistency when provider payload formats vary.",
+    output: "Output: clean, render-safe detection set.",
   },
   {
-    heading: "Step 4: Next-step guidance",
-    body: [
-      "Guidance changes based on output class and confidence. Positive-style outcomes prompt practical household steps and clinic confirmation pathways. Clear outcomes encourage routine checks and a re-scan if symptoms persist.",
-      "For low confidence, users see image-quality tips to improve capture before relying on conclusions. This is intentional: uncertainty should be surfaced clearly, not hidden.",
-      "The goal is actionability. Every result should make the next step obvious within seconds."
-    ],
+    title: "Generate confidence-led summary",
+    body: "Results are converted into practical tiers so families can understand likely signal strength without overconfident medical language.",
+    output: "Output: headline label, confidence tier, and indicator count.",
   },
   {
-    heading: "Step 5: Clinic follow-up",
-    body: [
-      "If you decide to escalate, the clinic finder lets you search locations and submit a structured enquiry through our lead form. This keeps details consistent and improves response handling.",
-      "Direct contact details are intentionally de-emphasized in modal lead flows to ensure enquiries are routed through one reliable pipeline.",
-      "You receive a reference on successful submission so follow-up can be tracked clearly."
-    ],
+    title: "Apply confirmation gate",
+    body: "Users review evidence overlays and symptom context before escalation. Low-confidence outcomes prompt recapture guidance instead of immediate clinic action.",
+    output: "Output: clear decision path to monitor, rescan, or escalate.",
   },
   {
-    heading: "Step 6: Continuous quality improvement",
-    body: [
-      "We monitor anonymized behavior signals such as overlay usage, repeated rescans, and clinic CTA engagement to understand where users need clearer guidance.",
-      "These insights inform parser hardening, content updates, and UI refinements so the product remains practical as provider outputs and user needs evolve.",
-      "Each release aims to improve user understanding without drifting into overconfident medical language."
-    ],
-  },
-  {
-    heading: "Safety boundaries",
-    body: [
-      "Head Lice Checker is an indicative screening tool. It does not diagnose conditions and does not replace clinician judgment.",
-      "If symptoms are persistent, worsening, or atypical, seek medical advice even after a reassuring scan.",
-      "Our methodology, clinical safety guidance, and editorial policy pages explain these boundaries in detail."
-    ],
+    title: "Open clinic follow-up when needed",
+    body: "When indicators repeat or confidence is elevated, users move to the clinic finder and submit structured enquiry details for professional confirmation.",
+    output: "Output: faster, better-context clinic handoff.",
   },
 ];
+
+const processCards = [
+  {
+    heading: "Image intake and preprocessing",
+    body: "Images are validated for format and minimum usable dimensions before inference. We avoid aggressive enhancement transforms and instead emphasize better source capture for reliable interpretation.",
+  },
+  {
+    heading: "Parsing and normalization",
+    body: "Provider outputs can include nested predictions and alias labels. We normalize these payloads into a stable internal structure so overlays, summaries, and logic remain consistent across releases.",
+  },
+  {
+    heading: "Confidence and fallback policy",
+    body: "Confidence tiers communicate signal strength in plain language. Where evidence is weak, guidance shifts to recapture quality controls and symptom-aware follow-up rather than binary certainty.",
+  },
+  {
+    heading: "Safety boundaries by design",
+    body: "The product is triage support, not diagnosis. Messaging, result framing, and CTA sequencing explicitly direct users to clinical confirmation when repeat indicators or persistent symptoms remain.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Does the tool diagnose head lice?",
+    answer:
+      "No. The output is indicative screening support. Diagnosis and treatment decisions should be confirmed by a qualified clinician.",
+  },
+  {
+    question: "Why is clinic finder shown after confirmation logic?",
+    answer:
+      "The flow is designed to reduce premature escalation. Users first review evidence quality and confidence context, then move to clinics when risk appears elevated or symptoms persist.",
+  },
+  {
+    question: "What causes low-confidence results?",
+    answer:
+      "Most low-confidence outcomes come from blur, poor lighting, or incomplete scalp visibility. A cleaner recapture often improves decision quality more than repeated random uploads.",
+  },
+  {
+    question: "Can a clear output still miss activity?",
+    answer:
+      "Yes. A clear result is reassuring but not absolute. If symptoms continue, repeat with stronger image quality and seek professional confirmation.",
+  },
+  {
+    question: "How does this support clinic teams?",
+    answer:
+      "Structured confirmation gating means families reach clinics with clearer context, reducing triage friction and improving follow-up quality.",
+  },
+];
+
+const confirmationSequence = ["Scan", "Review evidence", "Confirm need", "Find clinic"];
 
 export default function HowItWorksPage() {
   const breadcrumb = breadcrumbJsonLd([
@@ -82,14 +112,14 @@ export default function HowItWorksPage() {
   const webpage = medicalWebPageJsonLd({
     name: "How Head Lice Checker Works",
     path: "/how-it-works",
-    description: "Photo capture, AI screening, confidence tiers, overlays, and clinic follow-up workflow.",
-    reviewedAt: "2026-02-16",
+    description: "Step-by-step AI screening workflow, confidence logic, and confirmation-gated clinic follow-up.",
+    reviewedAt: "2026-02-19",
   });
 
   const service = serviceJsonLd({
-    name: "Head lice photo screening workflow",
+    name: "Head lice screening workflow",
     path: "/how-it-works",
-    description: "How the indicative head lice screening process operates from image upload to next-step guidance.",
+    description: "How image capture, AI analysis, confidence logic, and clinic follow-up decisions work together.",
   });
 
   return (
@@ -97,37 +127,123 @@ export default function HowItWorksPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
-      <div className="container mx-auto px-4">
-        <h1 className="section-title">How Head Lice Checker works</h1>
-        <p className="mt-4 section-copy">
-          A practical five-step flow: capture a better photo, run indicative screening, review evidence overlays, then choose clear next actions.
-        </p>
 
-        <div className="mt-8 space-y-4">
-          {sections.map((section) => (
-            <Card key={section.heading}>
+      <div className="container mx-auto px-4">
+        <div className="rounded-3xl border border-border bg-[radial-gradient(circle_at_top_right,hsl(var(--secondary))_0%,hsl(var(--card))_45%)] p-6 md:p-10">
+          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">How It Works</p>
+              <h1 className="mt-3 text-3xl font-bold leading-tight md:text-5xl">
+                A classic scan-to-confirm workflow for faster head lice decisions
+              </h1>
+              <p className="mt-4 section-copy max-w-3xl">
+                Head Lice Checker is built as a decision engine, not a black box. You capture better evidence, review AI signals with confidence context, then move to clinic follow-up only when the confirmation gate indicates escalation.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Button asChild className="rounded-full" size="lg">
+                  <Link href="/#start-scan">{copy.primaryCta}</Link>
+                </Button>
+                <Button asChild variant="outline" className="rounded-full" size="lg">
+                  <Link href="#step-flow">See the 6-step flow</Link>
+                </Button>
+              </div>
+            </div>
+
+            <Card>
               <CardContent className="p-6">
-                <h2 className="text-xl font-semibold">{section.heading}</h2>
-                <div className="mt-3 space-y-3 text-sm leading-7 text-muted-foreground md:text-base">
-                  {section.body.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
+                <h2 className="text-lg font-semibold">At-a-glance outcomes</h2>
+                <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                  {heroHighlights.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <span>{item}</span>
+                    </li>
                   ))}
-                </div>
+                </ul>
+                <p className="mt-4 text-xs text-muted-foreground">
+                  The same non-diagnostic safety boundaries apply across scan results, guidance content, and clinic escalation pathways.
+                </p>
               </CardContent>
             </Card>
-          ))}
+          </div>
         </div>
 
-        <div className="mt-8 rounded-2xl border border-border bg-card p-6">
-          <h2 className="text-xl font-semibold">Take the next step</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Run a free scan first, then use the clinic finder for professional confirmation where needed.
+        <div id="step-flow" className="mt-10">
+          <div className="max-w-3xl">
+            <h2 className="text-2xl font-bold md:text-3xl">The 6-step AI analysis sequence</h2>
+            <p className="mt-3 section-copy">
+              This page follows a standard SaaS process model: input quality, processing transparency, confidence framing, and controlled escalation.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {steps.map((step, index) => (
+              <Card key={step.title}>
+                <CardContent className="p-6">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-primary">Step {index + 1}</p>
+                  <h3 className="mt-2 text-lg font-semibold">{step.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground md:text-base">{step.body}</p>
+                  <p className="mt-3 text-sm font-medium text-foreground">{step.output}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-10">
+          <h2 className="text-2xl font-bold md:text-3xl">Inside the AI process</h2>
+          <p className="mt-3 section-copy max-w-4xl">
+            The workflow is intentionally auditable in plain language so families and partners understand what the system is doing before any escalation decision is made.
           </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Button asChild className="rounded-full">
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {processCards.map((card) => (
+              <Card key={card.heading}>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold">{card.heading}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground md:text-base">{card.body}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-10 rounded-2xl border border-primary/30 bg-card p-6 md:p-8">
+          <h2 className="text-2xl font-bold">Confirmation gate before clinic follow-up</h2>
+          <p className="mt-3 text-sm leading-7 text-muted-foreground md:text-base">
+            Clinic finder appears after confirmation logic, not as step one. This protects users from over-escalation and keeps professional follow-up focused on stronger or persistent risk cases.
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-2 text-sm font-medium">
+            {confirmationSequence.map((item, index) => (
+              <div key={item} className="flex items-center gap-2">
+                <span className="rounded-full border border-border bg-muted/30 px-3 py-1">{item}</span>
+                {index < confirmationSequence.length - 1 ? <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" /> : null}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-10 rounded-2xl border border-border bg-card p-6 md:p-8">
+          <h2 className="text-2xl font-bold">Expanded FAQ</h2>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {faqs.map((item) => (
+              <div key={item.question} className="rounded-xl border border-border/70 bg-muted/20 p-4">
+                <h3 className="font-semibold">{item.question}</h3>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.answer}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-10 rounded-2xl border border-border bg-card p-6 md:p-8">
+          <h2 className="text-2xl font-bold">Run scan first, then escalate with confidence</h2>
+          <p className="mt-2 text-sm text-muted-foreground md:text-base">
+            Start with an evidence-quality scan. If the confirmation gate points to escalation, move directly to clinic follow-up in a structured flow.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Button asChild className="rounded-full" size="lg">
               <Link href="/#start-scan">{copy.primaryCta}</Link>
             </Button>
-            <Button asChild variant="outline" className="rounded-full">
+            <Button asChild variant="outline" className="rounded-full" size="lg">
               <Link href="/find-clinics">{copy.secondaryCta}</Link>
             </Button>
           </div>
