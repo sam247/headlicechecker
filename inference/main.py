@@ -72,13 +72,18 @@ _model = None
 def _load_model():
     global _model
     from ultralytics import YOLO
+    import os
 
     t0 = time.monotonic()
+    # Log absolute path for debugging
+    abs_path = os.path.abspath(MODEL_PATH)
+    exists = os.path.exists(MODEL_PATH)
+    logger.info("loading model path=%s abs=%s exists=%s", MODEL_PATH, abs_path, exists)
     _model = YOLO(MODEL_PATH)
     # Warm the model with a tiny dummy image so PyTorch JIT / first-run overhead is paid here
     from PIL import Image as _PILImage
     _model.predict(_PILImage.new("RGB", (64, 64)), imgsz=64, verbose=False)
-    logger.info("model loaded and warmed in %.1fs  path=%s", time.monotonic() - t0, MODEL_PATH)
+    logger.info("model loaded and warmed in %.1fs  path=%s abs=%s", time.monotonic() - t0, MODEL_PATH, abs_path)
 
 
 def get_model():
