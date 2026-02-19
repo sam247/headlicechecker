@@ -4,6 +4,7 @@ import { ArrowRight, Building2, Download } from "lucide-react";
 import ClinicEnquiryForm from "@/components/site/ClinicEnquiryForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getSiteCopy } from "@/lib/data/content";
 import { breadcrumbJsonLd, faqJsonLd, medicalWebPageJsonLd, pageMetadata, serviceJsonLd } from "@/lib/seo";
 
@@ -169,6 +170,10 @@ export default function ForClinicsPage() {
     description: "Structured family enquiry routing and partner readiness workflow for head lice clinics.",
   });
 
+  const midpoint = Math.ceil(faqs.length / 2);
+  const leftFaqs = faqs.slice(0, midpoint);
+  const rightFaqs = faqs.slice(midpoint);
+
   return (
     <section className="section-shell">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
@@ -176,78 +181,68 @@ export default function ForClinicsPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }} />
 
-      <div className="container mx-auto px-4">
-        <div className="rounded-3xl border border-border bg-[radial-gradient(circle_at_top_right,hsl(var(--secondary))_0%,hsl(var(--card))_50%)] p-6 md:p-10">
-          <div className="grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Clinics Hub</p>
-              <h1 className="mt-3 text-3xl font-bold leading-tight md:text-5xl">
-                A partner operations hub for higher-quality head lice follow-up enquiries
-              </h1>
-              <p className="mt-4 section-copy max-w-3xl">
-                This hub organizes the workflows clinics need most: lead qualification standards, response operations, curated guidance, and structured onboarding. It is designed to help teams convert confirmed intent into clear next-step care pathways.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Button asChild className="rounded-full" size="lg">
-                  <Link href="/find-clinics">View finder experience</Link>
-                </Button>
-                <Button asChild variant="outline" className="rounded-full" size="lg">
-                  <Link href="#enquiry">Submit partner enquiry</Link>
-                </Button>
-                <Button asChild variant="ghost" className="rounded-full" size="lg">
-                  <Link href="/how-it-works">See process flow</Link>
-                </Button>
-              </div>
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--secondary))_0%,transparent_45%)]" />
+        <div className="container relative z-10 mx-auto grid gap-8 px-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Clinics Hub</p>
+            <h1 className="mt-3 text-3xl font-bold leading-tight md:text-5xl">
+              A partner operations hub for higher-quality head lice follow-up enquiries
+            </h1>
+            <p className="mt-4 section-copy max-w-3xl">
+              This hub organizes the workflows clinics need most: lead qualification standards, response operations, curated guidance, and structured onboarding. It is designed to help teams convert confirmed intent into clear next-step care pathways.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button asChild className="rounded-full" size="lg">
+                <Link href="/find-clinics">View finder experience</Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-full" size="lg">
+                <Link href="#enquiry">Submit partner enquiry</Link>
+              </Button>
+              <Button asChild variant="ghost" className="rounded-full" size="lg">
+                <Link href="/how-it-works">See process flow</Link>
+              </Button>
             </div>
+          </div>
 
-            <div className="rounded-2xl border border-border/70 bg-card/70 p-6">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-semibold">Partner outcomes</h2>
-              </div>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li>• Improve lead quality with confirmation-gated intake.</li>
-                <li>• Standardize response windows and handoff language.</li>
-                <li>• Scale coverage with operational consistency.</li>
-              </ul>
+          <div>
+            <div className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Partner outcomes</h2>
             </div>
+            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+              <li>• Improve lead quality with confirmation-gated intake.</li>
+              <li>• Standardize response windows and handoff language.</li>
+              <li>• Scale coverage with operational consistency.</li>
+            </ul>
           </div>
         </div>
+      </div>
 
-        <div className="mt-6 rounded-2xl border border-border bg-card p-4">
-          <div className="flex flex-wrap gap-3 text-sm">
-            {hubNav.map((item) => (
-              <Link key={item.href} href={item.href} className="rounded-full border border-border bg-muted/20 px-3 py-1.5 font-medium hover:bg-muted/40">
-                {item.label}
-              </Link>
-            ))}
-          </div>
+      <div className="container mx-auto px-4">
+        <div className="mt-6 flex flex-wrap gap-3 text-sm">
+          {hubNav.map((item) => (
+            <Link key={item.href} href={item.href} className="rounded-full border border-border bg-muted/20 px-3 py-1.5 font-medium hover:bg-muted/40">
+              {item.label}
+            </Link>
+          ))}
         </div>
 
         <section id="overview" className="mt-10">
           <h2 className="text-2xl font-bold md:text-3xl">Overview</h2>
-          <div className="mt-4 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-sm leading-7 text-muted-foreground md:text-base">
-                  Partner clinics perform best when operational clarity is built into every stage: intake, response, and confirmation handoff. The platform supports that by routing family enquiries through structured forms after scan-driven decision steps.
-                </p>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground md:text-base">
-                  This reduces context loss and helps teams prioritize care conversations where uncertainty or elevated risk is most likely. The result is better service quality and stronger follow-through intent.
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold">Operational guardrails</h3>
-                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                  <li>• Keep response promises explicit and measurable.</li>
-                  <li>• Align intake wording with non-diagnostic boundaries.</li>
-                  <li>• Use consistent context fields across all enquiries.</li>
-                  <li>• Audit handoff quality weekly during high-demand windows.</li>
-                </ul>
-              </CardContent>
-            </Card>
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
+            <div className="border-b border-border pb-5">
+              <h3 className="font-semibold">Operational clarity</h3>
+              <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                Partner clinics perform best when operational clarity is built into every stage: intake, response, and confirmation handoff. The platform supports that by routing family enquiries through structured forms after scan-driven decision steps.
+              </p>
+            </div>
+            <div className="border-b border-border pb-5">
+              <h3 className="font-semibold">Conversion-quality handoff</h3>
+              <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                This reduces context loss and helps teams prioritize care conversations where uncertainty or elevated risk is most likely. The result is better service quality and stronger follow-through intent.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -355,13 +350,24 @@ export default function ForClinicsPage() {
 
         <section className="mt-10">
           <h2 className="text-2xl font-bold">FAQ</h2>
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {faqs.map((item) => (
-              <div key={item.question} className="rounded-xl border border-border/70 bg-muted/20 p-4">
-                <h3 className="font-semibold">{item.question}</h3>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.answer}</p>
-              </div>
-            ))}
+          <div className="mt-5 grid gap-6 md:grid-cols-2">
+            <Accordion type="single" collapsible className="w-full">
+              {leftFaqs.map((faq, index) => (
+                <AccordionItem key={faq.question} value={`left-${index}`} className="border-border">
+                  <AccordionTrigger className="text-left text-base font-semibold hover:no-underline">{faq.question}</AccordionTrigger>
+                  <AccordionContent className="text-sm leading-7 text-muted-foreground">{faq.answer}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+
+            <Accordion type="single" collapsible className="w-full">
+              {rightFaqs.map((faq, index) => (
+                <AccordionItem key={faq.question} value={`right-${index}`} className="border-border">
+                  <AccordionTrigger className="text-left text-base font-semibold hover:no-underline">{faq.question}</AccordionTrigger>
+                  <AccordionContent className="text-sm leading-7 text-muted-foreground">{faq.answer}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </div>
         </section>
 

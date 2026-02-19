@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getSiteCopy } from "@/lib/data/content";
 import { breadcrumbJsonLd, medicalWebPageJsonLd, pageMetadata, serviceJsonLd } from "@/lib/seo";
 
@@ -122,50 +123,55 @@ export default function HowItWorksPage() {
     description: "How image capture, AI analysis, confidence logic, and clinic follow-up decisions work together.",
   });
 
+  const midpoint = Math.ceil(faqs.length / 2);
+  const leftFaqs = faqs.slice(0, midpoint);
+  const rightFaqs = faqs.slice(midpoint);
+
   return (
-    <section className="section-shell">
+    <section className="section-shell pb-12 md:pb-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
 
-      <div className="container mx-auto px-4">
-        <div className="rounded-3xl border border-border bg-[radial-gradient(circle_at_top_right,hsl(var(--secondary))_0%,hsl(var(--card))_45%)] p-6 md:p-10">
-          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">How It Works</p>
-              <h1 className="mt-3 text-3xl font-bold leading-tight md:text-5xl">
-                A classic scan-to-confirm workflow for faster head lice decisions
-              </h1>
-              <p className="mt-4 section-copy max-w-3xl">
-                Head Lice Checker is built as a decision engine, not a black box. You capture better evidence, review AI signals with confidence context, then move to clinic follow-up only when the confirmation gate indicates escalation.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Button asChild className="rounded-full" size="lg">
-                  <Link href="/#start-scan">{copy.primaryCta}</Link>
-                </Button>
-                <Button asChild variant="outline" className="rounded-full" size="lg">
-                  <Link href="#step-flow">See the 6-step flow</Link>
-                </Button>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-border/70 bg-card/70 p-6">
-              <h2 className="text-lg font-semibold">At-a-glance outcomes</h2>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                {heroHighlights.map((item) => (
-                  <li key={item} className="flex items-start gap-2">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-4 text-xs text-muted-foreground">
-                The same non-diagnostic safety boundaries apply across scan results, guidance content, and clinic escalation pathways.
-              </p>
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--secondary))_0%,transparent_45%)]" />
+        <div className="container relative z-10 mx-auto grid gap-8 px-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">How It Works</p>
+            <h1 className="mt-3 text-3xl font-bold leading-tight md:text-5xl">
+              A classic scan-to-confirm workflow for faster head lice decisions
+            </h1>
+            <p className="mt-4 section-copy max-w-3xl">
+              Head Lice Checker is built as a decision engine, not a black box. You capture better evidence, review AI signals with confidence context, then move to clinic follow-up only when the confirmation gate indicates escalation.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button asChild className="rounded-full" size="lg">
+                <Link href="/#start-scan">{copy.primaryCta}</Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-full" size="lg">
+                <Link href="#step-flow">See the 6-step flow</Link>
+              </Button>
             </div>
           </div>
-        </div>
 
+          <div>
+            <h2 className="text-lg font-semibold">At-a-glance outcomes</h2>
+            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+              {heroHighlights.map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-xs text-muted-foreground">
+              The same non-diagnostic safety boundaries apply across scan results, guidance content, and clinic escalation pathways.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4">
         <div id="step-flow" className="mt-10">
           <div className="max-w-3xl">
             <h2 className="text-2xl font-bold md:text-3xl">The 6-step AI analysis sequence</h2>
@@ -193,14 +199,12 @@ export default function HowItWorksPage() {
           <p className="mt-3 section-copy max-w-4xl">
             The workflow is intentionally auditable in plain language so families and partners understand what the system is doing before any escalation decision is made.
           </p>
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
             {processCards.map((card) => (
-              <Card key={card.heading}>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold">{card.heading}</h3>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground md:text-base">{card.body}</p>
-                </CardContent>
-              </Card>
+              <div key={card.heading} className="border-b border-border pb-5">
+                <h3 className="font-semibold">{card.heading}</h3>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">{card.body}</p>
+              </div>
             ))}
           </div>
         </div>
@@ -222,13 +226,24 @@ export default function HowItWorksPage() {
 
         <div className="mt-10">
           <h2 className="text-2xl font-bold">Expanded FAQ</h2>
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {faqs.map((item) => (
-              <div key={item.question} className="rounded-xl border border-border/70 bg-muted/20 p-4">
-                <h3 className="font-semibold">{item.question}</h3>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.answer}</p>
-              </div>
-            ))}
+          <div className="mt-5 grid gap-6 md:grid-cols-2">
+            <Accordion type="single" collapsible className="w-full">
+              {leftFaqs.map((faq, index) => (
+                <AccordionItem key={faq.question} value={`left-${index}`} className="border-border">
+                  <AccordionTrigger className="text-left text-base font-semibold hover:no-underline">{faq.question}</AccordionTrigger>
+                  <AccordionContent className="text-sm leading-7 text-muted-foreground">{faq.answer}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+
+            <Accordion type="single" collapsible className="w-full">
+              {rightFaqs.map((faq, index) => (
+                <AccordionItem key={faq.question} value={`right-${index}`} className="border-border">
+                  <AccordionTrigger className="text-left text-base font-semibold hover:no-underline">{faq.question}</AccordionTrigger>
+                  <AccordionContent className="text-sm leading-7 text-muted-foreground">{faq.answer}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </div>
         </div>
 

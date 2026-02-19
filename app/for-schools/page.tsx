@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Download, School } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getSiteCopy } from "@/lib/data/content";
 import { breadcrumbJsonLd, faqJsonLd, medicalWebPageJsonLd, pageMetadata } from "@/lib/seo";
 
@@ -162,84 +163,78 @@ export default function ForSchoolsPage() {
     reviewedAt: "2026-02-19",
   });
 
+  const midpoint = Math.ceil(faqs.length / 2);
+  const leftFaqs = faqs.slice(0, midpoint);
+  const rightFaqs = faqs.slice(midpoint);
+
   return (
     <section className="section-shell">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }} />
 
-      <div className="container mx-auto px-4">
-        <div className="rounded-3xl border border-border bg-[radial-gradient(circle_at_top_left,hsl(var(--secondary))_0%,hsl(var(--card))_52%)] p-6 md:p-10">
-          <div className="grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Schools Hub</p>
-              <h1 className="mt-3 text-3xl font-bold leading-tight md:text-5xl">
-                Operational head lice guidance for schools and childcare teams
-              </h1>
-              <p className="mt-4 section-copy max-w-3xl">
-                This hub is designed for real school workflows: calm communications, repeatable parent instructions, and structured clinic escalation when needed. Use it as a centralized reference for staff, notices, and family support pathways.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Button asChild className="rounded-full" size="lg">
-                  <Link href="/#start-scan">{copy.primaryCta}</Link>
-                </Button>
-                <Button asChild variant="outline" className="rounded-full" size="lg">
-                  <Link href="/find-clinics">{copy.secondaryCta}</Link>
-                </Button>
-                <Button asChild variant="ghost" className="rounded-full" size="lg">
-                  <Link href="/contact">Contact school support</Link>
-                </Button>
-              </div>
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsl(var(--secondary))_0%,transparent_45%)]" />
+        <div className="container relative z-10 mx-auto grid gap-8 px-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Schools Hub</p>
+            <h1 className="mt-3 text-3xl font-bold leading-tight md:text-5xl">
+              Operational head lice guidance for schools and childcare teams
+            </h1>
+            <p className="mt-4 section-copy max-w-3xl">
+              This hub is designed for real school workflows: calm communications, repeatable parent instructions, and structured clinic escalation when needed. Use it as a centralized reference for staff, notices, and family support pathways.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button asChild className="rounded-full" size="lg">
+                <Link href="/#start-scan">{copy.primaryCta}</Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-full" size="lg">
+                <Link href="/find-clinics">{copy.secondaryCta}</Link>
+              </Button>
+              <Button asChild variant="ghost" className="rounded-full" size="lg">
+                <Link href="/contact">Contact school support</Link>
+              </Button>
             </div>
+          </div>
 
-            <div className="rounded-2xl border border-border/70 bg-card/70 p-6">
-              <div className="flex items-center gap-2">
-                <School className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-semibold">Hub outcomes</h2>
-              </div>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li>• Align all staff on one outbreak communication rhythm.</li>
-                <li>• Give families practical scan-first instructions.</li>
-                <li>• Route higher-risk scenarios to clinic support faster.</li>
-              </ul>
+          <div>
+            <div className="flex items-center gap-2">
+              <School className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Hub outcomes</h2>
             </div>
+            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+              <li>• Align all staff on one outbreak communication rhythm.</li>
+              <li>• Give families practical scan-first instructions.</li>
+              <li>• Route higher-risk scenarios to clinic support faster.</li>
+            </ul>
           </div>
         </div>
+      </div>
 
-        <div className="mt-6 rounded-2xl border border-border bg-card p-4">
-          <div className="flex flex-wrap gap-3 text-sm">
-            {hubNav.map((item) => (
-              <Link key={item.href} href={item.href} className="rounded-full border border-border bg-muted/20 px-3 py-1.5 font-medium hover:bg-muted/40">
-                {item.label}
-              </Link>
-            ))}
-          </div>
+      <div className="container mx-auto px-4">
+        <div className="mt-6 flex flex-wrap gap-3 text-sm">
+          {hubNav.map((item) => (
+            <Link key={item.href} href={item.href} className="rounded-full border border-border bg-muted/20 px-3 py-1.5 font-medium hover:bg-muted/40">
+              {item.label}
+            </Link>
+          ))}
         </div>
 
         <section id="overview" className="mt-10">
           <h2 className="text-2xl font-bold md:text-3xl">Overview</h2>
-          <div className="mt-4 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-sm leading-7 text-muted-foreground md:text-base">
-                  Schools need consistency more than complexity. During exposure periods, uncertainty spreads faster than reliable guidance. This hub concentrates the highest-impact workflows in one place so teams can move from alert to action without rewriting processes each time.
-                </p>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground md:text-base">
-                  The core model is simple: issue calm communication, give practical home-check instructions, and escalate uncertain or persistent cases quickly to professional confirmation. This reduces avoidable panic while still protecting family decision quality.
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold">School workflow guardrails</h3>
-                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                  <li>• Non-diagnostic language in every communication.</li>
-                  <li>• One template, one cadence, one escalation route.</li>
-                  <li>• Keep records operational and minimal.</li>
-                  <li>• Review copy weekly during high-contact periods.</li>
-                </ul>
-              </CardContent>
-            </Card>
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
+            <div className="border-b border-border pb-5">
+              <h3 className="font-semibold">School response clarity</h3>
+              <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                Schools need consistency more than complexity. During exposure periods, uncertainty spreads faster than reliable guidance. This hub concentrates the highest-impact workflows in one place so teams can move from alert to action without rewriting processes each time.
+              </p>
+            </div>
+            <div className="border-b border-border pb-5">
+              <h3 className="font-semibold">Workflow guardrails</h3>
+              <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                The core model is simple: issue calm communication, give practical home-check instructions, and escalate uncertain or persistent cases quickly to professional confirmation. This reduces avoidable panic while still protecting family decision quality.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -329,13 +324,24 @@ export default function ForSchoolsPage() {
 
         <section id="faq" className="mt-10">
           <h2 className="text-2xl font-bold">FAQ</h2>
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {faqs.map((item) => (
-              <div key={item.question} className="rounded-xl border border-border/70 bg-muted/20 p-4">
-                <h3 className="font-semibold">{item.question}</h3>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.answer}</p>
-              </div>
-            ))}
+          <div className="mt-5 grid gap-6 md:grid-cols-2">
+            <Accordion type="single" collapsible className="w-full">
+              {leftFaqs.map((faq, index) => (
+                <AccordionItem key={faq.question} value={`left-${index}`} className="border-border">
+                  <AccordionTrigger className="text-left text-base font-semibold hover:no-underline">{faq.question}</AccordionTrigger>
+                  <AccordionContent className="text-sm leading-7 text-muted-foreground">{faq.answer}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+
+            <Accordion type="single" collapsible className="w-full">
+              {rightFaqs.map((faq, index) => (
+                <AccordionItem key={faq.question} value={`right-${index}`} className="border-border">
+                  <AccordionTrigger className="text-left text-base font-semibold hover:no-underline">{faq.question}</AccordionTrigger>
+                  <AccordionContent className="text-sm leading-7 text-muted-foreground">{faq.answer}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </div>
         </section>
 
