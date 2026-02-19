@@ -220,7 +220,7 @@ export default function ForClinicsPage() {
       </div>
 
       <div className="container mx-auto px-4">
-        <div className="mt-4 flex flex-wrap gap-3 text-sm">
+        <div className="flex flex-wrap gap-3 text-sm">
           {hubNav.map((item) => (
             <Link key={item.href} href={item.href} className="rounded-full border border-border bg-muted/20 px-3 py-1.5 font-medium hover:bg-muted/40">
               {item.label}
