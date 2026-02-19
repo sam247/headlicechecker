@@ -6,6 +6,8 @@ import base64
 import io
 import logging
 import os
+import time
+from contextlib import asynccontextmanager
 from typing import Any, Literal
 
 logging.basicConfig(level=logging.INFO)
@@ -15,12 +17,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-# Optional: set to path to your trained best.pt; else uses pretrained for structure
 MODEL_PATH = os.environ.get("SCAN_MODEL_PATH", "yolov8n.pt")
-# Minimum confidence (0–1) for a box to be returned. Lower = more sensitive, more false positives.
 MIN_CONFIDENCE = float(os.environ.get("SCAN_MIN_CONFIDENCE", "0.25"))
+# YOLO inference image size; smaller = faster on CPU (model resizes internally)
+INFER_IMGSZ = int(os.environ.get("SCAN_INFER_IMGSZ", "320"))
 
-# Class names from your trained model must map to these labels (index or name)
 VALID_LABELS = ("lice", "nits", "dandruff", "psoriasis")
 LabelType = Literal["lice", "nits", "dandruff", "psoriasis", "clear"]
 
@@ -65,7 +66,34 @@ class PredictResponse(BaseModel):
     image_height: int | None = None
 
 
-app = FastAPI(title="Scan inference", version="1.0.0")
+_model = None
+
+
+def _load_model():
+    global _model
+    from ultralytics import YOLO
+
+    t0 = time.monotonic()
+    _model = YOLO(MODEL_PATH)
+    # Warm the model with a tiny dummy image so PyTorch JIT / first-run overhead is paid here
+    from PIL import Image as _PILImage
+    _model.predict(_PILImage.new("RGB", (64, 64)), imgsz=64, verbose=False)
+    logger.info("model loaded and warmed in %.1fs  path=%s", time.monotonic() - t0, MODEL_PATH)
+
+
+def get_model():
+    if _model is None:
+        _load_model()
+    return _model
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    _load_model()
+    yield
+
+
+app = FastAPI(title="Scan inference", version="1.0.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -73,16 +101,6 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
-
-_model = None
-
-
-def get_model():
-    global _model
-    if _model is None:
-        from ultralytics import YOLO
-        _model = YOLO(MODEL_PATH)
-    return _model
 
 
 @app.get("/health")
@@ -103,7 +121,10 @@ def predict(req: PredictRequest):
         raise HTTPException(status_code=400, detail=f"Invalid image: {e}")
 
     model = get_model()
-    results = model.predict(pil, verbose=False)
+    t0 = time.monotonic()
+    results = model.predict(pil, imgsz=INFER_IMGSZ, verbose=False)
+    infer_ms = (time.monotonic() - t0) * 1000
+    logger.info("inference took %.0fms  imgsz=%d  image=%dx%d", infer_ms, INFER_IMGSZ, w, h)
 
     detections_out: list[DetectionOut] = []
     top_confidence = 0.0

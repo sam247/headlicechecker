@@ -15,6 +15,6 @@ COPY main.py .
 COPY best.pt /app/best.pt
 ENV SCAN_MODEL_PATH=/app/best.pt
 
-EXPOSE 8000
-ENV PORT=8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENV PORT=10000
+EXPOSE 10000
+CMD uvicorn main:app --host 0.0.0.0 --port $PORT
