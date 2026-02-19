@@ -17,7 +17,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-MODEL_PATH = os.environ.get("SCAN_MODEL_PATH", "yolov8n.pt")
+MODEL_PATH = os.environ.get("SCAN_MODEL_PATH", "best.pt")
 MIN_CONFIDENCE = float(os.environ.get("SCAN_MIN_CONFIDENCE", "0.05"))
 # Match training resolution (Ultralytics default 640); smaller = faster but nits can be missed
 INFER_IMGSZ = int(os.environ.get("SCAN_INFER_IMGSZ", "640"))
