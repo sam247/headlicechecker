@@ -92,13 +92,25 @@ async function scanWithRoboflowWorkflow(imageBase64: string): Promise<ProviderOu
       const text = await res.text();
       let detail = text.slice(0, 500);
       try {
-        const errJson = JSON.parse(text) as { message?: string; inner_error_type?: string; inner_error?: string };
-        const parts = [errJson.message, errJson.inner_error_type, errJson.inner_error].filter(Boolean);
+        const errJson = JSON.parse(text) as {
+          message?: string;
+          inner_error_type?: string;
+          inner_error?: string | Record<string, unknown>;
+        };
+        const parts = [errJson.message, errJson.inner_error_type].filter(Boolean);
+        const inner = errJson.inner_error;
+        if (inner !== undefined) {
+          parts.push(typeof inner === "string" ? inner : JSON.stringify(inner));
+        }
         if (parts.length) detail = parts.join(" | ");
       } catch {
         // keep detail as text slice
       }
-      console.warn("[scan][roboflow_workflow] non-OK", { status: res.status, detail });
+      console.warn("[scan][roboflow_workflow] non-OK", {
+        status: res.status,
+        detail,
+        fullBody: res.status === 400 ? text.slice(0, 800) : undefined,
+      });
       return { ok: false, reason: "provider_error", detail };
     }
     const data = (await res.json()) as Record<string, unknown>;
