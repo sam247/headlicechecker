@@ -182,12 +182,17 @@ function mapWorkflowResult(row: Record<string, unknown>): ProviderOutcome {
 
   if (predsV2 !== undefined) {
     if (Array.isArray(predsV2)) {
-      // Could be array of prediction objects directly
       preds = predsV2 as RoboflowPrediction[];
     } else if (typeof predsV2 === "object" && predsV2 !== null) {
       const obj = predsV2 as Record<string, unknown>;
       if (Array.isArray(obj.predictions)) {
         preds = obj.predictions as RoboflowPrediction[];
+      } else if (typeof obj.predictions === "object" && obj.predictions !== null) {
+        // Double-nested: output_predictions_v2.predictions.predictions[]
+        const inner = obj.predictions as Record<string, unknown>;
+        if (Array.isArray(inner.predictions)) {
+          preds = inner.predictions as RoboflowPrediction[];
+        }
       }
     }
   }
