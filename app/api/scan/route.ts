@@ -117,8 +117,8 @@ async function scanWithRoboflowModel(imageBase64: string): Promise<ProviderOutco
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: imageBase64,
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `image=${encodeURIComponent(imageBase64)}`,
     });
     if (!res.ok) {
       const text = await res.text();
