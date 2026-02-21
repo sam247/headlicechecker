@@ -113,8 +113,12 @@ async function scanWithRoboflowWorkflow(imageBase64: string): Promise<ProviderOu
       });
       return { ok: false, reason: "provider_error", detail };
     }
-    const data = (await res.json()) as Record<string, unknown>;
-    return mapRoboflowResult(data);
+    const data = await res.json();
+    console.info("[scan][roboflow_workflow] raw response keys", {
+      isArray: Array.isArray(data),
+      topKeys: Array.isArray(data) ? Object.keys(data[0] ?? {}) : Object.keys(data),
+    });
+    return mapWorkflowResult(data);
   } catch (e) {
     return { ok: false, reason: "provider_error", detail: String(e) };
   }
@@ -150,35 +154,105 @@ async function scanWithRoboflowModel(imageBase64: string): Promise<ProviderOutco
   }
 }
 
-function mapRoboflowResult(data: Record<string, unknown>): ProviderOutcome {
-  const label = extractRoboflowLabel(data);
-  const confidence = extractRoboflowConfidence(data);
+type RoboflowPrediction = {
+  class?: string;
+  class_name?: string;
+  label?: string;
+  confidence?: number;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+};
+
+/** Parse workflow response: array of result objects with output_predictions_v2 and message. */
+function mapWorkflowResult(raw: unknown): ProviderOutcome {
+  const row = Array.isArray(raw) ? (raw[0] as Record<string, unknown> | undefined) : (raw as Record<string, unknown>);
+  if (!row) return { ok: true, result: { label: "clear", confidence: 0.85, confidenceLevel: "low" } };
+
+  // Extract predictions from workflow output
+  const predsOutput = row.output_predictions_v2 as Record<string, unknown> | undefined;
+  let preds: RoboflowPrediction[] = [];
+  if (predsOutput) {
+    if (Array.isArray(predsOutput.predictions)) {
+      preds = predsOutput.predictions as RoboflowPrediction[];
+    } else if (Array.isArray(predsOutput)) {
+      preds = predsOutput as unknown as RoboflowPrediction[];
+    }
+  }
+
+  // message = detection count from property_definition
+  const detectionCount = typeof row.message === "number" ? row.message : preds.length;
+
+  console.info("[scan][roboflow_workflow] parsed", {
+    detectionCount,
+    predsLength: preds.length,
+    topPreds: preds.slice(0, 5).map((p) => ({
+      cls: p.class ?? p.class_name ?? p.label,
+      conf: p.confidence,
+    })),
+  });
+
+  if (preds.length === 0) {
+    return {
+      ok: true,
+      result: { label: "clear", confidence: 0.85, confidenceLevel: "low" },
+    };
+  }
+
+  // Use the highest-confidence detection as the label
+  const sorted = [...preds].sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
+  const best = sorted[0];
+  const bestClass = best.class ?? best.class_name ?? best.label ?? "clear";
+  const bestConf = best.confidence ?? 0.5;
+  const label = normalizeLabel(bestClass);
+
   return {
     ok: true,
     result: {
       label,
-      confidence: typeof confidence === "number" ? confidence : 0.85,
-      confidenceLevel: confidenceLevelFromConfidence(typeof confidence === "number" ? confidence : 0.85),
+      confidence: bestConf,
+      confidenceLevel: confidenceLevelFromConfidence(bestConf),
     },
   };
 }
 
-/** Workflow output shape varies; try common classification fields (top-level or under outputs). */
-function extractRoboflowLabel(data: Record<string, unknown>): ScanResult["label"] {
+/** Parse legacy detect API response: top-level classification fields or predictions array. */
+function mapRoboflowResult(data: Record<string, unknown>): ProviderOutcome {
   const root = (data?.outputs as Record<string, unknown>) ?? data;
-  const top = root?.top ?? root?.predicted_class ?? root?.class;
-  if (typeof top === "string") return normalizeLabel(top);
-  const preds = root?.predictions as Array<{ class?: string; label?: string }> | undefined;
-  const c = preds?.[0]?.class ?? preds?.[0]?.label;
-  if (typeof c === "string") return normalizeLabel(c);
-  return "clear";
-}
 
-function extractRoboflowConfidence(data: Record<string, unknown>): number | undefined {
-  const root = (data?.outputs as Record<string, unknown>) ?? data;
-  if (typeof root?.confidence === "number") return root.confidence;
-  const preds = root?.predictions as Array<{ confidence?: number }> | undefined;
-  return preds?.[0]?.confidence;
+  // Try classification fields
+  const top = root?.top ?? root?.predicted_class ?? root?.class;
+  if (typeof top === "string") {
+    const conf = typeof root?.confidence === "number" ? root.confidence : 0.85;
+    return {
+      ok: true,
+      result: {
+        label: normalizeLabel(top),
+        confidence: conf,
+        confidenceLevel: confidenceLevelFromConfidence(conf),
+      },
+    };
+  }
+
+  // Try predictions array
+  const preds = root?.predictions as RoboflowPrediction[] | undefined;
+  if (Array.isArray(preds) && preds.length > 0) {
+    const sorted = [...preds].sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
+    const best = sorted[0];
+    const cls = best.class ?? best.class_name ?? best.label ?? "clear";
+    const conf = best.confidence ?? 0.5;
+    return {
+      ok: true,
+      result: {
+        label: normalizeLabel(cls),
+        confidence: conf,
+        confidenceLevel: confidenceLevelFromConfidence(conf),
+      },
+    };
+  }
+
+  return { ok: true, result: { label: "clear", confidence: 0.85, confidenceLevel: "low" } };
 }
 
 export async function POST(request: NextRequest) {
