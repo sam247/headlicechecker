@@ -114,11 +114,18 @@ async function scanWithRoboflowWorkflow(imageBase64: string): Promise<ProviderOu
       return { ok: false, reason: "provider_error", detail };
     }
     const data = await res.json();
-    console.info("[scan][roboflow_workflow] raw response keys", {
-      isArray: Array.isArray(data),
-      topKeys: Array.isArray(data) ? Object.keys(data[0] ?? {}) : Object.keys(data),
+    // Workflow response: { outputs: [ { output_predictions_v2: ..., message: ... } ], profiler_trace: ... }
+    const outputsArr = Array.isArray(data?.outputs) ? data.outputs : Array.isArray(data) ? data : [data];
+    const row = outputsArr[0] as Record<string, unknown> | undefined;
+    console.info("[scan][roboflow_workflow] raw response", {
+      topKeys: Object.keys(data),
+      outputsIsArray: Array.isArray(data?.outputs),
+      outputsLength: Array.isArray(data?.outputs) ? data.outputs.length : "n/a",
+      rowKeys: row ? Object.keys(row) : [],
+      predsV2Type: row?.output_predictions_v2 === undefined ? "undefined" : typeof row.output_predictions_v2,
+      message: row?.message,
     });
-    return mapWorkflowResult(data);
+    return mapWorkflowResult(row ?? {});
   } catch (e) {
     return { ok: false, reason: "provider_error", detail: String(e) };
   }
@@ -165,28 +172,51 @@ type RoboflowPrediction = {
   height?: number;
 };
 
-/** Parse workflow response: array of result objects with output_predictions_v2 and message. */
-function mapWorkflowResult(raw: unknown): ProviderOutcome {
-  const row = Array.isArray(raw) ? (raw[0] as Record<string, unknown> | undefined) : (raw as Record<string, unknown>);
+/** Parse a single workflow output row (already extracted from data.outputs[0]). */
+function mapWorkflowResult(row: Record<string, unknown>): ProviderOutcome {
   if (!row) return { ok: true, result: { label: "clear", confidence: 0.85, confidenceLevel: "low" } };
 
-  // Extract predictions from workflow output
-  const predsOutput = row.output_predictions_v2 as Record<string, unknown> | undefined;
+  // Try multiple paths to find predictions
   let preds: RoboflowPrediction[] = [];
-  if (predsOutput) {
-    if (Array.isArray(predsOutput.predictions)) {
-      preds = predsOutput.predictions as RoboflowPrediction[];
-    } else if (Array.isArray(predsOutput)) {
-      preds = predsOutput as unknown as RoboflowPrediction[];
+  const predsV2 = row.output_predictions_v2;
+
+  if (predsV2 !== undefined) {
+    if (Array.isArray(predsV2)) {
+      // Could be array of prediction objects directly
+      preds = predsV2 as RoboflowPrediction[];
+    } else if (typeof predsV2 === "object" && predsV2 !== null) {
+      const obj = predsV2 as Record<string, unknown>;
+      if (Array.isArray(obj.predictions)) {
+        preds = obj.predictions as RoboflowPrediction[];
+      }
     }
   }
 
-  // message = detection count from property_definition
+  // Also check for predictions at other common keys
+  if (preds.length === 0) {
+    for (const key of Object.keys(row)) {
+      const val = row[key];
+      if (Array.isArray(val) && val.length > 0 && typeof val[0] === "object" && val[0] !== null && "confidence" in val[0]) {
+        preds = val as RoboflowPrediction[];
+        break;
+      }
+      if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+        const nested = val as Record<string, unknown>;
+        if (Array.isArray(nested.predictions) && nested.predictions.length > 0) {
+          preds = nested.predictions as RoboflowPrediction[];
+          break;
+        }
+      }
+    }
+  }
+
   const detectionCount = typeof row.message === "number" ? row.message : preds.length;
 
   console.info("[scan][roboflow_workflow] parsed", {
     detectionCount,
     predsLength: preds.length,
+    predsV2Type: predsV2 === undefined ? "undefined" : Array.isArray(predsV2) ? `array(${(predsV2 as unknown[]).length})` : typeof predsV2,
+    predsV2Sample: predsV2 !== undefined ? JSON.stringify(predsV2).slice(0, 300) : "n/a",
     topPreds: preds.slice(0, 5).map((p) => ({
       cls: p.class ?? p.class_name ?? p.label,
       conf: p.confidence,
