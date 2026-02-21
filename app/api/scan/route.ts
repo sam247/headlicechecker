@@ -235,9 +235,8 @@ function mapWorkflowResult(row: Record<string, unknown>): ProviderOutcome {
     };
   }
 
-  // Only keep high-confidence detections; show top 3 on overlay
   const MIN_CONF = 0.5;
-  const MAX_OVERLAY = 3;
+  const MAX_OVERLAY = 6;
 
   const sorted = [...preds].sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
   const allDetections: DetectionItem[] = sorted
@@ -249,15 +248,13 @@ function mapWorkflowResult(row: Record<string, unknown>): ProviderOutcome {
       if (conf < MIN_CONF) return null;
       const w = p.width ?? 0;
       const h = p.height ?? 0;
-      const cx = p.x ?? 0;
-      const cy = p.y ?? 0;
       return {
         id: `det-${i + 1}`,
         label: dlabel as DetectionItem["label"],
         confidence: conf,
         confidenceLevel: confidenceLevelFromConfidence(conf),
-        x: cx - w / 2,
-        y: cy - h / 2,
+        x: p.x ?? 0,
+        y: p.y ?? 0,
         width: w,
         height: h,
       };
