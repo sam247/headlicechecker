@@ -235,21 +235,25 @@ function mapWorkflowResult(row: Record<string, unknown>): ProviderOutcome {
     };
   }
 
-  // Convert to DetectionItems (Roboflow x/y = center; convert to top-left for overlay)
+  // Only keep high-confidence detections; show top 3 on overlay
+  const MIN_CONF = 0.5;
+  const MAX_OVERLAY = 3;
+
   const sorted = [...preds].sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
-  const detections: DetectionItem[] = sorted
+  const allDetections: DetectionItem[] = sorted
     .map((p, i): DetectionItem | null => {
       const cls = p.class ?? p.class_name ?? p.label;
-      const label = cls ? normalizeLabel(cls) : null;
-      if (!label || label === "clear") return null;
+      const dlabel = cls ? normalizeLabel(cls) : null;
+      if (!dlabel || dlabel === "clear") return null;
       const conf = p.confidence ?? 0;
+      if (conf < MIN_CONF) return null;
       const w = p.width ?? 0;
       const h = p.height ?? 0;
       const cx = p.x ?? 0;
       const cy = p.y ?? 0;
       return {
         id: `det-${i + 1}`,
-        label: label as DetectionItem["label"],
+        label: dlabel as DetectionItem["label"],
         confidence: conf,
         confidenceLevel: confidenceLevelFromConfidence(conf),
         x: cx - w / 2,
@@ -260,14 +264,25 @@ function mapWorkflowResult(row: Record<string, unknown>): ProviderOutcome {
     })
     .filter((d): d is DetectionItem => d !== null);
 
+  // Top N for the UI overlay (circles)
+  const overlayDetections = allDetections.slice(0, MAX_OVERLAY);
+
   const best = sorted[0];
   const bestClass = best.class ?? best.class_name ?? best.label ?? "clear";
   const bestConf = best.confidence ?? 0.5;
   const label = normalizeLabel(bestClass);
 
-  const liceCount = detections.filter((d) => d.label === "lice").length;
-  const nitsCount = detections.filter((d) => d.label === "nits").length;
-  const strongest = detections[0]?.label;
+  const liceCount = allDetections.filter((d) => d.label === "lice").length;
+  const nitsCount = allDetections.filter((d) => d.label === "nits").length;
+  const strongest = allDetections[0]?.label;
+
+  console.info("[scan][roboflow_workflow] filtered", {
+    rawPreds: preds.length,
+    aboveMinConf: allDetections.length,
+    overlayCount: overlayDetections.length,
+    label,
+    bestConf,
+  });
 
   return {
     ok: true,
@@ -275,9 +290,9 @@ function mapWorkflowResult(row: Record<string, unknown>): ProviderOutcome {
       label,
       confidence: bestConf,
       confidenceLevel: confidenceLevelFromConfidence(bestConf),
-      detections: detections.length > 0 ? detections : undefined,
-      summary: detections.length > 0
-        ? { totalDetections: detections.length, liceCount, nitsCount, strongestLabel: strongest ?? undefined }
+      detections: overlayDetections.length > 0 ? overlayDetections : undefined,
+      summary: allDetections.length > 0
+        ? { totalDetections: allDetections.length, liceCount, nitsCount, strongestLabel: strongest ?? undefined }
         : undefined,
     },
   };
