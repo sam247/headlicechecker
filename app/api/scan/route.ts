@@ -90,7 +90,16 @@ async function scanWithRoboflowWorkflow(imageBase64: string): Promise<ProviderOu
     });
     if (!res.ok) {
       const text = await res.text();
-      return { ok: false, reason: "provider_error", detail: text.slice(0, 200) };
+      let detail = text.slice(0, 500);
+      try {
+        const errJson = JSON.parse(text) as { message?: string; inner_error_type?: string; inner_error?: string };
+        const parts = [errJson.message, errJson.inner_error_type, errJson.inner_error].filter(Boolean);
+        if (parts.length) detail = parts.join(" | ");
+      } catch {
+        // keep detail as text slice
+      }
+      console.warn("[scan][roboflow_workflow] non-OK", { status: res.status, detail });
+      return { ok: false, reason: "provider_error", detail };
     }
     const data = (await res.json()) as Record<string, unknown>;
     return mapRoboflowResult(data);
@@ -99,7 +108,7 @@ async function scanWithRoboflowWorkflow(imageBase64: string): Promise<ProviderOu
   }
 }
 
-/** Roboflow legacy model (project_id/version, e.g. find-head-lice-psoriases-and-dandruffs/1). */
+/** Roboflow legacy model (project_id/version, e.g. find-head-lice-psoriases-and-dandruffs/1). Use this if workflow returns WorkflowSyntaxError. */
 async function scanWithRoboflowModel(imageBase64: string): Promise<ProviderOutcome> {
   if (!ROBOFLOW_MODEL_ID) return { ok: false, reason: "no_config" };
   const [projectId, version] = ROBOFLOW_MODEL_ID.split("/");
