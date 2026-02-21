@@ -122,6 +122,13 @@ async function scanWithRoboflowModel(imageBase64: string): Promise<ProviderOutco
     });
     if (!res.ok) {
       const text = await res.text();
+      console.warn("[scan][roboflow_legacy] non-OK", {
+        status: res.status,
+        modelId: `${projectId}/${version}`,
+        apiKeyPresent: !!ROBOFLOW_API_KEY,
+        apiKeyLength: ROBOFLOW_API_KEY?.length ?? 0,
+        detail: text.slice(0, 150),
+      });
       return { ok: false, reason: "provider_error", detail: text.slice(0, 200) };
     }
     const data = (await res.json()) as Record<string, unknown>;
