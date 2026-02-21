@@ -235,12 +235,39 @@ function mapWorkflowResult(row: Record<string, unknown>): ProviderOutcome {
     };
   }
 
-  // Use the highest-confidence detection as the label
+  // Convert to DetectionItems (Roboflow x/y = center; convert to top-left for overlay)
   const sorted = [...preds].sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
+  const detections: DetectionItem[] = sorted
+    .map((p, i): DetectionItem | null => {
+      const cls = p.class ?? p.class_name ?? p.label;
+      const label = cls ? normalizeLabel(cls) : null;
+      if (!label || label === "clear") return null;
+      const conf = p.confidence ?? 0;
+      const w = p.width ?? 0;
+      const h = p.height ?? 0;
+      const cx = p.x ?? 0;
+      const cy = p.y ?? 0;
+      return {
+        id: `det-${i + 1}`,
+        label: label as DetectionItem["label"],
+        confidence: conf,
+        confidenceLevel: confidenceLevelFromConfidence(conf),
+        x: cx - w / 2,
+        y: cy - h / 2,
+        width: w,
+        height: h,
+      };
+    })
+    .filter((d): d is DetectionItem => d !== null);
+
   const best = sorted[0];
   const bestClass = best.class ?? best.class_name ?? best.label ?? "clear";
   const bestConf = best.confidence ?? 0.5;
   const label = normalizeLabel(bestClass);
+
+  const liceCount = detections.filter((d) => d.label === "lice").length;
+  const nitsCount = detections.filter((d) => d.label === "nits").length;
+  const strongest = detections[0]?.label;
 
   return {
     ok: true,
@@ -248,6 +275,10 @@ function mapWorkflowResult(row: Record<string, unknown>): ProviderOutcome {
       label,
       confidence: bestConf,
       confidenceLevel: confidenceLevelFromConfidence(bestConf),
+      detections: detections.length > 0 ? detections : undefined,
+      summary: detections.length > 0
+        ? { totalDetections: detections.length, liceCount, nitsCount, strongestLabel: strongest ?? undefined }
+        : undefined,
     },
   };
 }
