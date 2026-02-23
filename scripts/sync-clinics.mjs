@@ -18,6 +18,7 @@ const REQUIRED_HEADERS = [
   "Website",
 ];
 const OPTIONAL_HEADERS = [
+  "Tier",
   "Featured",
   "Sponsored",
   "Featured Rank",
@@ -90,6 +91,14 @@ function normalizeOptionalNumber(input, { min = Number.NEGATIVE_INFINITY, max = 
   if (integer && !Number.isInteger(n)) return null;
   if (n < min || n > max) return null;
   return n;
+}
+
+function normalizeTier(input) {
+  const value = String(input ?? "").trim().toLowerCase();
+  if (!value) return undefined;
+  if (value === "featured") return "featured";
+  if (value === "standard") return "standard";
+  return null;
 }
 
 function parseCsv(text) {
@@ -261,6 +270,7 @@ async function run() {
     const email = getCell(row, indexByHeader, "Email");
     const websiteRaw = getCell(row, indexByHeader, "Website");
     const featuredRaw = getCell(row, indexByHeader, "Featured");
+    const tierRaw = getCell(row, indexByHeader, "Tier");
     const sponsoredRaw = getCell(row, indexByHeader, "Sponsored");
     const featuredRankRaw = getCell(row, indexByHeader, "Featured Rank");
     const reviewStarsRaw = getCell(row, indexByHeader, "Review Stars");
@@ -319,13 +329,14 @@ async function run() {
     }
 
     const featured = normalizeBoolean(featuredRaw);
+    const tier = normalizeTier(tierRaw);
     const sponsored = normalizeBoolean(sponsoredRaw);
     const featuredRank = normalizeOptionalNumber(featuredRankRaw, { min: 1, integer: true });
     const reviewStars = normalizeOptionalNumber(reviewStarsRaw, { min: 0, max: 5 });
     const reviewCount = normalizeOptionalNumber(reviewCountRaw, { min: 0, integer: true });
 
-    if (featuredRank === null || reviewStars === null || reviewCount === null) {
-      const message = `Row ${rowNum}: invalid numeric value in Featured Rank/Review Stars/Review Count`;
+    if (tier === null || featuredRank === null || reviewStars === null || reviewCount === null) {
+      const message = `Row ${rowNum}: invalid value in Tier/Featured Rank/Review Stars/Review Count`;
       if (strictMode) {
         errors.push(message);
         continue;
@@ -386,6 +397,8 @@ async function run() {
       continue;
     }
 
+    const normalizedTier = tier ?? (featured === true ? "featured" : "standard");
+
     output.push({
       id,
       name,
@@ -398,6 +411,7 @@ async function run() {
       ...(telephone ? { phone: telephone } : {}),
       ...(email ? { email } : {}),
       ...(bookingUrl ? { bookingUrl } : {}),
+      tier: normalizedTier,
       ...(typeof featured === "boolean" ? { featured } : {}),
       ...(typeof sponsored === "boolean" ? { sponsored } : {}),
       ...(typeof featuredRank === "number" ? { featuredRank } : {}),

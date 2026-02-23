@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { getClinics } from "@/lib/data/content";
+import { applyFeaturedCap, getClinics, sortClinicsByTier } from "@/lib/data/content";
 import { findOriginFromQuery, sortClinicsByNearest, distanceMiles } from "@/lib/data/geo";
 import { trackEvent } from "@/lib/data/events";
 import type { Clinic } from "@/lib/data/types";
@@ -64,35 +64,10 @@ function buildMapSrcForClinic(clinic: Clinic): string {
   return `https://www.openstreetmap.org/export/embed.html?bbox=${minLng},${minLat},${maxLng},${maxLat}&layer=mapnik`;
 }
 
-function isPromotedClinic(clinic: Clinic): boolean {
-  return clinic.sponsored === true || clinic.featured === true;
-}
-
-function promotionRank(clinic: Clinic): number {
-  if (typeof clinic.featuredRank === "number") return clinic.featuredRank;
-  return Number.MAX_SAFE_INTEGER;
-}
-
-function sortByFeaturedThenDistance(clinics: Clinic[]): Clinic[] {
-  return clinics
-    .slice()
-    .sort((a, b) => {
-      const aFeatured = isPromotedClinic(a) ? 1 : 0;
-      const bFeatured = isPromotedClinic(b) ? 1 : 0;
-      if (aFeatured !== bFeatured) return bFeatured - aFeatured;
-      if (aFeatured === 1 && bFeatured === 1) {
-        const rankA = promotionRank(a);
-        const rankB = promotionRank(b);
-        if (rankA !== rankB) return rankA - rankB;
-      }
-      return 0;
-    });
-}
-
 function formatReview(clinic: Clinic): string | null {
   if (typeof clinic.reviewStars !== "number") return null;
-  if (typeof clinic.reviewCount === "number") return `${clinic.reviewStars.toFixed(1)} (${clinic.reviewCount})`;
-  return clinic.reviewStars.toFixed(1);
+  const count = typeof clinic.reviewCount === "number" ? ` (${clinic.reviewCount})` : "";
+  return `Google Reviews ${clinic.reviewStars.toFixed(1)}${count}`;
 }
 
 export default function ClinicFinder({
@@ -201,7 +176,7 @@ export default function ClinicFinder({
         : sortedByDistance;
 
     return {
-      clinics: sortByFeaturedThenDistance(withinRadius),
+      clinics: applyFeaturedCap(sortClinicsByTier(withinRadius), 2),
       origin: originPoint,
     };
   }, [query, selectedCountry, geocodedOrigin, radiusMiles]);
@@ -312,7 +287,7 @@ export default function ClinicFinder({
               {clinics.map((clinic) => {
                 const miles = origin ? Math.round(distanceMiles(origin.lat, origin.lng, clinic.lat, clinic.lng)) : null;
                 const reviewLabel = formatReview(clinic);
-                const isFeatured = isPromotedClinic(clinic);
+                const isFeatured = clinic.tier === "featured";
 
                 return (
                   <Card
@@ -347,18 +322,14 @@ export default function ClinicFinder({
                             {!(hideClinicContactDetails || hideDirectContact) && (
                               <p className="flex items-start gap-2">
                                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                                <span className="block">
+                                <span>
                                   {clinic.address1 ? (
                                     <>
                                       {clinic.address1}
-                                      {clinic.address2 ? `, ${clinic.address2}` : ""}, {clinic.city}
-                                      <span className="block">{clinic.postcode}</span>
+                                      {clinic.address2 ? `, ${clinic.address2}` : ""}, {clinic.city} {clinic.postcode}
                                     </>
                                   ) : (
-                                    <>
-                                      <span className="block">{clinic.city}</span>
-                                      <span className="block">{clinic.postcode}</span>
-                                    </>
+                                    <>{clinic.city} {clinic.postcode}</>
                                   )}
                                 </span>
                               </p>
@@ -367,10 +338,7 @@ export default function ClinicFinder({
                             {(hideClinicContactDetails || hideDirectContact) && (
                               <p className="flex items-start gap-2">
                                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                                <span className="block">
-                                  <span className="block">{clinic.city}</span>
-                                  <span className="block">{clinic.postcode}</span>
-                                </span>
+                                <span>{clinic.city} {clinic.postcode}</span>
                               </p>
                             )}
 

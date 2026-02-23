@@ -107,6 +107,14 @@ function nextStepsForLabel(label: ScanLabel): string[] {
   ];
 }
 
+function lowConfidencePositiveSteps(): string[] {
+  return [
+    "Re-scan with bright lighting and a sharper close-up before taking action.",
+    "Monitor symptoms over the next 24 to 48 hours.",
+    "Use clinic support if you want faster professional confirmation.",
+  ];
+}
+
 function inferCoordinateMode(
   detections: DetectionItem[],
   meta?: { width: number; height: number } | null
@@ -153,9 +161,14 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   const [previewMeta, setPreviewMeta] = useState<{ width: number; height: number } | null>(null);
   const [scanPreviewMeta, setScanPreviewMeta] = useState<{ width: number; height: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const positiveShownTrackedRef = useRef<string | null>(null);
   const selectedClinicName = useMemo(() => {
     if (!selectedClinicId) return undefined;
     return getClinics("ALL").find((c) => c.id === selectedClinicId)?.name;
+  }, [selectedClinicId]);
+  const selectedClinicCity = useMemo(() => {
+    if (!selectedClinicId) return undefined;
+    return getClinics("ALL").find((c) => c.id === selectedClinicId)?.city;
   }, [selectedClinicId]);
 
   const reset = useCallback(() => {
@@ -174,10 +187,11 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
     setScanErrorCode(null);
     setShowClinicsModal(false);
     setContactPanelOpen(false);
-    setSelectedClinicId(undefined);
-    setRetryCooldown(0);
-    setShowMarkers(true);
-    setMarkerFilter("all");
+      setSelectedClinicId(undefined);
+      setRetryCooldown(0);
+      setShowMarkers(true);
+      setMarkerFilter("all");
+      positiveShownTrackedRef.current = null;
   }, []);
 
   useEffect(() => {
@@ -238,8 +252,6 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
       setSelectedClinicId(undefined);
       setShowMarkers(true);
       setMarkerFilter("all");
-      await trackEvent({ event: "scan_submission", source: "photo_checker" });
-
       let index = 0;
       const timer = setInterval(() => {
         setProgress((prev) => {
@@ -294,7 +306,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
         setScanResult(result);
 
         await trackEvent({
-          event: "scan_result",
+          event: "scan_completed",
           result_label: result.label,
           confidence: result.confidenceLevel,
           detectionCount: result.detections?.length,
@@ -316,6 +328,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   const processFile = useCallback(
     (file: File) => {
       if (!file.type.startsWith("image/")) return;
+      void trackEvent({ event: "photo_upload_initiated", source: "photo_checker" });
       const url = URL.createObjectURL(file);
       const img = new Image();
       img.onload = () => {
@@ -357,6 +370,28 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   }, [initialFile, onFileConsumed, processFile]);
 
   const resultCopy = scanResult ? nextStepCopy(scanResult.label) : null;
+  const isLowConfidencePositive =
+    (scanResult?.label === "lice" || scanResult?.label === "nits") && scanResult?.confidenceLevel === "low";
+  const isPositiveResult = scanResult?.label === "lice" || scanResult?.label === "nits";
+  const actionSteps = scanResult
+    ? isLowConfidencePositive
+      ? lowConfidencePositiveSteps()
+      : nextStepsForLabel(scanResult.label)
+    : [];
+
+  useEffect(() => {
+    if (stage !== "result" || !scanResult) return;
+    if (!isPositiveResult) return;
+    const key = `${scanResult.label}:${scanResult.confidenceLevel ?? "unknown"}:${scanResult.summary?.totalDetections ?? 0}`;
+    if (positiveShownTrackedRef.current === key) return;
+    positiveShownTrackedRef.current = key;
+    void trackEvent({
+      event: "positive_detection_shown",
+      label: scanResult.label,
+      confidence: scanResult.confidenceLevel,
+      source: "scan_result_panel",
+    });
+  }, [stage, scanResult, isPositiveResult]);
   const displayPreview = scanPreview ?? preview;
   const overlayMeta = scanResult?.imageMeta ?? scanPreviewMeta ?? previewMeta;
   const allDetections = useMemo(() => scanResult?.detections ?? [], [scanResult?.detections]);
@@ -620,6 +655,12 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                       </div>
                       <h3 className="text-xl font-semibold">{resultCopy.title}</h3>
                       <p className="mt-2 text-sm text-muted-foreground">{scanResult.explanation ?? resultCopy.description}</p>
+                      {isPositiveResult && (
+                        <div className="mx-auto mt-3 max-w-lg rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-left">
+                          <p className="text-sm font-medium text-foreground">You are not alone. This is common and manageable.</p>
+                          <p className="mt-1 text-sm font-semibold text-primary">Professional confirmation is recommended.</p>
+                        </div>
+                      )}
 
                       {OVERLAY_UI_ENABLED && scanResult.summary && (
                         <div className="mx-auto mt-4 grid max-w-lg gap-2 sm:grid-cols-2">
@@ -640,7 +681,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                       <div className="mx-auto mt-4 max-w-lg rounded-xl border border-border bg-background p-4 text-left">
                         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">What to do now</p>
                         <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-                          {nextStepsForLabel(scanResult.label).map((tip) => (
+                          {actionSteps.map((tip) => (
                             <li key={tip}>• {tip}</li>
                           ))}
                         </ul>
@@ -675,26 +716,23 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                     {(scanResult?.label === "lice" || scanResult?.label === "nits") && (
                       <Button
                         className="rounded-full"
-                        variant="outline"
+                        variant={isLowConfidencePositive ? "ghost" : "outline"}
                         onClick={async () => {
                           setShowClinicsModal(true);
                           if (MODAL_LEAD_FLOW_ENABLED) {
                             await trackEvent({ event: "clinic_modal_opened", label: scanResult?.label });
                           }
                           await trackEvent({
-                            event: "scan_positive_detection_click",
+                            event: "view_clinics_clicked",
                             label: scanResult?.label,
                             source: "scan_result_panel",
-                          });
-                          await trackEvent({
-                            event: "find_clinic_click",
-                            label: scanResult?.label,
-                            source: "scan_result_panel",
+                            result_label: scanResult?.label,
+                            confidence: scanResult?.confidenceLevel,
                           });
                         }}
                       >
                         <MapPin className="mr-2 h-4 w-4" />
-                        View clinics
+                        {isLowConfidencePositive ? "View clinics (optional)" : "View clinics"}
                       </Button>
                     )}
                     {scanErrorCode === "NO_PROVIDER_CONFIGURED" && (
@@ -779,8 +817,10 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                       compact
                       clinicId={selectedClinicId}
                       clinicName={selectedClinicName}
+                      clinicCity={selectedClinicCity}
                       scanLabel={scanResult?.label}
                       scanConfidenceLevel={scanResult?.confidenceLevel}
+                      indicatorCount={scanResult?.summary?.totalDetections}
                       source="modal"
                       onCancel={() => setContactPanelOpen(false)}
                     />

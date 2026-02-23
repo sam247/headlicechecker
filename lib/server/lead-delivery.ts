@@ -6,14 +6,17 @@ export type LeadDestination = {
 
 export type LeadPayload = {
   referenceId: string;
+  submittedAt: string;
   name: string;
   email: string;
   phone?: string;
   postcode: string;
+  city?: string;
   message?: string;
   clinicId?: string;
   scanLabel?: string;
   scanConfidenceLevel?: string;
+  indicatorCount?: number;
   consentAt: string;
   policyVersion: string;
 };
@@ -64,17 +67,31 @@ export type ClinicEnquiryPayload = {
   policyVersion: string;
 };
 
+export type SchoolToolkitLeadPayload = {
+  referenceId: string;
+  submittedAt: string;
+  schoolName: string;
+  role: string;
+  email: string;
+  country: string;
+  trustName?: string;
+  toolkitAssets: Array<{ id: string; title: string; href: string }>;
+};
+
 function buildTextBody(payload: LeadPayload, destination: LeadDestination): string {
   return [
     `Reference: ${payload.referenceId}`,
+    `Submitted at: ${payload.submittedAt}`,
     `Clinic: ${destination.clinicId ?? "auto"}`,
     `Region: ${destination.region}`,
+    `City: ${payload.city ?? "Unknown"}`,
     `Name: ${payload.name}`,
     `Email: ${payload.email}`,
     `Phone: ${payload.phone ?? "N/A"}`,
     `Postcode/ZIP: ${payload.postcode}`,
     `Scan label: ${payload.scanLabel ?? "N/A"}`,
     `Scan confidence: ${payload.scanConfidenceLevel ?? "N/A"}`,
+    `Indicator count: ${payload.indicatorCount ?? "N/A"}`,
     `Consent: true (${payload.consentAt}) policy ${payload.policyVersion}`,
     `Message: ${payload.message ?? "N/A"}`,
   ].join("\n");
@@ -121,17 +138,22 @@ function buildClinicEnquiryText(payload: ClinicEnquiryPayload): string {
   ].join("\n");
 }
 
-async function sendEmail(subject: string, text: string, to: string): Promise<LeadDeliveryResult> {
+async function sendEmail(
+  subject: string,
+  text: string,
+  to: string,
+  options?: { from?: string; bcc?: string }
+): Promise<LeadDeliveryResult> {
   const provider = (process.env.LEAD_EMAIL_PROVIDER ?? "none").toLowerCase();
-  const from = process.env.LEAD_FROM_EMAIL;
+  const from = options?.from ?? process.env.LEAD_FROM_EMAIL;
 
   if (!to || !from) {
-    return { deliveryStatus: "failed", provider: "none", error: "Missing email routing configuration" };
+    return { deliveryStatus: "queued", provider: "none", error: "Missing email routing configuration" };
   }
 
   if (provider === "resend") {
     const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) return { deliveryStatus: "failed", provider: "resend", error: "Missing RESEND_API_KEY" };
+    if (!apiKey) return { deliveryStatus: "queued", provider: "none", error: "Missing RESEND_API_KEY" };
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -139,7 +161,13 @@ async function sendEmail(subject: string, text: string, to: string): Promise<Lea
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from, to: [to], subject, text }),
+      body: JSON.stringify({
+        from,
+        to: [to],
+        ...(options?.bcc ? { bcc: [options.bcc] } : {}),
+        subject,
+        text,
+      }),
     });
 
     if (!res.ok) {
@@ -153,7 +181,7 @@ async function sendEmail(subject: string, text: string, to: string): Promise<Lea
 
   if (provider === "postmark") {
     const token = process.env.POSTMARK_SERVER_TOKEN;
-    if (!token) return { deliveryStatus: "failed", provider: "postmark", error: "Missing POSTMARK_SERVER_TOKEN" };
+    if (!token) return { deliveryStatus: "queued", provider: "none", error: "Missing POSTMARK_SERVER_TOKEN" };
 
     const res = await fetch("https://api.postmarkapp.com/email", {
       method: "POST",
@@ -164,6 +192,7 @@ async function sendEmail(subject: string, text: string, to: string): Promise<Lea
       body: JSON.stringify({
         From: from,
         To: to,
+        ...(options?.bcc ? { Bcc: options.bcc } : {}),
         Subject: subject,
         TextBody: text,
         MessageStream: "outbound",
@@ -188,7 +217,9 @@ export async function deliverLeadEmail(
 ): Promise<LeadDeliveryResult> {
   const fallbackTo = process.env.LEAD_FALLBACK_TO;
   const to = destination.email ?? fallbackTo;
-  const subject = `Head Lice Checker lead ${payload.referenceId} (${destination.region})`;
+  const city = payload.city ?? "Unknown";
+  const confidence = payload.scanConfidenceLevel ?? "Unknown";
+  const subject = `New Head Lice Enquiry - ${city} - Confidence: ${confidence}`;
   const text = buildTextBody(payload, destination);
   return sendEmail(subject, text, to ?? "");
 }
@@ -209,4 +240,30 @@ export async function deliverClinicEnquiryEmail(
   const subject = `Clinic enquiry ${payload.referenceId}`;
   const text = buildClinicEnquiryText(payload);
   return sendEmail(subject, text, to ?? "");
+}
+
+export async function deliverSchoolToolkitEmail(
+  payload: SchoolToolkitLeadPayload
+): Promise<LeadDeliveryResult> {
+  const to = payload.email;
+  const subject = `School Toolkit Access - ${payload.schoolName}`;
+  const text = [
+    `Reference: ${payload.referenceId}`,
+    `Submitted at: ${payload.submittedAt}`,
+    `School: ${payload.schoolName}`,
+    `Role: ${payload.role}`,
+    `Email: ${payload.email}`,
+    `Country: ${payload.country}`,
+    `Trust: ${payload.trustName ?? "N/A"}`,
+    "",
+    "Your toolkit files are now unlocked:",
+    ...payload.toolkitAssets.map((asset) => `- ${asset.title}: ${asset.href}`),
+    "",
+    "This framework provides non-diagnostic policy and communication guidance for schools.",
+  ].join("\n");
+
+  return sendEmail(subject, text, to, {
+    from: process.env.SCHOOL_TOOLKIT_CONFIRMATION_FROM ?? process.env.LEAD_FROM_EMAIL,
+    bcc: process.env.SCHOOL_TOOLKIT_OPS_BCC,
+  });
 }

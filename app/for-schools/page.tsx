@@ -19,6 +19,7 @@ export const metadata: Metadata = pageMetadata({
 
 const hubNav = [
   { href: "#overview", label: "Overview" },
+  { href: "/school-head-lice-toolkit", label: "Toolkit" },
   { href: "#playbooks", label: "Playbooks" },
   { href: "#curated-articles", label: "Curated articles" },
   { href: "#guides", label: "Guides" },
@@ -202,6 +203,9 @@ export default function ForSchoolsPage() {
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild className="rounded-full" size="lg">
+                <Link href="/school-head-lice-toolkit">Open Toolkit Framework</Link>
+              </Button>
+              <Button asChild className="rounded-full" size="lg">
                 <Link href="/#start-scan">{copy.primaryCta}</Link>
               </Button>
               <Button asChild variant="outline" className="rounded-full" size="lg">
@@ -312,7 +316,14 @@ export default function ForSchoolsPage() {
 
         <section id="downloads" className="mt-10">
           <h2 className="text-2xl font-bold md:text-3xl">Downloads</h2>
-          <p className="mt-3 section-copy">Download and share these school-ready toolkit files.</p>
+          <p className="mt-3 section-copy">
+            Download and share these school-ready toolkit files, or use the full gated framework for structured rollout.
+          </p>
+          <div className="mt-4">
+            <Button asChild variant="outline" className="rounded-full">
+              <Link href="/school-head-lice-toolkit">Open The Head Lice School Response Framework™</Link>
+            </Button>
+          </div>
           <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {downloads.map((item) => (
               <Card key={`${item.title}-${item.format}`}>

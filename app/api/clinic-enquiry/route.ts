@@ -4,6 +4,7 @@ import { POLICY_VERSION } from "@/lib/data/compliance";
 import { deliverClinicEnquiryEmail } from "@/lib/server/lead-delivery";
 import { clientIp, isAllowedOrigin, normalizeEmail, redactEmail } from "@/lib/server/security";
 import { getRateLimitConfig, rateLimit } from "@/lib/server/rate-limit";
+import { appendAnalyticsRow, countryFromHeaders, mapDetectionOutcome } from "@/lib/server/analytics-table";
 
 const schema = z
   .object({
@@ -95,7 +96,9 @@ export async function POST(request: NextRequest) {
   }
 
   const referenceId = `enquiry_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-  const consentAt = new Date().toISOString();
+  const submittedAt = new Date().toISOString();
+  const consentAt = submittedAt;
+  const country = countryFromHeaders(request.headers);
 
   const delivery = await deliverClinicEnquiryEmail({
     referenceId,
@@ -148,6 +151,15 @@ export async function POST(request: NextRequest) {
       { status: 503 }
     );
   }
+
+  await appendAnalyticsRow({
+    timestamp: submittedAt,
+    userCountry: country,
+    detectionOutcome: mapDetectionOutcome(undefined, undefined),
+    clinicClicked: "",
+    leadSubmitted: true,
+    eventKey: `partner:${referenceId}:${payload.clinicName}`,
+  });
 
   return NextResponse.json({
     ok: true,

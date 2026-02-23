@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { getBlogPostBySlug, getBlogPosts, formatDate } from "@/lib/data/content";
-import { articleJsonLd, breadcrumbJsonLd, canonical, pageMetadata } from "@/lib/seo";
+import { articleJsonLd, breadcrumbJsonLd, canonical, medicalWebPageJsonLd, pageMetadata } from "@/lib/seo";
 
 export function generateStaticParams() {
   return getBlogPosts().map((post) => ({ slug: post.slug }));
@@ -84,17 +84,31 @@ function parseBodyBlocks(body: string[]): BodyBlock[] {
 export default function BlogDetailPage({ params }: BlogDetailPageProps) {
   const post = getBlogPostBySlug(params.slug);
   if (!post) notFound();
+  const isFirstSignsPage = post.slug === "what-are-the-first-signs-of-head-lice";
+  const showSchoolToolkitCta =
+    post.slug === "what-are-the-first-signs-of-head-lice" || post.slug === "head-lice-treatment-for-adults";
 
   const breadcrumb = breadcrumbJsonLd([
     { name: "Home", path: "/" },
     { name: "Blog", path: "/blog" },
     { name: post.title, path: `/blog/${post.slug}` },
   ]);
+  const firstSignsMedicalSchema = isFirstSignsPage
+    ? medicalWebPageJsonLd({
+        name: post.title,
+        path: `/blog/${post.slug}`,
+        description: post.description,
+        reviewedAt: post.updatedAt,
+      })
+    : null;
 
   return (
     <article className="section-shell">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd(post)) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
+      {firstSignsMedicalSchema ? (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(firstSignsMedicalSchema) }} />
+      ) : null}
 
       <div className="container mx-auto px-4">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -176,6 +190,20 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                 </p>
               </CardContent>
             </Card>
+
+            {showSchoolToolkitCta && (
+              <Card className="mt-6">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-semibold">School outbreak response toolkit</h2>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    If your school needs structured parent communication and policy-aligned escalation guidance, use The Head Lice School Response Framework™.
+                  </p>
+                  <Link href="/school-head-lice-toolkit" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                    School outbreak response toolkit
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           <aside className="space-y-4 lg:pt-0">

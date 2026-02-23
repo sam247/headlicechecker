@@ -1,6 +1,7 @@
 export type ScanLabel = "lice" | "nits" | "dandruff" | "psoriasis" | "clear";
 
 export type ScanConfidenceLevel = "high" | "medium" | "low";
+export type ClinicTier = "featured" | "standard";
 
 export interface DetectionItem {
   id: string;
@@ -33,6 +34,7 @@ export interface Clinic {
   email?: string;
   bookingUrl?: string;
   description?: string;
+  tier?: ClinicTier;
   featured?: boolean;
   sponsored?: boolean;
   featuredRank?: number;
@@ -126,6 +128,18 @@ export interface HomePageContent {
     intro: string;
     links: HomeTrustLink[];
   };
+  comparison: {
+    heading: string;
+    intro: string;
+    cards: Array<{
+      title: string;
+      bullets: string[];
+    }>;
+  };
+  internalLinks: Array<{
+    href: string;
+    label: string;
+  }>;
   guides: {
     heading: string;
     intro: string;

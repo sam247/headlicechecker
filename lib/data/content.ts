@@ -10,6 +10,7 @@ import homePageContent from "@/content/pages/home.json";
 import type {
   BlogPost,
   Clinic,
+  ClinicTier,
   EvergreenPage,
   FaqItem,
   HomePageContent,
@@ -18,10 +19,70 @@ import type {
   TrustPage,
 } from "@/lib/data/types";
 
+function normalizeClinicTier(clinic: Clinic): ClinicTier {
+  if (clinic.tier === "featured" || clinic.tier === "standard") return clinic.tier;
+  if (clinic.featured === true || clinic.sponsored === true) return "featured";
+  return "standard";
+}
+
+function normalizeClinic(clinic: Clinic): Clinic {
+  const tier = normalizeClinicTier(clinic);
+  return {
+    ...clinic,
+    tier,
+    featured: tier === "featured",
+  };
+}
+
 export function getClinics(country: "US" | "UK" | "ALL" = "US"): Clinic[] {
-  const all = [...(usClinics as Clinic[]), ...(ukClinics as Clinic[])].filter((c) => c.active);
+  const all = [...(usClinics as Clinic[]), ...(ukClinics as Clinic[])]
+    .filter((c) => c.active)
+    .map(normalizeClinic);
   if (country === "ALL") return all;
   return all.filter((c) => c.country === country);
+}
+
+function featuredRank(clinic: Clinic): number {
+  return typeof clinic.featuredRank === "number" ? clinic.featuredRank : Number.MAX_SAFE_INTEGER;
+}
+
+export function sortClinicsByTier(clinics: Clinic[]): Clinic[] {
+  return clinics.slice().sort((a, b) => {
+    const aFeatured = a.tier === "featured" ? 1 : 0;
+    const bFeatured = b.tier === "featured" ? 1 : 0;
+    if (aFeatured !== bFeatured) return bFeatured - aFeatured;
+    if (aFeatured === 1 && bFeatured === 1) return featuredRank(a) - featuredRank(b);
+    return 0;
+  });
+}
+
+export function applyFeaturedCap(clinics: Clinic[], maxFeatured = 2): Clinic[] {
+  if (maxFeatured < 0) return clinics.slice();
+  let featuredSeen = 0;
+  const kept: Clinic[] = [];
+  for (const clinic of clinics) {
+    if (clinic.tier === "featured") {
+      if (featuredSeen >= maxFeatured) continue;
+      featuredSeen += 1;
+    }
+    kept.push(clinic);
+  }
+  return kept;
+}
+
+export function getClinicsForLocationPage(page: LocationSeoPage, maxFeatured = 2, maxTotal = 6): Clinic[] {
+  const inCountry = getClinics(page.country);
+  const city = page.city.trim().toLowerCase();
+  const region = page.region.trim().toLowerCase();
+  const primary = inCountry.filter((clinic) => {
+    const clinicCity = clinic.city.trim().toLowerCase();
+    const clinicRegion = clinic.region.trim().toLowerCase();
+    return clinicCity === city || clinicRegion === region;
+  });
+
+  const source = primary.length > 0 ? primary : inCountry;
+  const ranked = applyFeaturedCap(sortClinicsByTier(source), maxFeatured);
+  return ranked.slice(0, Math.max(maxTotal, 1));
 }
 
 export function getFaqs(): FaqItem[] {

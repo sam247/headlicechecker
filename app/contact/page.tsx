@@ -142,7 +142,12 @@ export default function ContactPage({ searchParams }: ContactPageProps) {
         </Card>
 
         <div className="mt-8">
-          <ClinicContactForm compact clinicId={selectedClinic?.id} clinicName={selectedClinic?.name} />
+          <ClinicContactForm
+            compact
+            clinicId={selectedClinic?.id}
+            clinicName={selectedClinic?.name}
+            clinicCity={selectedClinic?.city}
+          />
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">{copy.medicalDisclaimer}</p>

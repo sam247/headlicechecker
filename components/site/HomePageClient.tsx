@@ -79,8 +79,10 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
   const consumeHeroFile = useCallback(() => setHeroFile(null), []);
 
   const reviewedAt = useMemo(() => readableDate(content.reviewedAt), [content.reviewedAt]);
-  const leftFaqs = useMemo(() => content.faq.items.slice(0, 4), [content.faq.items]);
-  const rightFaqs = useMemo(() => content.faq.items.slice(4, 8), [content.faq.items]);
+  const [leftFaqs, rightFaqs] = useMemo(() => {
+    const midpoint = Math.ceil(content.faq.items.length / 2);
+    return [content.faq.items.slice(0, midpoint), content.faq.items.slice(midpoint)];
+  }, [content.faq.items]);
 
   return (
     <div>
@@ -299,6 +301,35 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
+            ))}
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center gap-4 text-sm">
+            {content.internalLinks.map((item) => (
+              <Link key={item.href} href={item.href} className="text-primary hover:underline">
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section-shell pt-4 md:pt-4 bg-muted/20">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl font-bold md:text-3xl">{content.comparison.heading}</h2>
+          <p className="mt-3 section-copy max-w-4xl">{content.comparison.intro}</p>
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+            {content.comparison.cards.map((card) => (
+              <Card key={card.title}>
+                <CardContent className="p-5">
+                  <h3 className="font-semibold">{card.title}</h3>
+                  <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                    {card.bullets.map((item) => (
+                      <li key={item}>• {item}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>

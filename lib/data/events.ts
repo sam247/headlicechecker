@@ -2,6 +2,11 @@ import { track } from "@vercel/analytics";
 import type { ScanConfidenceLevel, ScanLabel } from "@/lib/data/types";
 
 export type AnalyticsEventName =
+  | "photo_upload_initiated"
+  | "scan_completed"
+  | "positive_detection_shown"
+  | "view_clinics_clicked"
+  | "partner_enquiry_submitted"
   | "scan_submission"
   | "scan_result"
   | "scan_positive_detection_click"
@@ -17,7 +22,11 @@ export type AnalyticsEventName =
   | "clinic_contact_panel_opened"
   | "scan_overlay_toggled"
   | "scan_legend_filter_used"
-  | "scan_clinic_cta_clicked";
+  | "scan_clinic_cta_clicked"
+  | "school_toolkit_page_view"
+  | "school_toolkit_form_submitted"
+  | "school_toolkit_file_downloaded"
+  | "school_toolkit_confirmation_email_sent";
 
 interface BasePayload {
   event: AnalyticsEventName;
@@ -36,16 +45,29 @@ interface ScanResultPayload extends BasePayload {
   topDetectionConfidenceLevel?: ScanConfidenceLevel;
 }
 
+interface ScanCompletedPayload extends BasePayload {
+  event: "scan_completed";
+  result_label?: ScanLabel;
+  confidence?: ScanConfidenceLevel;
+  detectionCount?: number;
+  topDetectionLabel?: Exclude<ScanLabel, "clear">;
+  topDetectionConfidenceLevel?: ScanConfidenceLevel;
+}
+
 interface ScanPositivePayload extends BasePayload {
-  event: "scan_positive_detection_click";
+  event: "scan_positive_detection_click" | "positive_detection_shown";
   label?: ScanLabel;
   source?: string;
+  confidence?: ScanConfidenceLevel;
 }
 
 interface FindClinicClickPayload extends BasePayload {
-  event: "find_clinic_click";
+  event: "find_clinic_click" | "view_clinics_clicked";
   source?: string;
   label?: ScanLabel;
+  clinicId?: string;
+  result_label?: ScanLabel;
+  confidence?: ScanConfidenceLevel;
 }
 
 interface ClinicProfileClickPayload extends BasePayload {
@@ -61,6 +83,19 @@ interface SchoolAssetDownloadPayload extends BasePayload {
   format: "pdf" | "docx" | "xlsx";
 }
 
+interface SchoolToolkitEventPayload extends BasePayload {
+  event:
+    | "school_toolkit_page_view"
+    | "school_toolkit_form_submitted"
+    | "school_toolkit_file_downloaded"
+    | "school_toolkit_confirmation_email_sent";
+  asset_name?: string;
+  format?: "pdf" | "docx" | "xlsx" | "pptx" | "md";
+  role?: string;
+  country?: string;
+  reference_id?: string;
+}
+
 interface OverlayTogglePayload extends BasePayload {
   event: "scan_overlay_toggled";
   enabled: boolean;
@@ -72,7 +107,7 @@ interface LegendFilterPayload extends BasePayload {
 }
 
 interface ClinicApplyPayload extends BasePayload {
-  event: "clinic_apply_submit" | "clinic_apply_submitted";
+  event: "clinic_apply_submit" | "clinic_apply_submitted" | "partner_enquiry_submitted";
   country?: "UK" | "US";
   source?: "for-clinics";
 }
@@ -86,10 +121,12 @@ interface ClinicContactPayload extends BasePayload {
 export type EventPayload =
   | BasePayload
   | ScanResultPayload
+  | ScanCompletedPayload
   | ScanPositivePayload
   | FindClinicClickPayload
   | ClinicProfileClickPayload
   | SchoolAssetDownloadPayload
+  | SchoolToolkitEventPayload
   | OverlayTogglePayload
   | LegendFilterPayload
   | ClinicApplyPayload
@@ -103,7 +140,11 @@ function normalizeEventName(payload: EventPayload): AnalyticsEventName {
   if (payload.event === "scan_start") return "scan_submission";
   if (payload.event === "scan_clinic_cta_clicked") return "find_clinic_click";
   if (payload.event === "clinic_contact_submit") return "clinic_contact_submitted";
-  if (payload.event === "clinic_apply_submit") return "clinic_apply_submitted";
+  if (payload.event === "clinic_apply_submit" || payload.event === "clinic_apply_submitted") return "partner_enquiry_submitted";
+  if (payload.event === "scan_submission") return "photo_upload_initiated";
+  if (payload.event === "scan_result") return "scan_completed";
+  if (payload.event === "scan_positive_detection_click") return "positive_detection_shown";
+  if (payload.event === "find_clinic_click") return "view_clinics_clicked";
   return payload.event;
 }
 

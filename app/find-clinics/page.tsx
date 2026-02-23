@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import Link from "next/link";
 import FindClinicsSection from "@/components/site/FindClinicsSection";
 import ClinicEnquiryForm from "@/components/site/ClinicEnquiryForm";
 import { getClinics, getSiteCopy } from "@/lib/data/content";
-import { breadcrumbJsonLd, medicalWebPageJsonLd, pageMetadata, serviceJsonLd } from "@/lib/seo";
+import { breadcrumbJsonLd, clinicReviewJsonLd, localBusinessJsonLd, medicalWebPageJsonLd, pageMetadata, serviceJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   title: "Find Head Lice Clinics Near You",
@@ -16,6 +17,8 @@ const copy = getSiteCopy();
 
 export default function FindClinicsPage() {
   const clinics = getClinics("ALL");
+  const clinicSchemas = clinics.map((clinic) => localBusinessJsonLd(clinic));
+  const reviewSchemas = clinics.map((clinic) => clinicReviewJsonLd(clinic)).filter(Boolean);
 
   const breadcrumb = breadcrumbJsonLd([
     { name: "Home", path: "/" },
@@ -40,6 +43,20 @@ export default function FindClinicsPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
+      {clinicSchemas.map((schema, index) => (
+        <script
+          key={`clinic-schema-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
+      {reviewSchemas.map((schema, index) => (
+        <script
+          key={`clinic-review-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
 
       <section className="hero-gradient-shell hero-gradient-right section-shell">
         <div className="container mx-auto px-4">
@@ -50,7 +67,13 @@ export default function FindClinicsPage() {
           <section className="section-shell pt-10 md:pt-12">
             <div className="mt-8">
               <h2 className="text-xl font-semibold">Are you a head lice clinic and interested in being listed?</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Submit your details and we will get back to you.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Submit your details and we will get back to you.{" "}
+                <Link href="/for-clinics/pricing" className="font-medium text-primary hover:underline">
+                  See featured placement options
+                </Link>
+                .
+              </p>
               <div className="mt-4">
                 <ClinicEnquiryForm />
               </div>

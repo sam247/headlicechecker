@@ -25,8 +25,10 @@ type FormValues = z.infer<typeof schema>;
 interface ClinicContactFormProps {
   clinicId?: string;
   clinicName?: string;
+  clinicCity?: string;
   scanLabel?: ScanLabel;
   scanConfidenceLevel?: ScanConfidenceLevel;
+  indicatorCount?: number;
   compact?: boolean;
   source?: "page" | "modal";
   onSuccess?: (referenceId: string) => void | Promise<void>;
@@ -43,8 +45,10 @@ function mapError(result: LeadSubmissionResult): string {
 export default function ClinicContactForm({
   clinicId,
   clinicName,
+  clinicCity,
   scanLabel,
   scanConfidenceLevel,
+  indicatorCount,
   compact = false,
   source = "page",
   onSuccess,
@@ -85,8 +89,10 @@ export default function ClinicContactForm({
       body: JSON.stringify({
         ...values,
         clinicId,
+        clinicCity,
         scanLabel,
         scanConfidenceLevel,
+        indicatorCount,
       }),
     });
 

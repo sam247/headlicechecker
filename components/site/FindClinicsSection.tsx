@@ -46,6 +46,7 @@ export default function FindClinicsSection({ clinics, containerClassName }: Find
           <ClinicContactForm
             clinicId={contactClinic?.id}
             clinicName={contactClinic?.name}
+            clinicCity={contactClinic?.city}
             source="modal"
             compact
             onSuccess={() => setContactModalOpen(false)}

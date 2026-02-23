@@ -130,7 +130,7 @@ export default function ClinicApplicationForm() {
 
     setReferenceId(data.referenceId ?? null);
     setDeliveryStatus(data.deliveryStatus ?? "queued");
-    await trackEvent({ event: "clinic_apply_submitted", country: values.country, source: "for-clinics" });
+    await trackEvent({ event: "partner_enquiry_submitted", country: values.country, source: "for-clinics" });
 
     reset({
       clinicName: "",

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { BlogPost } from "@/lib/data/types";
+import type { BlogPost, Clinic } from "@/lib/data/types";
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://headlicechecker.com";
 export const SITE_NAME = "Head Lice Checker";
@@ -170,6 +170,42 @@ export function medicalWebPageJsonLd(input: {
   };
 }
 
+export function webPageJsonLd(input: {
+  name: string;
+  path: string;
+  description: string;
+  reviewedAt?: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: input.name,
+    description: input.description,
+    url: canonical(input.path),
+    lastReviewed: input.reviewedAt,
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+    },
+  };
+}
+
+export function educationalOrganizationJsonLd(input: {
+  name: string;
+  path: string;
+  description: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    name: input.name,
+    description: input.description,
+    url: canonical(input.path),
+    areaServed: ["United Kingdom", "United States"],
+    sameAs: [SITE_URL],
+  };
+}
+
 export function collectionPageJsonLd(input: { name: string; path: string; description: string }) {
   return {
     "@context": "https://schema.org",
@@ -177,5 +213,72 @@ export function collectionPageJsonLd(input: { name: string; path: string; descri
     name: input.name,
     description: input.description,
     url: canonical(input.path),
+  };
+}
+
+function clampRating(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(5, Math.max(0, value));
+}
+
+function normalizeReviewCount(value?: number): number | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
+  const normalized = Math.max(0, Math.floor(value));
+  return normalized;
+}
+
+export function clinicReviewJsonLd(clinic: Clinic) {
+  if (typeof clinic.reviewStars !== "number") return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Review",
+    itemReviewed: {
+      "@type": "LocalBusiness",
+      name: clinic.name,
+    },
+    reviewRating: {
+      "@type": "Rating",
+      ratingValue: clampRating(clinic.reviewStars),
+      bestRating: 5,
+      worstRating: 0,
+    },
+    author: {
+      "@type": "Organization",
+      name: "Google Reviews",
+    },
+  };
+}
+
+export function localBusinessJsonLd(clinic: Clinic) {
+  const reviewCount = normalizeReviewCount(clinic.reviewCount);
+  const hasRating = typeof clinic.reviewStars === "number";
+  const streetAddress = [clinic.address1, clinic.address2].filter(Boolean).join(", ");
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: clinic.name,
+    description: clinic.description,
+    telephone: clinic.phone,
+    email: clinic.email,
+    url: clinic.bookingUrl,
+    sameAs: clinic.gmbUrl,
+    areaServed: clinic.region,
+    address: {
+      "@type": "PostalAddress",
+      ...(streetAddress ? { streetAddress } : {}),
+      addressLocality: clinic.city,
+      postalCode: clinic.postcode,
+      addressCountry: clinic.country,
+    },
+    ...(hasRating
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: clampRating(clinic.reviewStars as number),
+            ...(typeof reviewCount === "number" ? { reviewCount } : {}),
+          },
+        }
+      : {}),
   };
 }

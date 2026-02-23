@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDate, getSiteCopy } from "@/lib/data/content";
@@ -17,6 +18,7 @@ interface LongformContentPageProps {
   reviewedAt?: string;
   ctaTitle?: string;
   ctaCopy?: string;
+  extraContent?: ReactNode;
   relatedLinks?: RelatedLink[];
 }
 
@@ -30,6 +32,7 @@ export default function LongformContentPage({
   reviewedAt,
   ctaTitle = "Ready for a quick next step?",
   ctaCopy = "Start a free photo scan first, then use the clinic finder if you want professional confirmation.",
+  extraContent,
   relatedLinks = [],
 }: LongformContentPageProps) {
   return (
@@ -78,6 +81,8 @@ export default function LongformContentPage({
             </div>
           </div>
         ) : null}
+
+        {extraContent}
 
         {relatedLinks.length ? (
           <div className="mt-8 rounded-2xl border border-border bg-card p-6">

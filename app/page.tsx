@@ -4,9 +4,9 @@ import { getBlogPosts, getHomePageContent, getSiteCopy } from "@/lib/data/conten
 import { canonical, faqJsonLd, medicalWebPageJsonLd, organizationJsonLd, serviceJsonLd, websiteJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Head Lice Checker | Free Online Head Lice and Nit Check",
+  title: "Head Lice Checker Online | AI Photo-Based Detection",
   description:
-    "Use Head Lice Checker for a free photo-based head lice and nits check, then follow clear next steps at home or with a clinic.",
+    "Use Head Lice Checker Online for AI photo-based head lice and nits detection, then follow clear next steps at home or with a clinic.",
   keywords: [
     "head lice checker",
     "head lice check",
@@ -19,9 +19,9 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Head Lice Checker | Free Online Head Lice and Nit Check",
+    title: "Head Lice Checker Online | AI Photo-Based Detection",
     description:
-      "Run a fast head lice and nits photo check, review confidence-safe guidance, and take clear next steps.",
+      "Run an AI photo-based head lice and nits check online, review confidence-safe guidance, and take clear next steps.",
     url: canonical("/"),
     type: "website",
     siteName: "Head Lice Checker",
@@ -29,9 +29,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Head Lice Checker | Free Online Head Lice and Nit Check",
+    title: "Head Lice Checker Online | AI Photo-Based Detection",
     description:
-      "Run a fast head lice and nits photo check, review confidence-safe guidance, and take clear next steps.",
+      "Run an AI photo-based head lice and nits check online, review confidence-safe guidance, and take clear next steps.",
     images: ["/logo_new.png"],
   },
 };
@@ -53,10 +53,10 @@ export default function Home() {
     homeContent.faq.items.map((item) => ({ question: item.question, answer: item.answer }))
   );
   const medicalWebPage = medicalWebPageJsonLd({
-    name: "Head Lice Checker",
+    name: "Head Lice Checker Online",
     path: "/",
     description:
-      "Head lice checker homepage with non-diagnostic photo screening guidance, escalation criteria, and clinic follow-up pathways.",
+      "Head Lice Checker Online homepage with AI photo-based non-diagnostic screening guidance, escalation criteria, and clinic follow-up pathways.",
     reviewedAt: homeContent.reviewedAt,
   });
   const service = serviceJsonLd({

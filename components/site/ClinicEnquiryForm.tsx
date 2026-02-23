@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -113,7 +114,7 @@ export default function ClinicEnquiryForm() {
 
     setReferenceId(data.referenceId ?? null);
     setDeliveryStatus(data.deliveryStatus ?? "queued");
-    await trackEvent({ event: "clinic_apply_submitted", source: "for-clinics" });
+    await trackEvent({ event: "partner_enquiry_submitted", source: "for-clinics" });
 
     reset({
       contactName: "",
@@ -134,7 +135,14 @@ export default function ClinicEnquiryForm() {
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 md:p-6">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Looking for priority visibility?{" "}
+        <Link href="/for-clinics/pricing" className="font-medium text-primary hover:underline">
+          See featured placement options
+        </Link>
+        .
+      </p>
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
         <input type="text" tabIndex={-1} autoComplete="off" className="hidden" {...register("hp_field")} />
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

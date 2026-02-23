@@ -20,6 +20,7 @@ export const metadata: Metadata = pageMetadata({
 const hubNav = [
   { href: "#overview", label: "Overview" },
   { href: "#lead-ops", label: "Lead ops" },
+  { href: "/for-clinics/pricing", label: "Pricing" },
   { href: "#curated-articles", label: "Curated articles" },
   { href: "#guides", label: "Guides" },
   { href: "#downloads", label: "Downloads" },
@@ -197,6 +198,9 @@ export default function ForClinicsPage() {
                 <Link href="/find-clinics">View finder experience</Link>
               </Button>
               <Button asChild variant="outline" className="rounded-full" size="lg">
+                <Link href="/for-clinics/pricing">View pricing tiers</Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-full" size="lg">
                 <Link href="#enquiry">Submit partner enquiry</Link>
               </Button>
               <Button asChild variant="ghost" className="rounded-full" size="lg">
@@ -334,6 +338,13 @@ export default function ForClinicsPage() {
           <h2 className="text-2xl font-bold">Partner enquiry</h2>
           <p className="mt-2 text-sm text-muted-foreground md:text-base">
             Share your clinic details and operational coverage. Our team will review fit, routing readiness, and onboarding requirements.
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Want priority placement?{" "}
+            <Link href="/for-clinics/pricing" className="font-medium text-primary hover:underline">
+              See featured options
+            </Link>
+            .
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Button asChild className="rounded-full">

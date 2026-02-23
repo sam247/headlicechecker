@@ -2,10 +2,10 @@
   "reviewedAt": "2026-02-18",
   "hero": {
     "badge": "Calm, private, parent-first head lice checker guidance",
-    "title": "Head Lice Checker",
-    "emphasis": "Get Clear Next Steps for Nits and Head Lice",
+    "title": "Head Lice Checker Online",
+    "emphasis": "AI Photo-Based Detection for Head Lice and Nits",
     "paragraphs": [
-      "Use this head lice checker for a fast first check when you spot itching, scalp irritation, or possible nits. Upload a clear close-up photo and get an indicative result with practical guidance for what to do at home. This scan provides non-diagnostic support. If risk appears elevated or symptoms continue, use the clinic pathway for professional confirmation."
+      "Use Head Lice Checker Online for a fast first check when you spot itching, scalp irritation, or possible nits. Upload a clear close-up photo and get an indicative result with practical guidance for what to do at home. This AI scan provides non-diagnostic support. If risk appears elevated or symptoms continue, use the clinic pathway for professional confirmation."
     ],
     "highlights": [
       "Indicative head lice check",
@@ -117,6 +117,50 @@
       }
     ]
   },
+  "comparison": {
+    "heading": "AI check comparisons in real-world use",
+    "intro": "Use this as a practical decision guide when choosing between at-home checks and immediate escalation.",
+    "cards": [
+      {
+        "title": "AI check vs manual combing",
+        "bullets": [
+          "AI check gives a fast first signal from one clear photo.",
+          "Manual combing remains useful for repeat confirmation across days.",
+          "Best approach: use both when symptoms persist or findings are mixed."
+        ]
+      },
+      {
+        "title": "AI check vs immediate clinic visit",
+        "bullets": [
+          "AI check helps triage quickly before booking.",
+          "Clinic confirmation is the right step for repeated or high-risk signs.",
+          "Low-confidence scans should be rescanned before escalation where practical."
+        ]
+      }
+    ]
+  },
+  "internalLinks": [
+    {
+      "href": "/how-it-works",
+      "label": "How the AI check works"
+    },
+    {
+      "href": "/locations",
+      "label": "Find clinics near you"
+    },
+    {
+      "href": "/blog/what-are-the-first-signs-of-head-lice",
+      "label": "First signs of head lice"
+    },
+    {
+      "href": "/for-schools",
+      "label": "Guidance for schools"
+    },
+    {
+      "href": "/school-head-lice-toolkit",
+      "label": "School outbreak response toolkit"
+    }
+  ],
   "guides": {
     "heading": "Latest practical guides",
     "intro": "Read focused guidance on first signs, treatment pathways, and common misreads, then return to the scan when you are ready to take action."
@@ -128,6 +172,22 @@
       {
         "question": "Is this tool a medical diagnosis?",
         "answer": "No. It provides an indicative head lice screening result only. For diagnosis and treatment decisions, speak with a clinician."
+      },
+      {
+        "question": "Is this a medical diagnosis?",
+        "answer": "No. This is an indicative screening tool only and does not replace clinical diagnosis."
+      },
+      {
+        "question": "How accurate is the scan?",
+        "answer": "Accuracy depends on photo quality and visibility. Use bright light, clear focus, and part the hair near the roots for best results."
+      },
+      {
+        "question": "Can I check lice at home?",
+        "answer": "Yes. Home checks are useful for fast triage. Use this scan with repeat visual checks when symptoms continue."
+      },
+      {
+        "question": "When should I see a professional?",
+        "answer": "Seek professional confirmation when likely signs repeat, confidence remains low after rescan, or symptoms persist across household contacts."
       },
       {
         "question": "What photo gives the best head lice check result?",

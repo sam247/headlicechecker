@@ -35,6 +35,83 @@ If `CLINIC_APPLY_TO` is unset, applications fall back to `LEAD_FALLBACK_TO`.
 
 The find-clinics and for-clinics pages also show a **clinic listing enquiry** form (`POST /api/clinic-enquiry`). Enquiries are sent to `CLINIC_ENQUIRY_TO` (e.g. `info@headlicechecker.com`); if unset, they fall back to `LEAD_FALLBACK_TO`.
 
+If email provider credentials are missing, lead routing gracefully returns a queued status to avoid silent lead loss.
+
+## Structured Analytics Table (Google Sheets)
+
+Phase 1 writes minimal conversion rows to an append-only Google Sheet. Configure:
+
+- `ANALYTICS_SHEET_ID`
+- `ANALYTICS_SHEET_TAB`
+- `ANALYTICS_METRICS_SHEET_TAB` (for event metrics like toolkit funnel events)
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL`
+- `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`
+
+Row shape:
+
+1. `timestamp`
+2. `user_country`
+3. `detection_outcome` (`clear`, `possible activity`, `high confidence`)
+4. `clinic_clicked`
+5. `lead_submitted`
+
+Toolkit event metrics rows (when enabled) use:
+
+1. `timestamp`
+2. `event_name`
+3. `country`
+4. `reference_id`
+5. `asset_name`
+
+## School Toolkit Funnel
+
+The school toolkit landing page is:
+
+- `/school-head-lice-toolkit`
+
+Gated submissions post to:
+
+- `POST /api/school-toolkit`
+
+Required fields:
+
+- `schoolName`
+- `role`
+- `email`
+- `country`
+
+Optional fields:
+
+- `trustName`
+
+On success, users receive immediate file access and confirmation email delivery.
+
+### SchoolLeads Table (Google Sheets)
+
+Configure:
+
+- `SCHOOL_LEADS_SHEET_ID`
+- `SCHOOL_LEADS_SHEET_TAB`
+- `SCHOOL_TOOLKIT_CONFIRMATION_FROM` (optional; falls back to `LEAD_FROM_EMAIL`)
+- `SCHOOL_TOOLKIT_OPS_BCC` (ops copy destination)
+
+`SchoolLeads` columns written by the API:
+
+1. `timestamp`
+2. `school_name`
+3. `role`
+4. `email`
+5. `country`
+6. `trust_name`
+7. `toolkit_downloaded`
+8. `toolkit_assets_unlocked`
+9. `region_tag`
+10. `country_tag`
+11. `follow_up_status`
+12. `follow_up_owner`
+13. `source_page`
+14. `reference_id`
+
 ## Clinic Data Via Google Sheet
 
 Clinics are sourced from a spreadsheet and synced into:
@@ -60,7 +137,7 @@ Use this exact header row:
 
 Optional headers for featured placement and reviews:
 
-| Featured | Sponsored | Featured Rank | Review Stars | Review Count | Google Business URL |
+| Tier | Featured | Sponsored | Featured Rank | Review Stars | Review Count | Description | Google Business URL |
 
 ### Mapping Notes
 
@@ -71,9 +148,20 @@ Optional headers for featured placement and reviews:
 - `lat/lng` are auto-geocoded during sync and cached in `content/.clinic-geocode-cache.json`
 - `id` is generated deterministically from country/city/name
 - `Featured`/`Sponsored` support priority listing order in finder results
+- `Tier` supports explicit placement strategy: `featured` or `standard`
+- If `Tier` is blank, sync falls back to `Featured` (`YES` => `featured`, otherwise `standard`)
 - `Featured Rank` sorts sponsored clinics to the top (`1` highest)
 - `Review Stars` (0-5) and `Review Count` render in finder cards
 - `Google Business URL` is stored as `gmbUrl` for manual enrichment
+
+## Clinic Pricing Labels
+
+`/for-clinics/pricing` reads non-hardcoded tier labels from:
+
+- `CLINIC_PRICING_FEATURED_LABEL`
+- `CLINIC_PRICING_STANDARD_LABEL`
+
+If either is unset, the page falls back to `Contact us`.
 
 ### Typical Workflow
 

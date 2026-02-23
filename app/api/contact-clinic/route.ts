@@ -6,6 +6,7 @@ import type { ScanConfidenceLevel, ScanLabel } from "@/lib/data/types";
 import { deliverLeadEmail } from "@/lib/server/lead-delivery";
 import { clientIp, isAllowedOrigin, normalizeEmail, redactEmail } from "@/lib/server/security";
 import { getRateLimitConfig, rateLimit } from "@/lib/server/rate-limit";
+import { appendAnalyticsRow, countryFromHeaders, mapDetectionOutcome } from "@/lib/server/analytics-table";
 
 const schema = z
   .object({
@@ -15,23 +16,25 @@ const schema = z
     postcode: z.string().min(3),
     message: z.string().max(500).optional(),
     clinicId: z.string().optional(),
+    clinicCity: z.string().optional(),
     scanLabel: z.custom<ScanLabel>().optional(),
     scanConfidenceLevel: z.custom<ScanConfidenceLevel>().optional(),
+    indicatorCount: z.number().int().min(0).optional(),
     consent: z.literal(true),
     hp_field: z.string().optional(),
   })
   .strict();
 
-function pickDestination(clinicId?: string, postcode?: string): { clinicId?: string; email?: string; region: string } {
+function pickDestination(clinicId?: string, postcode?: string): { clinicId?: string; email?: string; region: string; city?: string } {
   const clinics = getClinics("ALL");
   const byId = clinicId ? clinics.find((c) => c.id === clinicId) : undefined;
-  if (byId) return { clinicId: byId.id, email: byId.email, region: byId.country };
+  if (byId) return { clinicId: byId.id, email: byId.email, region: byId.country, city: byId.city };
 
   const normalized = postcode?.trim().toUpperCase() ?? "";
   const usHint = /^\d{5}/.test(normalized);
   const region = usHint ? "US" : "UK";
   const fallback = clinics.find((c) => c.country === region);
-  return { clinicId: fallback?.id, email: fallback?.email, region };
+  return { clinicId: fallback?.id, email: fallback?.email, region, city: fallback?.city };
 }
 
 function classifyDeliveryError(detail?: string): "TRANSIENT_DELIVERY_ERROR" | "PERMANENT_DELIVERY_ERROR" {
@@ -87,19 +90,24 @@ export async function POST(request: NextRequest) {
 
   const destination = pickDestination(payload.clinicId, payload.postcode);
   const referenceId = `lead_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-  const consentAt = new Date().toISOString();
+  const submittedAt = new Date().toISOString();
+  const consentAt = submittedAt;
+  const country = countryFromHeaders(request.headers);
 
   const delivery = await deliverLeadEmail(
     {
       referenceId,
+      submittedAt,
       name: payload.name,
       email: payload.email,
       phone: payload.phone,
       postcode: payload.postcode,
+      city: payload.clinicCity ?? destination.city,
       message: payload.message,
       clinicId: payload.clinicId,
       scanLabel: payload.scanLabel,
       scanConfidenceLevel: payload.scanConfidenceLevel,
+      indicatorCount: payload.indicatorCount,
       consentAt,
       policyVersion: POLICY_VERSION,
     },
@@ -123,6 +131,7 @@ export async function POST(request: NextRequest) {
       messageLength: payload.message?.length ?? 0,
       scanLabel: payload.scanLabel,
       scanConfidenceLevel: payload.scanConfidenceLevel,
+      indicatorCount: payload.indicatorCount ?? null,
       consentAt,
       policyVersion: POLICY_VERSION,
       ip,
@@ -139,6 +148,15 @@ export async function POST(request: NextRequest) {
       { status: 503 }
     );
   }
+
+  await appendAnalyticsRow({
+    timestamp: submittedAt,
+    userCountry: country,
+    detectionOutcome: mapDetectionOutcome(payload.scanLabel, payload.scanConfidenceLevel),
+    clinicClicked: payload.clinicId ?? destination.clinicId ?? "",
+    leadSubmitted: true,
+    eventKey: `lead:${referenceId}:${payload.clinicId ?? destination.clinicId ?? ""}`,
+  });
 
   return NextResponse.json({
     ok: true,

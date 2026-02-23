@@ -18,7 +18,8 @@
       "Screening",
       "Removal"
     ],
-    "active": true
+    "active": true,
+    "tier": "standard"
   },
   {
     "id": "uk-chipping-norton-nit-happens",
@@ -39,7 +40,8 @@
       "Screening",
       "Removal"
     ],
-    "active": true
+    "active": true,
+    "tier": "standard"
   },
   {
     "id": "uk-essex-the-nit-nurse",
@@ -61,7 +63,8 @@
       "Screening",
       "Removal"
     ],
-    "active": true
+    "active": true,
+    "tier": "standard"
   },
   {
     "id": "uk-richmond-nitnot-clinic",
@@ -84,7 +87,8 @@
       "Screening",
       "Removal"
     ],
-    "active": true
+    "active": true,
+    "tier": "featured"
   },
   {
     "id": "uk-yorkshire-york-head-lice-clinic",
@@ -106,6 +110,7 @@
       "Screening",
       "Removal"
     ],
-    "active": true
+    "active": true,
+    "tier": "standard"
   }
 ]

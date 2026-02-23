@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import LocationClinicSection from "@/components/site/LocationClinicSection";
 import LongformContentPage from "@/components/site/LongformContentPage";
-import { getLocationPageBySlug, getLocationPages } from "@/lib/data/content";
-import { breadcrumbJsonLd, faqJsonLd, medicalWebPageJsonLd, pageMetadata, serviceJsonLd } from "@/lib/seo";
+import { getClinicsForLocationPage, getLocationPageBySlug, getLocationPages } from "@/lib/data/content";
+import { breadcrumbJsonLd, clinicReviewJsonLd, faqJsonLd, localBusinessJsonLd, medicalWebPageJsonLd, pageMetadata, serviceJsonLd } from "@/lib/seo";
 
 export function generateStaticParams() {
   return getLocationPages().map((page) => ({ slug: page.slug }));
@@ -26,6 +27,7 @@ export function generateMetadata({ params }: LocationPageProps): Metadata {
 export default function LocationPage({ params }: LocationPageProps) {
   const page = getLocationPageBySlug(params.slug);
   if (!page) notFound();
+  const nearbyClinics = getClinicsForLocationPage(page, 2, 6);
 
   const breadcrumb = breadcrumbJsonLd([
     { name: "Home", path: "/" },
@@ -46,6 +48,8 @@ export default function LocationPage({ params }: LocationPageProps) {
     description: page.description,
     reviewedAt: page.updatedAt,
   });
+  const clinicSchemas = nearbyClinics.map((clinic) => localBusinessJsonLd(clinic));
+  const reviewSchemas = nearbyClinics.map((clinic) => clinicReviewJsonLd(clinic)).filter(Boolean);
 
   return (
     <>
@@ -53,12 +57,27 @@ export default function LocationPage({ params }: LocationPageProps) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(page.faqs)) }} />
+      {clinicSchemas.map((schema, index) => (
+        <script
+          key={`location-clinic-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
+      {reviewSchemas.map((schema, index) => (
+        <script
+          key={`location-review-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
       <LongformContentPage
         title={page.title}
         intro={page.intro}
         sections={page.sections}
         faqs={page.faqs}
         reviewedAt={page.updatedAt}
+        extraContent={<LocationClinicSection city={page.city} clinics={nearbyClinics} />}
         relatedLinks={[
           { href: "/locations", label: "All Locations" },
           { href: "/find-clinics", label: "Find Clinics" },

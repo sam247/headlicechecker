@@ -21,6 +21,7 @@ const footerColumns = [
       { label: "For Parents", href: "/" },
       { label: "For Schools", href: "/for-schools" },
       { label: "For Clinics", href: "/for-clinics" },
+      { label: "Clinic Pricing", href: "/for-clinics/pricing" },
       { label: "Head Lice Symptoms", href: "/head-lice-symptoms" },
       { label: "Blog", href: "/blog" },
     ],
@@ -39,6 +40,7 @@ const footerColumns = [
   {
     title: "Downloads",
     links: [
+      { label: "School Response Toolkit", href: "/school-head-lice-toolkit" },
       { label: "Parent Notice Template", href: "/for-schools#downloads" },
       { label: "Classroom Response Checklist", href: "/for-schools#downloads" },
       { label: "School Head Lice Guide", href: "/for-schools#downloads" },
