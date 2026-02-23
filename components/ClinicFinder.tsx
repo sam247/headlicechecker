@@ -312,13 +312,13 @@ export default function ClinicFinder({
               {clinics.map((clinic) => {
                 const miles = origin ? Math.round(distanceMiles(origin.lat, origin.lng, clinic.lat, clinic.lng)) : null;
                 const reviewLabel = formatReview(clinic);
-                const isSponsored = isPromotedClinic(clinic);
+                const isFeatured = isPromotedClinic(clinic);
 
                 return (
                   <Card
                     key={clinic.id}
                     className={`clinic-card cursor-pointer border-border/80 transition-colors hover:border-primary/50 ${
-                      isSponsored ? "clinic-card--sponsored" : ""
+                      isFeatured ? "clinic-card--sponsored" : ""
                     }`}
                     onClick={() => {
                       setMapFocusClinicId(clinic.id);
@@ -332,7 +332,7 @@ export default function ClinicFinder({
                             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                               {clinic.country} · {clinic.region}
                             </p>
-                            {isSponsored && <span className="clinic-badge-sponsored">Sponsored</span>}
+                            {isFeatured && <span className="clinic-badge-sponsored">Featured</span>}
                           </div>
                           <h3 className="mt-1 text-lg font-semibold text-foreground">{clinic.name}</h3>
                           {clinic.description && <p className="clinic-description mt-1 text-sm text-muted-foreground">{clinic.description}</p>}
