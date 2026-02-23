@@ -57,6 +57,9 @@
   {
     "id": "uk-richmond-nitnot-clinic",
     "name": "NitNOT Clinic",
+    "featured": true,
+    "sponsored": true,
+    "featuredRank": 1,
     "region": "London",
     "country": "UK",
     "city": "Richmond",

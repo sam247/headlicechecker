@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Download, School } from "lucide-react";
+import { ArrowRight, School } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import TrackedDownloadLink from "@/components/site/TrackedDownloadLink";
 import { getSiteCopy } from "@/lib/data/content";
 import { breadcrumbJsonLd, faqJsonLd, medicalWebPageJsonLd, pageMetadata } from "@/lib/seo";
 
@@ -111,19 +112,34 @@ const guides = [
 
 const downloads = [
   {
-    title: "Parent notice template",
-    format: "DOCX",
-    copy: "A standardized non-stigmatizing notice format for outbreak communication.",
+    title: "Policy guidance template",
+    format: "PDF" as const,
+    copy: "A policy-ready template for school and childcare head lice response protocols.",
+    href: "/downloads/schools/policy-guidance-template.pdf",
   },
   {
-    title: "Classroom response checklist",
+    title: "Policy guidance template",
+    format: "DOCX" as const,
+    copy: "Editable version of the policy guidance template for local customization.",
+    href: "/downloads/schools/policy-guidance-template.docx",
+  },
+  {
+    title: "Parent communication notice",
     format: "PDF",
-    copy: "A practical checklist for same-day school response and follow-up timing.",
+    copy: "Family-ready notice copy with neutral language and practical next steps.",
+    href: "/downloads/schools/parent-communication-notice.pdf",
   },
   {
-    title: "Escalation log sheet",
-    format: "XLSX",
-    copy: "A lightweight log for tracking notices, reminders, and escalation milestones.",
+    title: "Parent communication notice",
+    format: "DOCX" as const,
+    copy: "Editable parent notice template for school office and pastoral teams.",
+    href: "/downloads/schools/parent-communication-notice.docx",
+  },
+  {
+    title: "Escalation tracker spreadsheet",
+    format: "XLSX" as const,
+    copy: "A lightweight tracker for notices, reminders, escalations, and outcomes.",
+    href: "/downloads/schools/escalation-tracker.xlsx",
   },
 ];
 
@@ -173,8 +189,7 @@ export default function ForSchoolsPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }} />
 
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsl(var(--secondary))_0%,transparent_45%)]" />
+      <div className="hero-gradient-shell hero-gradient-left relative overflow-hidden">
         <div className="container relative z-10 mx-auto grid gap-8 px-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-primary">Schools Hub</p>
@@ -296,23 +311,33 @@ export default function ForSchoolsPage() {
 
         <section id="downloads" className="mt-10">
           <h2 className="text-2xl font-bold md:text-3xl">Downloads</h2>
-          <p className="mt-3 section-copy">Resource downloads are in production. Preview the planned toolkit below.</p>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <p className="mt-3 section-copy">Download and share these school-ready toolkit files.</p>
+          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {downloads.map((item) => (
-              <Card key={item.title}>
+              <Card key={`${item.title}-${item.format}`}>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-primary">{item.format}</p>
-                    <span className="rounded-full border border-border bg-muted/30 px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                      Coming soon
-                    </span>
+                    <span className="rounded-full border border-border bg-muted/30 px-2 py-0.5 text-xs font-medium text-muted-foreground">Ready</span>
                   </div>
                   <h3 className="mt-3 text-lg font-semibold">{item.title}</h3>
                   <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.copy}</p>
-                  <p className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <Download className="h-4 w-4" />
-                    Not available yet
-                  </p>
+                  <div className="mt-4 flex items-center gap-3 text-sm font-medium">
+                    <TrackedDownloadLink
+                      href={item.href}
+                      assetName={item.title}
+                      format={item.format.toLowerCase() as "pdf" | "docx" | "xlsx"}
+                      mode="view"
+                      className="inline-flex items-center gap-1 text-primary hover:underline"
+                    />
+                    <TrackedDownloadLink
+                      href={item.href}
+                      assetName={item.title}
+                      format={item.format.toLowerCase() as "pdf" | "docx" | "xlsx"}
+                      mode="download"
+                      className="inline-flex items-center gap-1 text-primary hover:underline"
+                    />
+                  </div>
                 </CardContent>
               </Card>
             ))}

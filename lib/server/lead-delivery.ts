@@ -32,10 +32,13 @@ export type ClinicApplicationPayload = {
   email: string;
   phone?: string;
   website?: string;
+  gmbUrl?: string;
   country: "UK" | "US";
   city: string;
   region: string;
   postcode: string;
+  reviewStars?: number;
+  reviewCount?: number;
   address1: string;
   address2?: string;
   services: string[];
@@ -49,9 +52,14 @@ export type ClinicEnquiryPayload = {
   contactName: string;
   clinicName: string;
   phone?: string;
-  address: string;
+  city: string;
+  state: string;
+  address?: string;
+  reviewStars?: number;
+  reviewCount?: number;
   email: string;
   website?: string;
+  gmbUrl?: string;
   consentAt: string;
   policyVersion: string;
 };
@@ -80,10 +88,13 @@ function buildClinicApplicationText(payload: ClinicApplicationPayload): string {
     `Email: ${payload.email}`,
     `Phone: ${payload.phone ?? "N/A"}`,
     `Website: ${payload.website ?? "N/A"}`,
+    `Google Business URL: ${payload.gmbUrl ?? "N/A"}`,
     `Country: ${payload.country}`,
     `City: ${payload.city}`,
     `Region: ${payload.region}`,
     `Postcode/ZIP: ${payload.postcode}`,
+    `Review stars: ${payload.reviewStars ?? "N/A"}`,
+    `Review count: ${payload.reviewCount ?? "N/A"}`,
     `Address 1: ${payload.address1}`,
     `Address 2: ${payload.address2 ?? "N/A"}`,
     `Services: ${payload.services.join(", ")}`,
@@ -98,9 +109,14 @@ function buildClinicEnquiryText(payload: ClinicEnquiryPayload): string {
     `Contact name: ${payload.contactName}`,
     `Clinic name: ${payload.clinicName}`,
     `Phone: ${payload.phone ?? "N/A"}`,
-    `Address: ${payload.address}`,
+    `City: ${payload.city}`,
+    `State: ${payload.state}`,
+    `Address: ${payload.address ?? "N/A"}`,
+    `Review stars: ${payload.reviewStars ?? "N/A"}`,
+    `Review count: ${payload.reviewCount ?? "N/A"}`,
     `Email: ${payload.email}`,
     `Website: ${payload.website ?? "N/A"}`,
+    `Google Business URL: ${payload.gmbUrl ?? "N/A"}`,
     `Consent: true (${payload.consentAt}) policy ${payload.policyVersion}`,
   ].join("\n");
 }

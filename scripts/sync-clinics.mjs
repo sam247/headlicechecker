@@ -17,6 +17,14 @@ const REQUIRED_HEADERS = [
   "Email",
   "Website",
 ];
+const OPTIONAL_HEADERS = [
+  "Featured",
+  "Sponsored",
+  "Featured Rank",
+  "Review Stars",
+  "Review Count",
+  "Google Business URL",
+];
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,6 +71,24 @@ function normalizeWebsite(input) {
   } catch {
     return null;
   }
+}
+
+function normalizeBoolean(input) {
+  const value = String(input ?? "").trim().toLowerCase();
+  if (!value) return undefined;
+  if (["1", "true", "yes", "y"].includes(value)) return true;
+  if (["0", "false", "no", "n"].includes(value)) return false;
+  return undefined;
+}
+
+function normalizeOptionalNumber(input, { min = Number.NEGATIVE_INFINITY, max = Number.POSITIVE_INFINITY, integer = false } = {}) {
+  const raw = String(input ?? "").trim();
+  if (!raw) return undefined;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return null;
+  if (integer && !Number.isInteger(n)) return null;
+  if (n < min || n > max) return null;
+  return n;
 }
 
 function parseCsv(text) {
@@ -207,6 +233,11 @@ async function run() {
   for (const header of REQUIRED_HEADERS) {
     indexByHeader.set(header, headerRow.indexOf(header));
   }
+  for (const header of OPTIONAL_HEADERS) {
+    if (headerRow.includes(header)) {
+      indexByHeader.set(header, headerRow.indexOf(header));
+    }
+  }
 
   const cache = await readCache();
   const output = [];
@@ -228,6 +259,12 @@ async function run() {
     const telephone = getCell(row, indexByHeader, "Telephone");
     const email = getCell(row, indexByHeader, "Email");
     const websiteRaw = getCell(row, indexByHeader, "Website");
+    const featuredRaw = getCell(row, indexByHeader, "Featured");
+    const sponsoredRaw = getCell(row, indexByHeader, "Sponsored");
+    const featuredRankRaw = getCell(row, indexByHeader, "Featured Rank");
+    const reviewStarsRaw = getCell(row, indexByHeader, "Review Stars");
+    const reviewCountRaw = getCell(row, indexByHeader, "Review Count");
+    const gmbUrlRaw = getCell(row, indexByHeader, "Google Business URL");
 
     // Only Postcode and County are required; other address fields are optional
     const requiredChecks = [
@@ -261,6 +298,32 @@ async function run() {
     const bookingUrl = normalizeWebsite(websiteRaw);
     if (bookingUrl === null) {
       const message = `Row ${rowNum}: invalid website URL "${websiteRaw}"`;
+      if (strictMode) {
+        errors.push(message);
+        continue;
+      }
+      console.warn(`[sync:clinics] ${message} (skipped)`);
+      continue;
+    }
+    const gmbUrl = normalizeWebsite(gmbUrlRaw);
+    if (gmbUrl === null) {
+      const message = `Row ${rowNum}: invalid Google Business URL "${gmbUrlRaw}"`;
+      if (strictMode) {
+        errors.push(message);
+        continue;
+      }
+      console.warn(`[sync:clinics] ${message} (skipped)`);
+      continue;
+    }
+
+    const featured = normalizeBoolean(featuredRaw);
+    const sponsored = normalizeBoolean(sponsoredRaw);
+    const featuredRank = normalizeOptionalNumber(featuredRankRaw, { min: 1, integer: true });
+    const reviewStars = normalizeOptionalNumber(reviewStarsRaw, { min: 0, max: 5 });
+    const reviewCount = normalizeOptionalNumber(reviewCountRaw, { min: 0, integer: true });
+
+    if (featuredRank === null || reviewStars === null || reviewCount === null) {
+      const message = `Row ${rowNum}: invalid numeric value in Featured Rank/Review Stars/Review Count`;
       if (strictMode) {
         errors.push(message);
         continue;
@@ -333,6 +396,12 @@ async function run() {
       ...(telephone ? { phone: telephone } : {}),
       ...(email ? { email } : {}),
       ...(bookingUrl ? { bookingUrl } : {}),
+      ...(typeof featured === "boolean" ? { featured } : {}),
+      ...(typeof sponsored === "boolean" ? { sponsored } : {}),
+      ...(typeof featuredRank === "number" ? { featuredRank } : {}),
+      ...(typeof reviewStars === "number" ? { reviewStars } : {}),
+      ...(typeof reviewCount === "number" ? { reviewCount } : {}),
+      ...(gmbUrl ? { gmbUrl } : {}),
       lat: coords.lat,
       lng: coords.lng,
       services: ["Screening", "Removal"],

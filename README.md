@@ -6,6 +6,7 @@ Next.js front end for the Head Lice Checker photo screening tool and clinic find
 
 - **Next.js 14** (App Router), React 18, TypeScript
 - **Tailwind CSS**, shadcn/ui (Radix)
+- **Vercel Analytics** custom events (`@vercel/analytics`)
 - **Photo scan API** (`/api/scan`) — your YOLO inference (DETECTION_API_URL), DeepSeek vision, or stub
 
 ## Scripts
@@ -57,6 +58,10 @@ Use this exact header row:
 
 | Name | Address 1 | Address 2 | Town | County | Postcode | Country | Telephone | Email | Website |
 
+Optional headers for featured placement and reviews:
+
+| Featured | Sponsored | Featured Rank | Review Stars | Review Count | Google Business URL |
+
 ### Mapping Notes
 
 - `Town -> city`
@@ -65,6 +70,10 @@ Use this exact header row:
 - `Country` is normalized to `UK` or `US` (`uk`, `gb`, `united kingdom`, `us`, `usa`, `united states`)
 - `lat/lng` are auto-geocoded during sync and cached in `content/.clinic-geocode-cache.json`
 - `id` is generated deterministically from country/city/name
+- `Featured`/`Sponsored` support priority listing order in finder results
+- `Featured Rank` sorts sponsored clinics to the top (`1` highest)
+- `Review Stars` (0-5) and `Review Count` render in finder cards
+- `Google Business URL` is stored as `gmbUrl` for manual enrichment
 
 ### Typical Workflow
 

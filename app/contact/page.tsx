@@ -34,7 +34,7 @@ export default function ContactPage({ searchParams }: ContactPageProps) {
   });
 
   return (
-    <section className="section-shell">
+    <section className="section-shell hero-gradient-shell hero-gradient-left">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
       <div className="container mx-auto px-4">

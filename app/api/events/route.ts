@@ -14,11 +14,58 @@ const scanResultSchema = z
   .object({
     event: z.literal("scan_result"),
     timestamp: z.string().optional(),
-    label: z.enum(["lice", "nits", "dandruff", "psoriasis", "clear"]),
+    label: z.enum(["lice", "nits", "dandruff", "psoriasis", "clear"]).optional(),
+    result_label: z.enum(["lice", "nits", "dandruff", "psoriasis", "clear"]).optional(),
+    confidence: z.enum(["high", "medium", "low"]).optional(),
     confidenceLevel: z.enum(["high", "medium", "low"]).optional(),
     detectionCount: z.number().int().min(0).optional(),
     topDetectionLabel: z.enum(["lice", "nits", "dandruff", "psoriasis"]).optional(),
     topDetectionConfidenceLevel: z.enum(["high", "medium", "low"]).optional(),
+  })
+  .strict();
+
+const scanSubmissionSchema = z
+  .object({
+    event: z.literal("scan_submission"),
+    timestamp: z.string().optional(),
+    source: z.string().optional(),
+  })
+  .strict();
+
+const scanPositiveClickSchema = z
+  .object({
+    event: z.literal("scan_positive_detection_click"),
+    timestamp: z.string().optional(),
+    label: z.enum(["lice", "nits", "dandruff", "psoriasis", "clear"]).optional(),
+    source: z.string().optional(),
+  })
+  .strict();
+
+const findClinicClickSchema = z
+  .object({
+    event: z.literal("find_clinic_click"),
+    timestamp: z.string().optional(),
+    source: z.string().optional(),
+    label: z.enum(["lice", "nits", "dandruff", "psoriasis", "clear"]).optional(),
+  })
+  .strict();
+
+const clinicProfileClickSchema = z
+  .object({
+    event: z.literal("clinic_profile_click"),
+    timestamp: z.string().optional(),
+    clinicId: z.string().optional(),
+    clinicName: z.string().optional(),
+    destination: z.string().optional(),
+  })
+  .strict();
+
+const schoolAssetDownloadSchema = z
+  .object({
+    event: z.literal("school_asset_download"),
+    timestamp: z.string().optional(),
+    asset_name: z.string().min(1),
+    format: z.enum(["pdf", "docx", "xlsx"]),
   })
   .strict();
 
@@ -99,7 +146,12 @@ const clinicApplySubmittedSchema = z
 
 const schema = z.discriminatedUnion("event", [
   scanStartSchema,
+  scanSubmissionSchema,
   scanResultSchema,
+  scanPositiveClickSchema,
+  findClinicClickSchema,
+  clinicProfileClickSchema,
+  schoolAssetDownloadSchema,
   clinicSubmitSchema,
   clinicApplySubmitSchema,
   clinicApplySubmittedSchema,
@@ -113,7 +165,12 @@ const schema = z.discriminatedUnion("event", [
 
 const counters: Record<string, number> = {
   scan_start: 0,
+  scan_submission: 0,
   scan_result: 0,
+  scan_positive_detection_click: 0,
+  find_clinic_click: 0,
+  clinic_profile_click: 0,
+  school_asset_download: 0,
   clinic_contact_submit: 0,
   clinic_apply_submit: 0,
   clinic_apply_submitted: 0,

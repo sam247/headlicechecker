@@ -113,6 +113,45 @@
   .section-copy {
     @apply text-base leading-relaxed text-muted-foreground md:text-lg;
   }
+
+  .hero-gradient-shell {
+    @apply relative overflow-hidden;
+    isolation: isolate;
+  }
+
+  .hero-gradient-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(
+      circle at var(--hero-grad-x, 86%) var(--hero-grad-y, 14%),
+      hsl(var(--secondary) / 0.85) 0%,
+      transparent 48%
+    );
+  }
+
+  .hero-gradient-right {
+    --hero-grad-x: 86%;
+    --hero-grad-y: 14%;
+  }
+
+  .hero-gradient-left {
+    --hero-grad-x: 14%;
+    --hero-grad-y: 14%;
+  }
+
+  .clinic-card {
+    @apply border-border/80;
+  }
+
+  .clinic-badge-sponsored {
+    @apply inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-700;
+  }
+
+  .clinic-stars {
+    @apply inline-flex items-center gap-1 text-xs font-medium text-amber-700;
+  }
 }
 
 @keyframes scan-ring-pop {

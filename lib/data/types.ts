@@ -32,6 +32,12 @@ export interface Clinic {
   phone?: string;
   email?: string;
   bookingUrl?: string;
+  featured?: boolean;
+  sponsored?: boolean;
+  featuredRank?: number;
+  reviewStars?: number;
+  reviewCount?: number;
+  gmbUrl?: string;
   lat: number;
   lng: number;
   services: string[];

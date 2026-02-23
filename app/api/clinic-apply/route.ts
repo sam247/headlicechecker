@@ -22,10 +22,23 @@ const schema = z
         return `https://${trimmed}`;
       })
       .refine((value) => !value || /^https?:\/\//.test(value), "Website must be a valid URL"),
+    gmbUrl: z
+      .string()
+      .optional()
+      .transform((value) => {
+        if (!value) return undefined;
+        const trimmed = value.trim();
+        if (!trimmed) return undefined;
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+        return `https://${trimmed}`;
+      })
+      .refine((value) => !value || /^https?:\/\//.test(value), "Google Business URL must be a valid URL"),
     country: z.enum(["UK", "US"]),
     city: z.string().min(2),
     region: z.string().min(2),
     postcode: z.string().min(2),
+    reviewStars: z.number().min(0).max(5).optional(),
+    reviewCount: z.number().int().min(0).optional(),
     address1: z.string().min(3),
     address2: z.string().optional(),
     services: z.array(z.string().min(2)).min(1).max(8),
@@ -96,10 +109,13 @@ export async function POST(request: NextRequest) {
     email: payload.email,
     phone: payload.phone,
     website: payload.website,
+    gmbUrl: payload.gmbUrl,
     country: payload.country,
     city: payload.city,
     region: payload.region,
     postcode: payload.postcode,
+    reviewStars: payload.reviewStars,
+    reviewCount: payload.reviewCount,
     address1: payload.address1,
     address2: payload.address2,
     services: payload.services,
@@ -125,6 +141,9 @@ export async function POST(request: NextRequest) {
       city: payload.city,
       region: payload.region,
       postcode: payload.postcode,
+      reviewStars: payload.reviewStars ?? null,
+      reviewCount: payload.reviewCount ?? null,
+      gmbUrl: payload.gmbUrl ? "provided" : "none",
       servicesCount: payload.services.length,
       messageLength: payload.message?.length ?? 0,
       consentAt,

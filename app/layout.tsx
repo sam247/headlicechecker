@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { Providers } from "./providers";
 import SiteHeader from "@/components/site/SiteHeader";
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <SiteHeader />
           <main>{children}</main>
           <SiteFooter />
+          <Analytics />
         </Providers>
       </body>
     </html>

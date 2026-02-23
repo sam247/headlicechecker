@@ -99,7 +99,6 @@ export default function ClinicContactForm({
 
     setReferenceId(data.referenceId ?? null);
     setDeliveryStatus(data.deliveryStatus ?? "queued");
-    await trackEvent({ event: "clinic_contact_submit", clinicId });
     await trackEvent({ event: "clinic_contact_submitted", clinicId, source });
     if (data.referenceId) {
       await onSuccess?.(data.referenceId);

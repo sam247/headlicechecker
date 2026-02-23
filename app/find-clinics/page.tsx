@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import FindClinicsSection from "@/components/site/FindClinicsSection";
 import ClinicEnquiryForm from "@/components/site/ClinicEnquiryForm";
 import { getClinics, getSiteCopy } from "@/lib/data/content";
@@ -11,15 +12,10 @@ export const metadata: Metadata = pageMetadata({
   path: "/find-clinics",
 });
 
-interface FindClinicsPageProps {
-  searchParams: { clinicId?: string };
-}
-
 const copy = getSiteCopy();
 
-export default function FindClinicsPage({ searchParams }: FindClinicsPageProps) {
+export default function FindClinicsPage() {
   const clinics = getClinics("ALL");
-  const selectedClinic = clinics.find((clinic) => clinic.id === searchParams.clinicId);
 
   const breadcrumb = breadcrumbJsonLd([
     { name: "Home", path: "/" },
@@ -44,23 +40,26 @@ export default function FindClinicsPage({ searchParams }: FindClinicsPageProps) 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
-      <div className="container mx-auto px-4">
-        <FindClinicsSection clinics={clinics} />
 
-        <section className="section-shell pt-8">
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold">Are you a head lice clinic and interested in being listed?</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Submit your details and we will get back to you.
-            </p>
-            <div className="mt-4">
-              <ClinicEnquiryForm />
+      <section className="hero-gradient-shell hero-gradient-right section-shell pb-8 md:pb-12">
+        <div className="container mx-auto px-4">
+          <Suspense fallback={<div className="section-shell">Loading clinic finder…</div>}>
+            <FindClinicsSection clinics={clinics} />
+          </Suspense>
+
+          <section className="section-shell pt-8">
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold">Are you a head lice clinic and interested in being listed?</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Submit your details and we will get back to you.</p>
+              <div className="mt-4">
+                <ClinicEnquiryForm />
+              </div>
             </div>
-          </div>
 
-          <p className="mt-4 text-xs text-muted-foreground">{copy.medicalDisclaimer}</p>
-        </section>
-      </div>
+            <p className="mt-4 text-xs text-muted-foreground">{copy.medicalDisclaimer}</p>
+          </section>
+        </div>
+      </section>
     </div>
   );
 }

@@ -19,6 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import PhotoChecker from "@/components/PhotoChecker";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { HomePageContent, SiteCopy } from "@/lib/data/types";
+import { trackEvent } from "@/lib/data/events";
 
 const HERO_DEMO_INTERVAL_MS = 1750;
 
@@ -107,7 +108,14 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
                 <Link href="#start-scan">{siteCopy.primaryCta}</Link>
               </Button>
               <Button asChild variant="outline" className="rounded-full" size="lg">
-                <Link href="/find-clinics">{siteCopy.secondaryCta}</Link>
+                <Link
+                  href="/find-clinics"
+                  onClick={() => {
+                    void trackEvent({ event: "find_clinic_click", source: "home_hero_secondary_cta" });
+                  }}
+                >
+                  {siteCopy.secondaryCta}
+                </Link>
               </Button>
             </div>
             <div className="mt-6 flex gap-3 overflow-x-auto pb-1">
@@ -173,7 +181,14 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
                     <p className="text-sm font-medium">Indicative: lice detected</p>
                     <p className="text-xs text-muted-foreground">Scroll down to run your own scan.</p>
                     <Button asChild size="sm" className="mt-1 rounded-full">
-                      <Link href="/find-clinics">View Closest Clinics</Link>
+                      <Link
+                        href="/find-clinics"
+                        onClick={() => {
+                          void trackEvent({ event: "find_clinic_click", source: "home_demo_preview" });
+                        }}
+                      >
+                        View Closest Clinics
+                      </Link>
                     </Button>
                   </div>
                 )}
@@ -298,7 +313,12 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
                 <p className="mt-2 text-sm text-muted-foreground md:text-base">{content.lowerCta.copy}</p>
               </div>
               <Button asChild className="rounded-full" size="lg">
-                <Link href="/find-clinics">
+                <Link
+                  href="/find-clinics"
+                  onClick={() => {
+                    void trackEvent({ event: "find_clinic_click", source: "home_lower_cta" });
+                  }}
+                >
                   {siteCopy.secondaryCta}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -419,7 +439,13 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
               <ShieldCheck className="h-3.5 w-3.5" />
               Methodology
             </Link>
-            <Link href="/find-clinics" className="text-primary hover:underline">
+            <Link
+              href="/find-clinics"
+              className="text-primary hover:underline"
+              onClick={() => {
+                void trackEvent({ event: "find_clinic_click", source: "home_faq_link" });
+              }}
+            >
               Find clinics
             </Link>
           </div>

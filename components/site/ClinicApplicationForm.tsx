@@ -16,10 +16,19 @@ const schema = z.object({
   email: z.string().email("Enter a valid email"),
   phone: z.string().optional(),
   website: z.string().optional(),
+  gmbUrl: z.string().url("Enter a valid Google Maps/Business URL").optional().or(z.literal("")),
   country: z.enum(["UK", "US"]),
   city: z.string().min(2, "City is required"),
   region: z.string().min(2, "Region/County/State is required"),
   postcode: z.string().min(2, "Postcode/ZIP is required"),
+  reviewStars: z
+    .string()
+    .optional()
+    .refine((value) => !value || (!Number.isNaN(Number(value)) && Number(value) >= 0 && Number(value) <= 5), "Stars must be between 0 and 5"),
+  reviewCount: z
+    .string()
+    .optional()
+    .refine((value) => !value || (!Number.isNaN(Number(value)) && Number(value) >= 0), "Review count must be 0 or higher"),
   address1: z.string().min(3, "Address line 1 is required"),
   address2: z.string().optional(),
   servicesCsv: z.string().min(2, "Enter at least one service"),
@@ -56,10 +65,13 @@ export default function ClinicApplicationForm() {
       email: "",
       phone: "",
       website: "",
+      gmbUrl: "",
       country: "UK",
       city: "",
       region: "",
       postcode: "",
+      reviewStars: "",
+      reviewCount: "",
       address1: "",
       address2: "",
       servicesCsv: "Screening, Removal",
@@ -88,10 +100,13 @@ export default function ClinicApplicationForm() {
       email: values.email,
       phone: values.phone,
       website: values.website,
+      gmbUrl: values.gmbUrl?.trim() || undefined,
       country: values.country,
       city: values.city,
       region: values.region,
       postcode: values.postcode,
+      reviewStars: values.reviewStars ? Number(values.reviewStars) : undefined,
+      reviewCount: values.reviewCount ? Number(values.reviewCount) : undefined,
       address1: values.address1,
       address2: values.address2,
       services,
@@ -99,8 +114,6 @@ export default function ClinicApplicationForm() {
       consent: values.consent,
       hp_field: values.hp_field,
     };
-
-    await trackEvent({ event: "clinic_apply_submit", country: values.country });
 
     const res = await fetch("/api/clinic-apply", {
       method: "POST",
@@ -125,10 +138,13 @@ export default function ClinicApplicationForm() {
       email: "",
       phone: "",
       website: "",
+      gmbUrl: "",
       country: values.country,
       city: "",
       region: "",
       postcode: "",
+      reviewStars: "",
+      reviewCount: "",
       address1: "",
       address2: "",
       servicesCsv: "Screening, Removal",
@@ -169,6 +185,10 @@ export default function ClinicApplicationForm() {
             {errors.website && <p className="mt-1 text-xs text-destructive">{errors.website.message}</p>}
           </div>
           <div>
+            <Input placeholder="Google Business link (optional)" {...register("gmbUrl")} />
+            {errors.gmbUrl && <p className="mt-1 text-xs text-destructive">{errors.gmbUrl.message}</p>}
+          </div>
+          <div>
             <select
               className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               {...register("country")}
@@ -188,6 +208,14 @@ export default function ClinicApplicationForm() {
           <div>
             <Input placeholder={country === "UK" ? "Postcode" : "ZIP"} {...register("postcode")} />
             {errors.postcode && <p className="mt-1 text-xs text-destructive">{errors.postcode.message}</p>}
+          </div>
+          <div>
+            <Input placeholder="Review stars (optional, 0-5)" inputMode="decimal" {...register("reviewStars")} />
+            {errors.reviewStars && <p className="mt-1 text-xs text-destructive">{errors.reviewStars.message}</p>}
+          </div>
+          <div>
+            <Input placeholder="Review count (optional)" inputMode="numeric" {...register("reviewCount")} />
+            {errors.reviewCount && <p className="mt-1 text-xs text-destructive">{errors.reviewCount.message}</p>}
           </div>
           <div>
             <Input placeholder="Address line 1" {...register("address1")} />

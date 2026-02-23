@@ -2,20 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { MapPin, Phone, ExternalLink, Search, Mail, Copy, Check } from "lucide-react";
+import { MapPin, Phone, ExternalLink, Search, Mail, Copy, Check, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getClinics } from "@/lib/data/content";
 import { findOriginFromQuery, sortClinicsByNearest, distanceMiles } from "@/lib/data/geo";
+import { trackEvent } from "@/lib/data/events";
 import type { Clinic } from "@/lib/data/types";
 
 const GEOCODE_DEBOUNCE_MS = 450;
@@ -33,9 +28,7 @@ interface ClinicFinderProps {
 }
 
 const initialClinics = getClinics("ALL");
-
 const MAP_DELTA = 0.02;
-
 const UK_BBOX = "-8,49,2,61";
 const US_BBOX = "-124,25,-66,49";
 
@@ -71,6 +64,28 @@ function buildMapSrcForClinic(clinic: Clinic): string {
   return `https://www.openstreetmap.org/export/embed.html?bbox=${minLng},${minLat},${maxLng},${maxLat}&layer=mapnik`;
 }
 
+function sortByFeaturedThenDistance(clinics: Clinic[]): Clinic[] {
+  return clinics
+    .slice()
+    .sort((a, b) => {
+      const aFeatured = a.featured || a.sponsored ? 1 : 0;
+      const bFeatured = b.featured || b.sponsored ? 1 : 0;
+      if (aFeatured !== bFeatured) return bFeatured - aFeatured;
+      if (aFeatured === 1 && bFeatured === 1) {
+        const rankA = a.featuredRank ?? Number.MAX_SAFE_INTEGER;
+        const rankB = b.featuredRank ?? Number.MAX_SAFE_INTEGER;
+        if (rankA !== rankB) return rankA - rankB;
+      }
+      return 0;
+    });
+}
+
+function formatReview(clinic: Clinic): string | null {
+  if (typeof clinic.reviewStars !== "number") return null;
+  if (typeof clinic.reviewCount === "number") return `${clinic.reviewStars.toFixed(1)} (${clinic.reviewCount})`;
+  return clinic.reviewStars.toFixed(1);
+}
+
 export default function ClinicFinder({
   showHeader = true,
   country = "ALL",
@@ -87,7 +102,7 @@ export default function ClinicFinder({
   const isMobile = useIsMobile();
   const isModalMode = mode === "modal";
 
-  const [query, setQuery] = useState(isModalMode ? "" : (searchParams.get("q") ?? ""));
+  const [query, setQuery] = useState(isModalMode ? "" : searchParams.get("q") ?? "");
   const [showMap, setShowMap] = useState(isModalMode ? false : (searchParams.get("view") ?? "list") === "map");
   const [selectedCountry, setSelectedCountry] = useState<"US" | "UK" | "ALL">(
     isModalMode ? country : ((searchParams.get("country") as "US" | "UK" | "ALL") ?? country)
@@ -116,7 +131,7 @@ export default function ClinicFinder({
         const params = new URLSearchParams({ q: trimmed });
         params.set("country", selectedCountry);
         const res = await fetch(`/api/geocode?${params.toString()}`);
-        const data = (await res.json()) as { lat?: number; lng?: number; error?: string };
+        const data = (await res.json()) as { lat?: number; lng?: number };
         if (res.ok && typeof data.lat === "number" && typeof data.lng === "number") {
           setGeocodedOrigin({ lat: data.lat, lng: data.lng });
         } else {
@@ -141,6 +156,7 @@ export default function ClinicFinder({
     params.set("country", selectedCountry);
     if (radiusMiles !== 25) params.set("radius", String(radiusMiles));
     else params.delete("radius");
+
     const next = params.toString();
     const current = searchParams.toString();
     if (next !== current) {
@@ -154,13 +170,11 @@ export default function ClinicFinder({
 
   const { clinics, origin } = useMemo(() => {
     const source =
-      selectedCountry === "ALL"
-        ? initialClinics
-        : initialClinics.filter((clinic) => clinic.country === selectedCountry);
+      selectedCountry === "ALL" ? initialClinics : initialClinics.filter((clinic) => clinic.country === selectedCountry);
 
     const normalized = query.trim().toLowerCase();
     const textFiltered =
-      normalized
+      normalized.length > 0
         ? source.filter(
             (clinic) =>
               clinic.city.toLowerCase().includes(normalized) ||
@@ -170,17 +184,17 @@ export default function ClinicFinder({
         : source;
 
     const originPoint = geocodedOrigin ?? findOriginFromQuery(source, query);
-    // Only use full source when we have a geocode origin (then filter by radius)
-    const filtered =
-      textFiltered.length === 0 && geocodedOrigin ? source : textFiltered;
-    const sorted = sortClinicsByNearest(filtered, originPoint);
+    const filtered = textFiltered.length === 0 && geocodedOrigin ? source : textFiltered;
+    const sortedByDistance = sortClinicsByNearest(filtered, originPoint);
     const withinRadius =
       originPoint && radiusMiles
-        ? sorted.filter(
-            (c) => distanceMiles(originPoint.lat, originPoint.lng, c.lat, c.lng) <= radiusMiles
-          )
-        : sorted;
-    return { clinics: withinRadius, origin: originPoint };
+        ? sortedByDistance.filter((c) => distanceMiles(originPoint.lat, originPoint.lng, c.lat, c.lng) <= radiusMiles)
+        : sortedByDistance;
+
+    return {
+      clinics: sortByFeaturedThenDistance(withinRadius),
+      origin: originPoint,
+    };
   }, [query, selectedCountry, geocodedOrigin, radiusMiles]);
 
   const mapSrc = useMemo(() => {
@@ -206,272 +220,260 @@ export default function ClinicFinder({
     }
   };
 
-  const body = (
-    <>
-      <div className={isModalMode ? "mb-4 grid gap-3 md:grid-cols-[1fr_auto_auto]" : "mb-6 grid gap-3 md:grid-cols-[1fr_auto_auto_auto]"}>
-        <div>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Enter ZIP, postcode, or city"
-              className="pl-10"
-            />
-          </div>
-          {isGeocoding && (
-            <p className="mt-1 text-xs text-muted-foreground" aria-live="polite">
-              Searching…
-            </p>
-          )}
-        </div>
-
-        <Select
-          value={selectedCountry}
-          onValueChange={(v) => setSelectedCountry(v as "US" | "UK" | "ALL")}
-        >
-          <SelectTrigger className="h-10 w-[7rem] rounded-lg border-input bg-background shadow-sm" aria-label="Choose country scope">
-            <SelectValue placeholder="Country" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="UK">UK</SelectItem>
-            <SelectItem value="US">US</SelectItem>
-            <SelectItem value="ALL">Global</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={String(radiusMiles)}
-          onValueChange={(v) => setRadiusMiles(Number(v) as (typeof radiusOptions)[number])}
-        >
-          <SelectTrigger className="h-10 w-[9rem] rounded-lg border-input bg-background shadow-sm" aria-label="Within miles">
-            <SelectValue placeholder="Radius" />
-          </SelectTrigger>
-          <SelectContent>
-            {radiusOptions.map((m) => (
-              <SelectItem key={m} value={String(m)}>
-                Within {m} miles
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Button variant="outline" className="rounded-full" onClick={() => setQuery("")}>
-          Reset search
-        </Button>
-      </div>
-
-      {isMobile && (
-        <div className="mb-4 flex justify-center">
-          <div className="inline-flex rounded-full bg-muted p-1">
-            <button
-              className={`rounded-full px-4 py-1.5 text-sm font-medium ${
-                !showMap ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-              }`}
-              onClick={() => setShowMap(false)}
-            >
-              List
-            </button>
-            <button
-              className={`rounded-full px-4 py-1.5 text-sm font-medium ${
-                showMap ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-              }`}
-              onClick={() => setShowMap(true)}
-            >
-              Map
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div
-        className={isModalMode ? "grid min-h-0 flex-1 gap-4 lg:grid-cols-2" : "grid gap-6 lg:grid-cols-2"}
-        style={isModalMode ? undefined : { height: FINDER_PANEL_HEIGHT_PX }}
-      >
-        {(!isMobile || !showMap) && (
-          <div
-            className={
-              isModalMode
-                ? "min-h-0 space-y-3 overflow-y-auto pr-1"
-                : "min-h-0 space-y-3 overflow-y-auto pr-1"
-            }
-            style={isModalMode ? undefined : { maxHeight: FINDER_PANEL_HEIGHT_PX }}
-          >
-            {clinics.length === 0 && (
-              <Card>
-                <CardContent className="p-5 text-sm text-muted-foreground">
-                  No clinics in your specified area. Use the mileage selector to search further afield.
-                </CardContent>
-              </Card>
-            )}
-
-            {clinics.map((clinic) => {
-              const miles = origin ? Math.round(distanceMiles(origin.lat, origin.lng, clinic.lat, clinic.lng)) : null;
-
-              return (
-                <Card
-                  key={clinic.id}
-                  className="cursor-pointer border-border/80 transition-colors hover:border-primary/50"
-                  onClick={() => setMapFocusClinicId(clinic.id)}
-                >
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                          {clinic.country} · {clinic.region}
-                        </p>
-                        <h3 className="mt-1 text-lg font-semibold text-foreground">{clinic.name}</h3>
-                        <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                          {!(hideClinicContactDetails || hideDirectContact) && (
-                            <p className="flex items-start gap-2">
-                              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                              <span className="block">
-                                {clinic.address1 ? (
-                                  <>
-                                    {clinic.address1}
-                                    {clinic.address2 ? `, ${clinic.address2}` : ""}, {clinic.city}
-                                    <span className="block">{clinic.postcode}</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <span className="block">{clinic.city}</span>
-                                    <span className="block">{clinic.postcode}</span>
-                                  </>
-                                )}
-                              </span>
-                            </p>
-                          )}
-                          {(hideClinicContactDetails || hideDirectContact) && (
-                            <p className="flex items-start gap-2">
-                              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                              <span className="block">
-                                <span className="block">{clinic.city}</span>
-                                <span className="block">{clinic.postcode}</span>
-                              </span>
-                            </p>
-                          )}
-                          {!hideDirectContact && !hideClinicContactDetails && clinic.phone && (
-                            <p className="flex items-center gap-2">
-                              <Phone className="h-4 w-4 shrink-0 text-primary" />
-                              <a href={`tel:${clinic.phone}`} className="hover:text-foreground">
-                                {clinic.phone}
-                              </a>
-                            </p>
-                          )}
-                          {!hideDirectContact && !hideClinicContactDetails && clinic.email && (
-                            <p className="flex items-center gap-2">
-                              <Mail className="h-4 w-4 shrink-0 text-primary" />
-                              <a href={`mailto:${clinic.email}`} className="hover:text-foreground">
-                                {clinic.email}
-                              </a>
-                            </p>
-                          )}
-                          {miles !== null && <p className="text-xs">Approx. {miles} miles from search match</p>}
-                        </div>
-                      </div>
-
-                      <div
-                        className="flex shrink-0 flex-col gap-2"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {hideDirectContact ? (
-                          <Button
-                            size="sm"
-                            className="rounded-full"
-                            onClick={() => {
-                              if (onContactClinic) {
-                                onContactClinic(clinic.id);
-                                return;
-                              }
-                              router.push(`/contact?clinicId=${encodeURIComponent(clinic.id)}`);
-                            }}
-                          >
-                            Contact clinic
-                          </Button>
-                        ) : (
-                          <Button asChild size="sm" className="rounded-full">
-                            <a href={clinic.bookingUrl ?? "/contact"}>
-                              Contact
-                              <ExternalLink className="ml-1 h-3 w-3" />
-                            </a>
-                          </Button>
-                        )}
-
-                        <Button asChild size="sm" variant="outline" className="rounded-full">
-                          <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                              hideClinicContactDetails || !clinic.address1
-                                ? `${clinic.city} ${clinic.postcode}`
-                                : `${clinic.address1}, ${clinic.city} ${clinic.postcode}`
-                            )}`}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            Directions
-                          </a>
-                        </Button>
-
-                        {!hideDirectContact && !hideClinicContactDetails && (
-                          <Button size="sm" variant="ghost" className="rounded-full" onClick={() => handleCopy(clinic)}>
-                            {copiedClinicId === clinic.id ? (
-                              <>
-                                <Check className="mr-1 h-3 w-3" /> Copied
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="mr-1 h-3 w-3" /> Copy details
-                              </>
-                            )}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-
-        {(!isMobile || showMap) && (
-          <div
-            className={
-              isModalMode
-                ? "min-h-0 overflow-hidden rounded-2xl border border-border/80 shadow-sm"
-                : "h-full min-h-0 overflow-hidden rounded-2xl border border-border/80 shadow-sm"
-            }
-            style={isModalMode ? undefined : { height: FINDER_PANEL_HEIGHT_PX }}
-          >
-            <iframe
-              title="Clinic locations"
-              src={mapSrc}
-              className={isModalMode ? "h-full min-h-[320px] w-full border-0" : "h-full w-full border-0"}
-              loading="lazy"
-            />
-          </div>
-        )}
-      </div>
-    </>
-  );
-
   return (
     <section id="clinic-finder" className={isModalMode ? "h-full min-h-0" : "section-shell"}>
-      <div
-        className={
-          isModalMode
-            ? "flex h-full min-h-0 flex-col"
-            : `container mx-auto px-4 ${containerClassName ?? ""}`.trim()
-        }
-      >
+      <div className={isModalMode ? "flex h-full min-h-0 flex-col" : `container mx-auto px-4 ${containerClassName ?? ""}`.trim()}>
         {showHeader && (
           <div className="mb-8 text-center md:mb-10">
             <h2 className="section-title">Find a clinic near you</h2>
-            <p className="mx-auto mt-3 max-w-2xl section-copy">
-              Search by ZIP/postcode or city. We prioritize US locations and keep UK coverage available.
-            </p>
+            <p className="mx-auto mt-3 max-w-2xl section-copy">Search by ZIP/postcode or city.</p>
           </div>
         )}
-        {body}
+
+        <div className={isModalMode ? "mb-4 grid gap-3 md:grid-cols-[1fr_auto_auto]" : "mb-6 grid gap-3 md:grid-cols-[1fr_auto_auto_auto]"}>
+          <div>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Enter ZIP, postcode, or city" className="pl-10" />
+            </div>
+            {isGeocoding && (
+              <p className="mt-1 text-xs text-muted-foreground" aria-live="polite">
+                Searching…
+              </p>
+            )}
+          </div>
+
+          <Select value={selectedCountry} onValueChange={(v) => setSelectedCountry(v as "US" | "UK" | "ALL") }>
+            <SelectTrigger className="h-10 w-[7rem] rounded-lg border-input bg-background shadow-sm" aria-label="Choose country scope">
+              <SelectValue placeholder="Country" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="UK">UK</SelectItem>
+              <SelectItem value="US">US</SelectItem>
+              <SelectItem value="ALL">Global</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={String(radiusMiles)} onValueChange={(v) => setRadiusMiles(Number(v) as (typeof radiusOptions)[number])}>
+            <SelectTrigger className="h-10 w-[9rem] rounded-lg border-input bg-background shadow-sm" aria-label="Within miles">
+              <SelectValue placeholder="Radius" />
+            </SelectTrigger>
+            <SelectContent>
+              {radiusOptions.map((m) => (
+                <SelectItem key={m} value={String(m)}>
+                  Within {m} miles
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Button variant="outline" className="rounded-full" onClick={() => setQuery("")}>Reset search</Button>
+        </div>
+
+        {isMobile && (
+          <div className="mb-4 flex justify-center">
+            <div className="inline-flex rounded-full bg-muted p-1">
+              <button
+                className={`rounded-full px-4 py-1.5 text-sm font-medium ${!showMap ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                onClick={() => setShowMap(false)}
+              >
+                List
+              </button>
+              <button
+                className={`rounded-full px-4 py-1.5 text-sm font-medium ${showMap ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                onClick={() => setShowMap(true)}
+              >
+                Map
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className={isModalMode ? "grid min-h-0 flex-1 gap-4 lg:grid-cols-2" : "grid gap-6 lg:grid-cols-2"} style={isModalMode ? undefined : { height: FINDER_PANEL_HEIGHT_PX }}>
+          {(!isMobile || !showMap) && (
+            <div className="min-h-0 space-y-3 overflow-y-auto pr-1" style={isModalMode ? undefined : { maxHeight: FINDER_PANEL_HEIGHT_PX }}>
+              {clinics.length === 0 && (
+                <Card>
+                  <CardContent className="p-5 text-sm text-muted-foreground">
+                    No clinics in your specified area. Use the mileage selector to search further afield.
+                  </CardContent>
+                </Card>
+              )}
+
+              {clinics.map((clinic) => {
+                const miles = origin ? Math.round(distanceMiles(origin.lat, origin.lng, clinic.lat, clinic.lng)) : null;
+                const reviewLabel = formatReview(clinic);
+
+                return (
+                  <Card
+                    key={clinic.id}
+                    className="clinic-card cursor-pointer border-border/80 transition-colors hover:border-primary/50"
+                    onClick={() => {
+                      setMapFocusClinicId(clinic.id);
+                      onClinicSelect?.(clinic.id);
+                    }}
+                  >
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                              {clinic.country} · {clinic.region}
+                            </p>
+                            {clinic.sponsored && <span className="clinic-badge-sponsored">Sponsored</span>}
+                          </div>
+                          <h3 className="mt-1 text-lg font-semibold text-foreground">{clinic.name}</h3>
+                          {reviewLabel && (
+                            <p className="clinic-stars mt-1">
+                              <Star className="h-3.5 w-3.5 fill-current" />
+                              {reviewLabel}
+                            </p>
+                          )}
+
+                          <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                            {!(hideClinicContactDetails || hideDirectContact) && (
+                              <p className="flex items-start gap-2">
+                                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                <span className="block">
+                                  {clinic.address1 ? (
+                                    <>
+                                      {clinic.address1}
+                                      {clinic.address2 ? `, ${clinic.address2}` : ""}, {clinic.city}
+                                      <span className="block">{clinic.postcode}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="block">{clinic.city}</span>
+                                      <span className="block">{clinic.postcode}</span>
+                                    </>
+                                  )}
+                                </span>
+                              </p>
+                            )}
+
+                            {(hideClinicContactDetails || hideDirectContact) && (
+                              <p className="flex items-start gap-2">
+                                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                <span className="block">
+                                  <span className="block">{clinic.city}</span>
+                                  <span className="block">{clinic.postcode}</span>
+                                </span>
+                              </p>
+                            )}
+
+                            {!hideDirectContact && !hideClinicContactDetails && clinic.phone && (
+                              <p className="flex items-center gap-2">
+                                <Phone className="h-4 w-4 shrink-0 text-primary" />
+                                <a href={`tel:${clinic.phone}`} className="hover:text-foreground">
+                                  {clinic.phone}
+                                </a>
+                              </p>
+                            )}
+
+                            {!hideDirectContact && !hideClinicContactDetails && clinic.email && (
+                              <p className="flex items-center gap-2">
+                                <Mail className="h-4 w-4 shrink-0 text-primary" />
+                                <a href={`mailto:${clinic.email}`} className="hover:text-foreground">
+                                  {clinic.email}
+                                </a>
+                              </p>
+                            )}
+
+                            {miles !== null && <p className="text-xs">Approx. {miles} miles from search match</p>}
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+                          {hideDirectContact ? (
+                            <Button
+                              size="sm"
+                              className="rounded-full"
+                              onClick={() => {
+                                void trackEvent({ event: "clinic_profile_click", clinicId: clinic.id, clinicName: clinic.name, destination: "contact_modal" });
+                                if (onContactClinic) {
+                                  onContactClinic(clinic.id);
+                                  return;
+                                }
+                                router.push(`/contact?clinicId=${encodeURIComponent(clinic.id)}`);
+                              }}
+                            >
+                              Contact clinic
+                            </Button>
+                          ) : (
+                            <Button asChild size="sm" className="rounded-full">
+                              <a
+                                href={clinic.bookingUrl ?? "/contact"}
+                                target={clinic.bookingUrl ? "_blank" : undefined}
+                                rel={clinic.bookingUrl ? "noreferrer" : undefined}
+                                onClick={() => {
+                                  void trackEvent({
+                                    event: "clinic_profile_click",
+                                    clinicId: clinic.id,
+                                    clinicName: clinic.name,
+                                    destination: clinic.bookingUrl ?? "/contact",
+                                  });
+                                }}
+                              >
+                                Contact
+                                <ExternalLink className="ml-1 h-3 w-3" />
+                              </a>
+                            </Button>
+                          )}
+
+                          <Button asChild size="sm" variant="outline" className="rounded-full">
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                hideClinicContactDetails || !clinic.address1
+                                  ? `${clinic.city} ${clinic.postcode}`
+                                  : `${clinic.address1}, ${clinic.city} ${clinic.postcode}`
+                              )}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Directions
+                            </a>
+                          </Button>
+
+                          {!hideDirectContact && !hideClinicContactDetails && (
+                            <Button size="sm" variant="ghost" className="rounded-full" onClick={() => handleCopy(clinic)}>
+                              {copiedClinicId === clinic.id ? (
+                                <>
+                                  <Check className="mr-1 h-3 w-3" /> Copied
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="mr-1 h-3 w-3" /> Copy details
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {(!isMobile || showMap) && (
+            <div
+              className={
+                isModalMode
+                  ? "min-h-0 overflow-hidden rounded-2xl border border-border/80 shadow-sm"
+                  : "h-full min-h-0 overflow-hidden rounded-2xl border border-border/80 shadow-sm"
+              }
+              style={isModalMode ? undefined : { height: FINDER_PANEL_HEIGHT_PX }}
+            >
+              <iframe
+                title="Clinic locations"
+                src={mapSrc}
+                className={isModalMode ? "h-full min-h-[320px] w-full border-0" : "h-full w-full border-0"}
+                loading="lazy"
+              />
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );

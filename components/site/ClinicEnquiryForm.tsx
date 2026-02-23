@@ -13,9 +13,20 @@ const schema = z.object({
   contactName: z.string().min(2, "Contact name is required"),
   clinicName: z.string().min(2, "Clinic name is required"),
   phone: z.string().optional(),
-  address: z.string().min(3, "Address is required"),
+  city: z.string().min(2, "City is required"),
+  state: z.string().min(2, "State/region is required"),
+  address: z.string().optional(),
+  reviewStars: z
+    .string()
+    .optional()
+    .refine((value) => !value || (!Number.isNaN(Number(value)) && Number(value) >= 0 && Number(value) <= 5), "Stars must be between 0 and 5"),
+  reviewCount: z
+    .string()
+    .optional()
+    .refine((value) => !value || (!Number.isNaN(Number(value)) && Number(value) >= 0), "Review count must be 0 or higher"),
   email: z.string().email("Enter a valid email"),
   website: z.string().optional(),
+  gmbUrl: z.string().url("Enter a valid Google Business URL").optional().or(z.literal("")),
   consent: z.boolean().refine((value) => value, "You must agree before submitting"),
   hp_field: z.string().optional(),
 });
@@ -45,9 +56,14 @@ export default function ClinicEnquiryForm() {
       contactName: "",
       clinicName: "",
       phone: "",
+      city: "",
+      state: "",
       address: "",
+      reviewStars: "",
+      reviewCount: "",
       email: "",
       website: "",
+      gmbUrl: "",
       consent: false,
       hp_field: "",
     },
@@ -63,6 +79,11 @@ export default function ClinicEnquiryForm() {
         ? `https://${values.website.trim()}`
         : values.website?.trim() || undefined;
 
+    const gmbPayload =
+      values.gmbUrl?.trim() && !/^https?:\/\//i.test(values.gmbUrl.trim())
+        ? `https://${values.gmbUrl.trim()}`
+        : values.gmbUrl?.trim() || undefined;
+
     const res = await fetch("/api/clinic-enquiry", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -70,9 +91,14 @@ export default function ClinicEnquiryForm() {
         contactName: values.contactName,
         clinicName: values.clinicName,
         phone: values.phone || undefined,
-        address: values.address,
+        city: values.city,
+        state: values.state,
+        address: values.address || undefined,
+        reviewStars: values.reviewStars ? Number(values.reviewStars) : undefined,
+        reviewCount: values.reviewCount ? Number(values.reviewCount) : undefined,
         email: values.email,
         website: websitePayload,
+        gmbUrl: gmbPayload,
         consent: true,
         hp_field: values.hp_field,
       }),
@@ -87,16 +113,20 @@ export default function ClinicEnquiryForm() {
 
     setReferenceId(data.referenceId ?? null);
     setDeliveryStatus(data.deliveryStatus ?? "queued");
-    await trackEvent({ event: "clinic_apply_submit" });
     await trackEvent({ event: "clinic_apply_submitted", source: "for-clinics" });
 
     reset({
       contactName: "",
       clinicName: "",
       phone: "",
+      city: "",
+      state: "",
       address: "",
+      reviewStars: "",
+      reviewCount: "",
       email: "",
       website: "",
+      gmbUrl: "",
       consent: false,
       hp_field: "",
     });
@@ -123,13 +153,33 @@ export default function ClinicEnquiryForm() {
             <Input placeholder="Email" type="email" {...register("email")} />
             {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
           </div>
+          <div>
+            <Input placeholder="City" {...register("city")} />
+            {errors.city && <p className="mt-1 text-xs text-destructive">{errors.city.message}</p>}
+          </div>
+          <div>
+            <Input placeholder="State/Region" {...register("state")} />
+            {errors.state && <p className="mt-1 text-xs text-destructive">{errors.state.message}</p>}
+          </div>
           <div className="md:col-span-2">
-            <Input placeholder="Address" {...register("address")} />
+            <Input placeholder="Address (optional)" {...register("address")} />
             {errors.address && <p className="mt-1 text-xs text-destructive">{errors.address.message}</p>}
+          </div>
+          <div>
+            <Input placeholder="Review stars (optional, 0-5)" inputMode="decimal" {...register("reviewStars")} />
+            {errors.reviewStars && <p className="mt-1 text-xs text-destructive">{errors.reviewStars.message}</p>}
+          </div>
+          <div>
+            <Input placeholder="Review count (optional)" inputMode="numeric" {...register("reviewCount")} />
+            {errors.reviewCount && <p className="mt-1 text-xs text-destructive">{errors.reviewCount.message}</p>}
           </div>
           <div className="md:col-span-2">
             <Input placeholder="Website (optional)" {...register("website")} />
             {errors.website && <p className="mt-1 text-xs text-destructive">{errors.website.message}</p>}
+          </div>
+          <div className="md:col-span-2">
+            <Input placeholder="Google Business link (optional)" {...register("gmbUrl")} />
+            {errors.gmbUrl && <p className="mt-1 text-xs text-destructive">{errors.gmbUrl.message}</p>}
           </div>
         </div>
 

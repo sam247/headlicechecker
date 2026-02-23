@@ -10,7 +10,11 @@ const schema = z
     contactName: z.string().min(2),
     clinicName: z.string().min(2),
     phone: z.string().optional(),
-    address: z.string().min(3),
+    city: z.string().min(2),
+    state: z.string().min(2),
+    address: z.string().optional(),
+    reviewStars: z.number().min(0).max(5).optional(),
+    reviewCount: z.number().int().min(0).optional(),
     email: z.string().email(),
     website: z
       .string()
@@ -23,6 +27,17 @@ const schema = z
         return `https://${trimmed}`;
       })
       .refine((value) => !value || /^https?:\/\//.test(value), "Website must be a valid URL"),
+    gmbUrl: z
+      .string()
+      .optional()
+      .transform((value) => {
+        if (!value) return undefined;
+        const trimmed = value.trim();
+        if (!trimmed) return undefined;
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+        return `https://${trimmed}`;
+      })
+      .refine((value) => !value || /^https?:\/\//.test(value), "Google Business URL must be a valid URL"),
     consent: z.literal(true),
     hp_field: z.string().optional(),
   })
@@ -87,9 +102,14 @@ export async function POST(request: NextRequest) {
     contactName: payload.contactName,
     clinicName: payload.clinicName,
     phone: payload.phone,
+    city: payload.city,
+    state: payload.state,
     address: payload.address,
+    reviewStars: payload.reviewStars,
+    reviewCount: payload.reviewCount,
     email: payload.email,
     website: payload.website,
+    gmbUrl: payload.gmbUrl,
     consentAt,
     policyVersion: POLICY_VERSION,
   });
@@ -107,6 +127,11 @@ export async function POST(request: NextRequest) {
       clinicName: payload.clinicName,
       email: redactEmail(payload.email),
       phone: payload.phone ? "provided" : "none",
+      city: payload.city,
+      state: payload.state,
+      reviewStars: payload.reviewStars ?? null,
+      reviewCount: payload.reviewCount ?? null,
+      gmbUrl: payload.gmbUrl ? "provided" : "none",
       consentAt,
       policyVersion: POLICY_VERSION,
       ip,

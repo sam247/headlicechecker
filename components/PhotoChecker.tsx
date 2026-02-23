@@ -238,7 +238,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
       setSelectedClinicId(undefined);
       setShowMarkers(true);
       setMarkerFilter("all");
-      await trackEvent({ event: "scan_start" });
+      await trackEvent({ event: "scan_submission", source: "photo_checker" });
 
       let index = 0;
       const timer = setInterval(() => {
@@ -295,8 +295,8 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
 
         await trackEvent({
           event: "scan_result",
-          label: result.label,
-          confidenceLevel: result.confidenceLevel,
+          result_label: result.label,
+          confidence: result.confidenceLevel,
           detectionCount: result.detections?.length,
           topDetectionLabel: result.summary?.strongestLabel,
           topDetectionConfidenceLevel: result.detections?.[0]?.confidenceLevel,
@@ -626,8 +626,8 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                           <div className="rounded-xl border border-border bg-background px-3 py-2 text-left">
                             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">What we found</p>
                             <p className="mt-1 text-sm font-semibold">
-                              {scanResult.summary.totalDetections} likely indicator
-                              {scanResult.summary.totalDetections === 1 ? "" : "s"}
+                              {allDetections.length} likely indicator
+                              {allDetections.length === 1 ? "" : "s"}
                             </p>
                           </div>
                           <div className="rounded-xl border border-border bg-background px-3 py-2 text-left">
@@ -681,7 +681,16 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                           if (MODAL_LEAD_FLOW_ENABLED) {
                             await trackEvent({ event: "clinic_modal_opened", label: scanResult?.label });
                           }
-                          await trackEvent({ event: "scan_clinic_cta_clicked", label: scanResult?.label });
+                          await trackEvent({
+                            event: "scan_positive_detection_click",
+                            label: scanResult?.label,
+                            source: "scan_result_panel",
+                          });
+                          await trackEvent({
+                            event: "find_clinic_click",
+                            label: scanResult?.label,
+                            source: "scan_result_panel",
+                          });
                         }}
                       >
                         <MapPin className="mr-2 h-4 w-4" />
@@ -723,7 +732,14 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                 </DialogDescription>
               </div>
               <Button asChild variant="outline" size="sm" className="rounded-full">
-                <Link href="/find-clinics?view=list&country=US">Open full page</Link>
+                <Link
+                  href="/find-clinics?view=list&country=US"
+                  onClick={() => {
+                    void trackEvent({ event: "find_clinic_click", source: "scan_modal_full_page" });
+                  }}
+                >
+                  Open full page
+                </Link>
               </Button>
             </div>
           </DialogHeader>
