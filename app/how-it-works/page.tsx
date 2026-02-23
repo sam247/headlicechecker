@@ -128,7 +128,7 @@ export default function HowItWorksPage() {
   const rightFaqs = faqs.slice(midpoint);
 
   return (
-    <section className="section-shell pb-8 md:pb-12">
+    <section className="section-shell">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />

@@ -41,13 +41,13 @@ export default function FindClinicsPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webpage) }} />
 
-      <section className="hero-gradient-shell hero-gradient-right section-shell pb-8 md:pb-12">
+      <section className="hero-gradient-shell hero-gradient-right section-shell">
         <div className="container mx-auto px-4">
           <Suspense fallback={<div className="section-shell">Loading clinic finder…</div>}>
             <FindClinicsSection clinics={clinics} />
           </Suspense>
 
-          <section className="section-shell pt-8">
+          <section className="section-shell pt-10 md:pt-12">
             <div className="mt-8">
               <h2 className="text-xl font-semibold">Are you a head lice clinic and interested in being listed?</h2>
               <p className="mt-1 text-sm text-muted-foreground">Submit your details and we will get back to you.</p>

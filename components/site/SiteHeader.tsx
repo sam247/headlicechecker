@@ -15,8 +15,6 @@ const navItems = [
   { href: "/locations", label: "Locations" },
   { href: "/for-schools", label: "For Schools" },
   { href: "/for-clinics", label: "For Clinics" },
-  { href: "/blog", label: "Blog" },
-  { href: "/faq", label: "FAQ" },
 ];
 
 const copy = getSiteCopy();

@@ -317,8 +317,8 @@ export default function ClinicFinder({
                 return (
                   <Card
                     key={clinic.id}
-                    className={`clinic-card cursor-pointer border-border/80 transition-colors hover:border-primary/50 ${
-                      isFeatured ? "clinic-card--sponsored" : ""
+                    className={`clinic-card cursor-pointer transition-colors hover:border-primary/50 ${
+                      isFeatured ? "border-primary/50 clinic-card--sponsored" : "border-border/80"
                     }`}
                     onClick={() => {
                       setMapFocusClinicId(clinic.id);

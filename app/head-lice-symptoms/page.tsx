@@ -42,7 +42,7 @@ export default function HeadLiceSymptomsPage() {
         reviewedAt={page.updatedAt}
         relatedLinks={[
           { href: "/nits-vs-dandruff", label: "Nits vs Dandruff" },
-          { href: "/faq", label: "FAQ" },
+          { href: "/locations", label: "Locations" },
           { href: "/find-clinics", label: "Find Clinics" },
         ]}
       />

@@ -198,7 +198,7 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
         </div>
       </section>
 
-      <section className="section-shell pt-0">
+      <section className="section-shell pt-4 md:pt-4">
         <div className="container mx-auto px-4">
           <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
             <div>
@@ -231,11 +231,11 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
         </div>
       </section>
 
-      <section className="section-shell pt-0 bg-muted/30">
+      <section className="section-shell pt-4 md:pt-4 bg-muted/30">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold md:text-3xl">{content.lookFor.heading}</h2>
           <p className="mt-3 section-copy max-w-4xl">{content.lookFor.intro}</p>
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="mt-9 grid gap-6 md:mt-10 md:grid-cols-2">
             {content.lookFor.items.map((item) => (
               <div key={item.title} className="space-y-3">
                 <h3 className="font-semibold">{item.title}</h3>
@@ -248,11 +248,11 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
 
       <PhotoChecker initialFile={heroFile} onFileConsumed={consumeHeroFile} />
 
-      <section className="section-shell pt-0 bg-muted/20">
+      <section className="section-shell pt-4 md:pt-4 bg-muted/20">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold md:text-3xl">{content.scenarios.heading}</h2>
           <p className="mt-3 section-copy max-w-4xl">{content.scenarios.intro}</p>
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="mt-9 grid gap-6 md:mt-10 md:grid-cols-2">
             {content.scenarios.cards.map((card) => (
               <Card key={card.title}>
                 <CardContent className="p-5">
@@ -271,7 +271,7 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
         </div>
       </section>
 
-      <section className="section-shell pt-0">
+      <section className="section-shell pt-4 md:pt-4">
         <div className="container mx-auto px-4">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="max-w-3xl">
@@ -289,7 +289,7 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
             </div>
           </div>
 
-          <div className="mt-8 grid gap-5 md:grid-cols-2">
+          <div className="mt-11 grid gap-6 md:mt-12 md:grid-cols-2">
             {content.trust.links.map((item) => (
               <div key={item.href} className="border-b border-border pb-5">
                 <h3 className="font-semibold">{item.title}</h3>
@@ -304,7 +304,7 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
         </div>
       </section>
 
-      <section className="section-shell pt-0">
+      <section className="section-shell pt-4 md:pt-4">
         <div className="container mx-auto px-4">
           <div className="rounded-2xl border border-border bg-card p-6 md:p-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -328,9 +328,9 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
         </div>
       </section>
 
-      <section className="section-shell pt-0 bg-muted/30">
+      <section className="section-shell pt-4 md:pt-4 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="mb-6 flex items-center justify-between gap-4">
+          <div className="mb-8 flex items-center justify-between gap-4 md:mb-6">
             <div>
               <h2 className="text-2xl font-bold md:text-3xl">{content.guides.heading}</h2>
               <p className="mt-2 text-sm text-muted-foreground md:text-base">{content.guides.intro}</p>
@@ -340,7 +340,7 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
             </Button>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {latestGuides.map((guide) => (
               <Card key={guide.slug}>
                 <CardContent className="overflow-hidden p-0">
@@ -391,7 +391,7 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
         </div>
       </section>
 
-      <section className="section-shell pt-0">
+      <section className="section-shell pt-4 md:pt-4">
         <div className="container mx-auto px-4">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div>
@@ -399,7 +399,7 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
               <p className="mt-2 text-sm text-muted-foreground md:text-base">{content.faq.intro}</p>
             </div>
             <Button asChild variant="ghost" className="rounded-full">
-              <Link href="/faq">See all</Link>
+              <Link href="/locations">See all</Link>
             </Button>
           </div>
 

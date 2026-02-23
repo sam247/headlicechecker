@@ -11,7 +11,7 @@ const footerColumns = [
       { label: "How It Works", href: "/how-it-works" },
       { label: "Find Clinics", href: "/find-clinics" },
       { label: "Locations", href: "/locations" },
-      { label: "FAQ", href: "/faq" },
+      { label: "Locations FAQ", href: "/locations" },
       { label: "Contact", href: "/contact" },
     ],
   },
