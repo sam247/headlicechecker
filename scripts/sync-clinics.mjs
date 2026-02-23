@@ -23,6 +23,7 @@ const OPTIONAL_HEADERS = [
   "Featured Rank",
   "Review Stars",
   "Review Count",
+  "Description",
   "Google Business URL",
 ];
 
@@ -264,6 +265,7 @@ async function run() {
     const featuredRankRaw = getCell(row, indexByHeader, "Featured Rank");
     const reviewStarsRaw = getCell(row, indexByHeader, "Review Stars");
     const reviewCountRaw = getCell(row, indexByHeader, "Review Count");
+    const descriptionRaw = getCell(row, indexByHeader, "Description");
     const gmbUrlRaw = getCell(row, indexByHeader, "Google Business URL");
 
     // Only Postcode and County are required; other address fields are optional
@@ -401,6 +403,7 @@ async function run() {
       ...(typeof featuredRank === "number" ? { featuredRank } : {}),
       ...(typeof reviewStars === "number" ? { reviewStars } : {}),
       ...(typeof reviewCount === "number" ? { reviewCount } : {}),
+      ...(descriptionRaw ? { description: descriptionRaw } : {}),
       ...(gmbUrl ? { gmbUrl } : {}),
       lat: coords.lat,
       lng: coords.lng,

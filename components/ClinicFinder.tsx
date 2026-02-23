@@ -64,16 +64,25 @@ function buildMapSrcForClinic(clinic: Clinic): string {
   return `https://www.openstreetmap.org/export/embed.html?bbox=${minLng},${minLat},${maxLng},${maxLat}&layer=mapnik`;
 }
 
+function isPromotedClinic(clinic: Clinic): boolean {
+  return clinic.sponsored === true || clinic.featured === true;
+}
+
+function promotionRank(clinic: Clinic): number {
+  if (typeof clinic.featuredRank === "number") return clinic.featuredRank;
+  return Number.MAX_SAFE_INTEGER;
+}
+
 function sortByFeaturedThenDistance(clinics: Clinic[]): Clinic[] {
   return clinics
     .slice()
     .sort((a, b) => {
-      const aFeatured = a.featured || a.sponsored ? 1 : 0;
-      const bFeatured = b.featured || b.sponsored ? 1 : 0;
+      const aFeatured = isPromotedClinic(a) ? 1 : 0;
+      const bFeatured = isPromotedClinic(b) ? 1 : 0;
       if (aFeatured !== bFeatured) return bFeatured - aFeatured;
       if (aFeatured === 1 && bFeatured === 1) {
-        const rankA = a.featuredRank ?? Number.MAX_SAFE_INTEGER;
-        const rankB = b.featuredRank ?? Number.MAX_SAFE_INTEGER;
+        const rankA = promotionRank(a);
+        const rankB = promotionRank(b);
         if (rankA !== rankB) return rankA - rankB;
       }
       return 0;
@@ -303,11 +312,14 @@ export default function ClinicFinder({
               {clinics.map((clinic) => {
                 const miles = origin ? Math.round(distanceMiles(origin.lat, origin.lng, clinic.lat, clinic.lng)) : null;
                 const reviewLabel = formatReview(clinic);
+                const isSponsored = isPromotedClinic(clinic);
 
                 return (
                   <Card
                     key={clinic.id}
-                    className="clinic-card cursor-pointer border-border/80 transition-colors hover:border-primary/50"
+                    className={`clinic-card cursor-pointer border-border/80 transition-colors hover:border-primary/50 ${
+                      isSponsored ? "clinic-card--sponsored" : ""
+                    }`}
                     onClick={() => {
                       setMapFocusClinicId(clinic.id);
                       onClinicSelect?.(clinic.id);
@@ -320,9 +332,10 @@ export default function ClinicFinder({
                             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                               {clinic.country} · {clinic.region}
                             </p>
-                            {clinic.sponsored && <span className="clinic-badge-sponsored">Sponsored</span>}
+                            {isSponsored && <span className="clinic-badge-sponsored">Sponsored</span>}
                           </div>
                           <h3 className="mt-1 text-lg font-semibold text-foreground">{clinic.name}</h3>
+                          {clinic.description && <p className="clinic-description mt-1 text-sm text-muted-foreground">{clinic.description}</p>}
                           {reviewLabel && (
                             <p className="clinic-stars mt-1">
                               <Star className="h-3.5 w-3.5 fill-current" />

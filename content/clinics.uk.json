@@ -9,6 +9,9 @@
     "phone": "7785390540",
     "email": "info@no-more-nits.com",
     "bookingUrl": "https://no-more-nits.com/",
+    "featured": false,
+    "reviewStars": 5,
+    "description": "No More Nits is your trusted specialist for safe, gentle and clinically-informed head lice and nit removal, across Berkshire and surrounding areas.",
     "lat": 51.4062463,
     "lng": -0.6767778,
     "services": [
@@ -27,6 +30,9 @@
     "phone": "7713982012",
     "email": "info@nithappens.co.uk",
     "bookingUrl": "https://nithappens.co.uk/",
+    "featured": false,
+    "reviewStars": 5,
+    "description": "Mobile head lice removal in the Cotswolds. Natural, chemical-free treatments that come to you, using gentle aromatherapy-based methods.",
     "lat": 51.9382855,
     "lng": -1.5423957,
     "services": [
@@ -46,6 +52,9 @@
     "phone": "7944227477",
     "email": "info@nitnurse.co.uk",
     "bookingUrl": "https://nitnurse.co.uk/",
+    "featured": false,
+    "reviewStars": 5,
+    "description": "Non toxic & hypoallergenic, 100% guaranteed head lice removal from my private home clinic in Buckhurst Hill in Essex.",
     "lat": 51.6259439,
     "lng": 0.0468161,
     "services": [
@@ -57,9 +66,6 @@
   {
     "id": "uk-richmond-nitnot-clinic",
     "name": "NitNOT Clinic",
-    "featured": true,
-    "sponsored": true,
-    "featuredRank": 1,
     "region": "London",
     "country": "UK",
     "city": "Richmond",
@@ -69,6 +75,9 @@
     "phone": "7835356251",
     "email": "anica@nitnot.com",
     "bookingUrl": "https://nitnotclinic.com/",
+    "featured": true,
+    "reviewStars": 4.7,
+    "description": "We provide professional head lice removal with a 100% guarantee of success in our clinic based in Hampton, UK and a mobile service directly to you, for stress-free treatment your family can trust.",
     "lat": 51.4314516,
     "lng": -0.3743448,
     "services": [
@@ -88,6 +97,9 @@
     "phone": "7830193302",
     "email": "redgem85@gmail.com",
     "bookingUrl": "https://yorkheadliceclinic.co.uk/",
+    "featured": false,
+    "reviewStars": 5,
+    "description": "We want to make sure we get rid of 100% of your bugs from nit, to larvae. We use an eco-friendly, perfume-free, chemical-free and hypoallergenic treatments.",
     "lat": 54.0367761,
     "lng": -1.0380357,
     "services": [
