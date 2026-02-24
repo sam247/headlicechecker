@@ -421,6 +421,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
     () => allDetections.filter((d) => markerFilter === "all" || d.label === markerFilter),
     [allDetections, markerFilter]
   );
+  const isResultStage = stage === "result";
   const detectionCounts = useMemo(
     () =>
       allDetections.reduce(
@@ -436,7 +437,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   return (
     <section id="start-scan" className="section-shell bg-muted/40">
       <div className="container mx-auto px-4">
-        <div className="grid gap-x-16 gap-y-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+        <div className={isResultStage ? "space-y-8" : "grid gap-x-16 gap-y-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start"}>
           {/* Left: h1, intro, bullets (including size restraint) */}
           <div>
             <h1 className="section-title text-left">Start a free photo scan</h1>
@@ -453,316 +454,320 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
             </p>
           </div>
 
-          {/* Right: action area, aligned with left content */}
-          <div className="min-w-0 lg:pt-0">
-            {stage === "upload" && (
-              <Card className="border-2 border-dashed border-primary/30">
-                <CardContent className="p-6 md:p-8">
-                  <div
-                    className="cursor-pointer text-center"
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      const file = e.dataTransfer.files[0];
-                      if (file) processFile(file);
-                    }}
-                    onClick={() => fileRef.current?.click()}
-                  >
-                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                      <Camera className="h-7 w-7 text-primary" />
-                    </div>
-                    <p className="text-lg font-semibold">Drop a photo or tap to upload</p>
-                    <p className="mt-1 text-sm text-muted-foreground">JPG, PNG, HEIC accepted</p>
-                    <Button className="mt-5 rounded-full">
-                      <Upload className="mr-2 h-4 w-4" />
-                      Upload photo
-                    </Button>
-                    <input
-                      ref={fileRef}
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) processFile(file);
-                      }}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {stage === "confirmSize" && preview && (
-              <Card>
-                <CardContent className="p-6 text-center md:p-8">
-                  <NextImage
-                    src={preview}
-                    alt="Uploaded preview"
-                    width={112}
-                    height={112}
-                    unoptimized
-                    className="mx-auto mb-4 h-28 w-28 rounded-xl object-cover"
-                  />
-                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
-                    <AlertTriangle className="h-5 w-5 text-amber-700" />
-                  </div>
-                  <p className="text-lg font-semibold">Photo too small</p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Shortest side must be at least {MIN_SIDE_PX}px. This image doesn’t meet the requirement and was rejected.
-                  </p>
-                  <Button variant="outline" className="mt-5 rounded-full" onClick={reset}>
-                    Choose another photo
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            {stage === "scanning" && (
-              <Card>
-                <CardContent className="p-6 text-center md:p-8">
-                  {displayPreview && (
-                    <NextImage
-                      src={displayPreview}
-                      alt="Uploaded preview"
-                      width={112}
-                      height={112}
-                      unoptimized
-                      className="mx-auto mb-5 h-28 w-28 rounded-xl object-cover"
-                    />
-                  )}
-                  <Loader2 className="mx-auto h-7 w-7 animate-spin text-primary" />
-                  <p className="mt-4 text-lg font-semibold">Analyzing photo</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Checking for lice, nits, dandruff, and scalp patterns</p>
-                  <Progress value={progress} className="mx-auto mt-5 h-3 w-full max-w-md" />
-                </CardContent>
-              </Card>
-            )}
-
-            {stage === "result" && (
-              <Card>
-                <CardContent className="p-6 text-center md:p-8">
-                  {scanError ? (
-                    <>
-                      <AlertTriangle className="mx-auto h-8 w-8 text-destructive" />
-                      <h3 className="mt-3 text-xl font-semibold">
-                        {scanErrorCode === "NO_PROVIDER_CONFIGURED"
-                          ? "Scan service setup is in progress"
-                          : "We couldn't process this image"}
-                      </h3>
-                      <p className="mt-2 text-sm text-muted-foreground">{scanError}</p>
-                      {(scanErrorCode === "NO_PROVIDER_CONFIGURED" || scanErrorCode === "PROVIDER_ERROR") && (
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          Please retry in a few seconds or request a clinic callback now.
-                        </p>
-                      )}
-                    </>
-                  ) : scanResult && resultCopy ? (
-                    <>
-                      {displayPreview && (
-                        <div className="mx-auto mb-5 w-full max-w-[560px]">
-                          <div className="rounded-2xl border border-border/80 bg-muted/40 p-3">
-                            <div className="relative mx-auto w-fit overflow-hidden rounded-xl bg-card">
-                              <NextImage
-                                src={displayPreview}
-                                alt="Uploaded scalp preview"
-                                width={overlayMeta?.width ?? 1024}
-                                height={overlayMeta?.height ?? 1024}
-                                unoptimized
-                                className="block max-h-[320px] w-auto max-w-full rounded-xl"
-                              />
-                              {OVERLAY_UI_ENABLED &&
-                                showMarkers &&
-                                filteredDetections.length > 0 &&
-                                overlayMeta?.width &&
-                                overlayMeta?.height && (
-                                  <svg
-                                    aria-hidden="true"
-                                    viewBox={`0 0 ${overlayMeta.width} ${overlayMeta.height}`}
-                                    className="pointer-events-none absolute inset-0 h-full w-full"
-                                    preserveAspectRatio="xMidYMid meet"
-                                  >
-                                    {filteredDetections.map((det, index) => {
-                                      const marker = markerClasses(det.label);
-                                      const cx = coordinateMode === "top_left" ? det.x + det.width / 2 : det.x;
-                                      const cy = coordinateMode === "top_left" ? det.y + det.height / 2 : det.y;
-                                      return (
-                                        <g
-                                          key={det.id}
-                                          className={`scan-ring-reveal ${marker.stroke} ${marker.fill}`}
-                                          style={{ animationDelay: `${index * 100}ms` }}
-                                        >
-                                          <ellipse
-                                            cx={cx}
-                                            cy={cy}
-                                            rx={Math.max(det.width / 2, 8)}
-                                            ry={Math.max(det.height / 2, 8)}
-                                            strokeWidth={2}
-                                          />
-                                          <circle cx={cx + det.width / 2} cy={cy - det.height / 2} r={13} className={marker.badge} />
-                                          <text
-                                            x={cx + det.width / 2}
-                                            y={cy - det.height / 2 + 4}
-                                            textAnchor="middle"
-                                            className="fill-white text-[12px] font-bold"
-                                          >
-                                            {index + 1}
-                                          </text>
-                                        </g>
-                                      );
-                                    })}
-                                  </svg>
-                                )}
-                            </div>
-
-                            {markerFilterEnabled && (
-                              <>
-                                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    className="rounded-full"
-                                    onClick={async () => {
-                                      const next = !showMarkers;
-                                      setShowMarkers(next);
-                                      await trackEvent({ event_type: "scan_overlay_toggled", metadata: { enabled: next } });
-                                    }}
-                                  >
-                                    {showMarkers ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
-                                    {showMarkers ? "Hide markers" : "Show markers"}
-                                  </Button>
-                                </div>
-                                <div className="scan-legend-reveal mt-3 flex flex-wrap items-center justify-center gap-2">
-                                  {(
-                                    [
-                                      { key: "all", label: "All", count: allDetections.length },
-                                      { key: "lice", label: "Lice", count: detectionCounts.lice },
-                                      { key: "nits", label: "Nits", count: detectionCounts.nits },
-                                      { key: "dandruff", label: "Dandruff", count: detectionCounts.dandruff },
-                                      { key: "psoriasis", label: "Psoriasis", count: detectionCounts.psoriasis },
-                                    ] as const
-                                  )
-                                    .filter((item) => item.key === "all" || item.count > 0)
-                                    .map((item) => (
-                                      <button
-                                        key={item.key}
-                                        type="button"
-                                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                                          markerFilter === item.key
-                                            ? "border-primary bg-primary/10 text-primary"
-                                            : "border-border bg-background text-muted-foreground hover:text-foreground"
-                                        }`}
-                                        onClick={async () => {
-                                          setMarkerFilter(item.key);
-                                          await trackEvent({ event_type: "scan_legend_filter_used", metadata: { filter: item.key } });
-                                        }}
-                                      >
-                                        {item.label} ({item.count})
-                                      </button>
-                                    ))}
-                                </div>
-                                <p className="sr-only">
-                                  Detected {allDetections.length} likely regions. Current filter: {markerFilter}.
-                                </p>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-                        <CheckCircle2 className="h-6 w-6 text-primary" />
-                      </div>
-                      <h3 className="text-xl font-semibold">{resultCopy.title}</h3>
-                      <p className="mt-2 text-sm text-muted-foreground">{scanResult.explanation ?? resultCopy.description}</p>
-                      {isPositiveResult && (
-                        <div className="mx-auto mt-3 max-w-lg rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-left">
-                          <p className="text-sm font-medium text-foreground">You are not alone. This is common and manageable.</p>
-                          <p className="mt-1 text-sm font-semibold text-primary">Professional confirmation is recommended.</p>
-                        </div>
-                      )}
-
-                      {OVERLAY_UI_ENABLED && scanResult.summary && (
-                        <div className="mx-auto mt-4 grid max-w-lg gap-2 sm:grid-cols-2">
-                          <div className="rounded-xl border border-border bg-background px-3 py-2 text-left">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">What we found</p>
-                            <p className="mt-1 text-sm font-semibold">
-                              {allDetections.length} likely indicator
-                              {allDetections.length === 1 ? "" : "s"}
-                            </p>
-                          </div>
-                          <div className="rounded-xl border border-border bg-background px-3 py-2 text-left">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Confidence</p>
-                            <p className="mt-1 text-sm font-semibold">{confidenceLabel(scanResult.confidenceLevel)}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="mx-auto mt-4 max-w-lg rounded-xl border border-border bg-background p-4 text-left">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">What to do now</p>
-                        <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-                          {actionSteps.map((tip) => (
-                            <li key={tip}>• {tip}</li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {scanResult.confidenceLevel === "low" && (
-                        <div className="mx-auto mt-4 max-w-lg rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-left text-sm text-amber-800">
-                          <p className="font-semibold">Low confidence image quality tip</p>
-                          <p className="mt-1">
-                            Re-upload a sharper close-up in bright light, with hair parted to show the roots clearly.
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  ) : null}
-
-                  <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
-                    <Button className="rounded-full" onClick={reset}>
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Scan another photo
-                    </Button>
-                    {scanErrorCode && (
-                      <Button
-                        className="rounded-full"
-                        variant="outline"
-                        disabled={retryCooldown > 0 || !pendingFile}
-                        onClick={() => pendingFile && runScan(pendingFile)}
-                      >
-                        Retry {retryCooldown > 0 ? `in ${retryCooldown}s` : "now"}
-                      </Button>
-                    )}
-                    {(scanResult?.label === "lice" || scanResult?.label === "nits") && (
-                      <Button
-                        className="rounded-full"
-                        variant={isLowConfidencePositive ? "ghost" : "outline"}
-                        onClick={async () => {
-                          setShowClinicsModal(true);
-                          await trackEvent({
-                            event_type: "clinic_finder_opened",
-                            confidence_tier: scanResult?.confidenceLevel,
-                            metadata: { source: "scan_result_panel", label: scanResult?.label },
-                          });
+          {!isResultStage && (
+            <>
+              {/* Right: action area, aligned with left content */}
+              <div className="min-w-0 lg:pt-0">
+                {stage === "upload" && (
+                  <Card className="border-2 border-dashed border-primary/30">
+                    <CardContent className="p-6 md:p-8">
+                      <div
+                        className="cursor-pointer text-center"
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const file = e.dataTransfer.files[0];
+                          if (file) processFile(file);
                         }}
+                        onClick={() => fileRef.current?.click()}
                       >
-                        <MapPin className="mr-2 h-4 w-4" />
-                        {isLowConfidencePositive ? "View clinics (optional)" : "View clinics"}
+                        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                          <Camera className="h-7 w-7 text-primary" />
+                        </div>
+                        <p className="text-lg font-semibold">Drop a photo or tap to upload</p>
+                        <p className="mt-1 text-sm text-muted-foreground">JPG, PNG, HEIC accepted</p>
+                        <Button className="mt-5 rounded-full">
+                          <Upload className="mr-2 h-4 w-4" />
+                          Upload photo
+                        </Button>
+                        <input
+                          ref={fileRef}
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) processFile(file);
+                          }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {stage === "confirmSize" && preview && (
+                  <Card>
+                    <CardContent className="p-6 text-center md:p-8">
+                      <NextImage
+                        src={preview}
+                        alt="Uploaded preview"
+                        width={112}
+                        height={112}
+                        unoptimized
+                        className="mx-auto mb-4 h-28 w-28 rounded-xl object-cover"
+                      />
+                      <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
+                        <AlertTriangle className="h-5 w-5 text-amber-700" />
+                      </div>
+                      <p className="text-lg font-semibold">Photo too small</p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Shortest side must be at least {MIN_SIDE_PX}px. This image doesn’t meet the requirement and was rejected.
+                      </p>
+                      <Button variant="outline" className="mt-5 rounded-full" onClick={reset}>
+                        Choose another photo
                       </Button>
-                    )}
-                    {scanErrorCode === "NO_PROVIDER_CONFIGURED" && (
-                      <Button asChild className="rounded-full" variant="outline">
-                        <Link href="/contact">Request clinic callback</Link>
-                      </Button>
-                    )}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {stage === "scanning" && (
+                  <Card>
+                    <CardContent className="p-6 text-center md:p-8">
+                      {displayPreview && (
+                        <NextImage
+                          src={displayPreview}
+                          alt="Uploaded preview"
+                          width={112}
+                          height={112}
+                          unoptimized
+                          className="mx-auto mb-5 h-28 w-28 rounded-xl object-cover"
+                        />
+                      )}
+                      <Loader2 className="mx-auto h-7 w-7 animate-spin text-primary" />
+                      <p className="mt-4 text-lg font-semibold">Analyzing photo</p>
+                      <p className="mt-1 text-sm text-muted-foreground">Checking for lice, nits, dandruff, and scalp patterns</p>
+                      <Progress value={progress} className="mx-auto mt-5 h-3 w-full max-w-md" />
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {isResultStage && (
+          <div className="mx-auto mt-8 w-full max-w-[860px] rounded-2xl border border-border/60 bg-muted/20 p-5 text-center md:p-7">
+            {scanError ? (
+              <div className="mx-auto max-w-[640px]">
+                <AlertTriangle className="mx-auto h-8 w-8 text-destructive" />
+                <h3 className="mt-3 text-xl font-semibold">
+                  {scanErrorCode === "NO_PROVIDER_CONFIGURED"
+                    ? "Scan service setup is in progress"
+                    : "We couldn't process this image"}
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground">{scanError}</p>
+                {(scanErrorCode === "NO_PROVIDER_CONFIGURED" || scanErrorCode === "PROVIDER_ERROR") && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Please retry in a few seconds or request a clinic callback now.
+                  </p>
+                )}
+              </div>
+            ) : scanResult && resultCopy ? (
+              <>
+                {displayPreview && (
+                  <div className="mx-auto mb-5 w-full max-w-[760px]">
+                    <div className="rounded-2xl border border-border/80 bg-muted/40 p-3">
+                      <div className="relative mx-auto w-fit overflow-hidden rounded-xl bg-card">
+                        <NextImage
+                          src={displayPreview}
+                          alt="Uploaded scalp preview"
+                          width={overlayMeta?.width ?? 1024}
+                          height={overlayMeta?.height ?? 1024}
+                          unoptimized
+                          className="block max-h-[320px] w-auto max-w-full rounded-xl"
+                        />
+                        {OVERLAY_UI_ENABLED &&
+                          showMarkers &&
+                          filteredDetections.length > 0 &&
+                          overlayMeta?.width &&
+                          overlayMeta?.height && (
+                            <svg
+                              aria-hidden="true"
+                              viewBox={`0 0 ${overlayMeta.width} ${overlayMeta.height}`}
+                              className="pointer-events-none absolute inset-0 h-full w-full"
+                              preserveAspectRatio="xMidYMid meet"
+                            >
+                              {filteredDetections.map((det, index) => {
+                                const marker = markerClasses(det.label);
+                                const cx = coordinateMode === "top_left" ? det.x + det.width / 2 : det.x;
+                                const cy = coordinateMode === "top_left" ? det.y + det.height / 2 : det.y;
+                                return (
+                                  <g
+                                    key={det.id}
+                                    className={`scan-ring-reveal ${marker.stroke} ${marker.fill}`}
+                                    style={{ animationDelay: `${index * 100}ms` }}
+                                  >
+                                    <ellipse
+                                      cx={cx}
+                                      cy={cy}
+                                      rx={Math.max(det.width / 2, 8)}
+                                      ry={Math.max(det.height / 2, 8)}
+                                      strokeWidth={2}
+                                    />
+                                    <circle cx={cx + det.width / 2} cy={cy - det.height / 2} r={13} className={marker.badge} />
+                                    <text
+                                      x={cx + det.width / 2}
+                                      y={cy - det.height / 2 + 4}
+                                      textAnchor="middle"
+                                      className="fill-white text-[12px] font-bold"
+                                    >
+                                      {index + 1}
+                                    </text>
+                                  </g>
+                                );
+                              })}
+                            </svg>
+                          )}
+                      </div>
+
+                      {markerFilterEnabled && (
+                        <>
+                          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="rounded-full"
+                              onClick={async () => {
+                                const next = !showMarkers;
+                                setShowMarkers(next);
+                                await trackEvent({ event_type: "scan_overlay_toggled", metadata: { enabled: next } });
+                              }}
+                            >
+                              {showMarkers ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+                              {showMarkers ? "Hide markers" : "Show markers"}
+                            </Button>
+                          </div>
+                          <div className="scan-legend-reveal mt-3 flex flex-wrap items-center justify-center gap-2">
+                            {(
+                              [
+                                { key: "all", label: "All", count: allDetections.length },
+                                { key: "lice", label: "Lice", count: detectionCounts.lice },
+                                { key: "nits", label: "Nits", count: detectionCounts.nits },
+                                { key: "dandruff", label: "Dandruff", count: detectionCounts.dandruff },
+                                { key: "psoriasis", label: "Psoriasis", count: detectionCounts.psoriasis },
+                              ] as const
+                            )
+                              .filter((item) => item.key === "all" || item.count > 0)
+                              .map((item) => (
+                                <button
+                                  key={item.key}
+                                  type="button"
+                                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                                    markerFilter === item.key
+                                      ? "border-primary bg-primary/10 text-primary"
+                                      : "border-border bg-background text-muted-foreground hover:text-foreground"
+                                  }`}
+                                  onClick={async () => {
+                                    setMarkerFilter(item.key);
+                                    await trackEvent({ event_type: "scan_legend_filter_used", metadata: { filter: item.key } });
+                                  }}
+                                >
+                                  {item.label} ({item.count})
+                                </button>
+                              ))}
+                          </div>
+                          <p className="sr-only">
+                            Detected {allDetections.length} likely regions. Current filter: {markerFilter}.
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mx-auto max-w-[640px]">
+                  <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+                    <CheckCircle2 className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold">{resultCopy.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{scanResult.explanation ?? resultCopy.description}</p>
+                  {isPositiveResult && (
+                    <div className="mx-auto mt-3 max-w-lg rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-left">
+                      <p className="text-sm font-medium text-foreground">You are not alone. This is common and manageable.</p>
+                      <p className="mt-1 text-sm font-semibold text-primary">Professional confirmation is recommended.</p>
+                    </div>
+                  )}
+
+                  {OVERLAY_UI_ENABLED && scanResult.summary && (
+                    <div className="mx-auto mt-4 grid max-w-lg gap-2 sm:grid-cols-2">
+                      <div className="rounded-xl border border-border bg-background px-3 py-2 text-left">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">What we found</p>
+                        <p className="mt-1 text-sm font-semibold">
+                          {allDetections.length} likely indicator
+                          {allDetections.length === 1 ? "" : "s"}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-border bg-background px-3 py-2 text-left">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Confidence</p>
+                        <p className="mt-1 text-sm font-semibold">{confidenceLabel(scanResult.confidenceLevel)}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mx-auto mt-4 max-w-lg rounded-xl border border-border bg-background p-4 text-left">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">What to do now</p>
+                    <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                      {actionSteps.map((tip) => (
+                        <li key={tip}>• {tip}</li>
+                      ))}
+                    </ul>
                   </div>
 
-                  <p className="mt-6 text-xs text-muted-foreground">{copy.medicalDisclaimer}</p>
-                </CardContent>
-              </Card>
-            )}
+                  {scanResult.confidenceLevel === "low" && (
+                    <div className="mx-auto mt-4 max-w-lg rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-left text-sm text-amber-800">
+                      <p className="font-semibold">Low confidence image quality tip</p>
+                      <p className="mt-1">
+                        Re-upload a sharper close-up in bright light, with hair parted to show the roots clearly.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : null}
+
+            <div className="mx-auto mt-6 flex max-w-[640px] flex-col gap-2 sm:flex-row sm:justify-center">
+              <Button className="rounded-full" onClick={reset}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Scan another photo
+              </Button>
+              {scanErrorCode && (
+                <Button
+                  className="rounded-full"
+                  variant="outline"
+                  disabled={retryCooldown > 0 || !pendingFile}
+                  onClick={() => pendingFile && runScan(pendingFile)}
+                >
+                  Retry {retryCooldown > 0 ? `in ${retryCooldown}s` : "now"}
+                </Button>
+              )}
+              {(scanResult?.label === "lice" || scanResult?.label === "nits") && (
+                <Button
+                  className="rounded-full"
+                  variant={isLowConfidencePositive ? "ghost" : "outline"}
+                  onClick={async () => {
+                    setShowClinicsModal(true);
+                    await trackEvent({
+                      event_type: "clinic_finder_opened",
+                      confidence_tier: scanResult?.confidenceLevel,
+                      metadata: { source: "scan_result_panel", label: scanResult?.label },
+                    });
+                  }}
+                >
+                  <MapPin className="mr-2 h-4 w-4" />
+                  {isLowConfidencePositive ? "View clinics (optional)" : "View clinics"}
+                </Button>
+              )}
+              {scanErrorCode === "NO_PROVIDER_CONFIGURED" && (
+                <Button asChild className="rounded-full" variant="outline">
+                  <Link href="/contact">Request clinic callback</Link>
+                </Button>
+              )}
+            </div>
+
+            <p className="mx-auto mt-6 max-w-[640px] text-xs text-muted-foreground">{copy.medicalDisclaimer}</p>
           </div>
-        </div>
+        )}
       </div>
 
       <Dialog

@@ -77,6 +77,8 @@ export default function SchoolToolkitGate({ assets }: { assets: SchoolToolkitAss
 
   const email = watch("email");
   const institutional = useMemo(() => isInstitutionalEmail(email ?? ""), [email]);
+  const isLockedView = unlockedAssets.length === 0 || !downloadToken;
+  const toolkitSummary = useMemo(() => assets.slice(0, 6).map((asset) => asset.title), [assets]);
 
   const buildToolkitUrl = useMemo(
     () =>
@@ -187,11 +189,11 @@ export default function SchoolToolkitGate({ assets }: { assets: SchoolToolkitAss
 
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-xl font-semibold">Toolkit files</h3>
+          <h3 className="text-xl font-semibold">{isLockedView ? "Toolkit includes" : "Toolkit files"}</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            {unlockedAssets.length > 0
-              ? "Your toolkit is unlocked. You can view or download all files now."
-              : "Files unlock immediately after form submission."}
+            {isLockedView
+              ? "Unlock the toolkit to access the full file set with view and download links."
+              : "Your toolkit is unlocked. You can view or download all files now."}
           </p>
           {referenceId && (
             <p className="mt-2 text-xs text-muted-foreground">
@@ -199,35 +201,40 @@ export default function SchoolToolkitGate({ assets }: { assets: SchoolToolkitAss
             </p>
           )}
           {tokenError && <p className="mt-2 text-sm text-amber-700">{tokenError}</p>}
-          <div className="mt-4 space-y-3">
-            {(unlockedAssets.length > 0 ? unlockedAssets : assets).map((asset) => {
-              const locked = unlockedAssets.length === 0 || !downloadToken;
-              return (
+          {isLockedView ? (
+            <div className="mt-4 rounded-xl border border-border/80 bg-background p-4">
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {toolkitSummary.map((title) => (
+                  <li key={title}>• {title}</li>
+                ))}
+              </ul>
+              <p className="mt-4 text-xs text-muted-foreground">Full files unlock immediately after form submission.</p>
+            </div>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {unlockedAssets.map((asset) => (
                 <div key={asset.id} className="rounded-xl border border-border px-4 py-3">
                   <p className="text-sm font-semibold">{asset.title}</p>
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">{asset.format}</p>
                   <div className="mt-2 flex items-center gap-3 text-sm">
                     <a
-                      href={locked ? undefined : buildToolkitUrl(asset.id, "view")}
+                      href={buildToolkitUrl(asset.id, "view")}
                       target="_blank"
                       rel="noreferrer"
-                      className={locked ? "pointer-events-none text-muted-foreground" : "inline-flex items-center gap-1 text-primary hover:underline"}
+                      className="inline-flex items-center gap-1 text-primary hover:underline"
                     >
                       <ExternalLink className="h-4 w-4" />
                       View
                     </a>
-                    <a
-                      href={locked ? undefined : buildToolkitUrl(asset.id, "download")}
-                      className={locked ? "pointer-events-none text-muted-foreground" : "inline-flex items-center gap-1 text-primary hover:underline"}
-                    >
+                    <a href={buildToolkitUrl(asset.id, "download")} className="inline-flex items-center gap-1 text-primary hover:underline">
                       <Download className="h-4 w-4" />
                       Download
                     </a>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

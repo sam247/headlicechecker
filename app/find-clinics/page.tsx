@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import Link from "next/link";
 import FindClinicsSection from "@/components/site/FindClinicsSection";
-import ClinicEnquiryForm from "@/components/site/ClinicEnquiryForm";
+import PartnerEnquiryCtaCard from "@/components/site/PartnerEnquiryCtaCard";
 import { getSiteCopy } from "@/lib/data/content";
 import { getClinicsWithLeadStats } from "@/lib/server/clinics";
 import { breadcrumbJsonLd, clinicReviewJsonLd, localBusinessJsonLd, medicalWebPageJsonLd, pageMetadata, serviceJsonLd } from "@/lib/seo";
@@ -67,17 +66,7 @@ export default async function FindClinicsPage() {
 
           <section className="section-shell pt-10 md:pt-12">
             <div className="mt-8">
-              <h2 className="text-xl font-semibold">Are you a head lice clinic and interested in being listed?</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Submit your details and we will get back to you.{" "}
-                <Link href="/for-clinics/pricing" className="font-medium text-primary hover:underline">
-                  See featured placement options
-                </Link>
-                .
-              </p>
-              <div className="mt-4">
-                <ClinicEnquiryForm />
-              </div>
+              <PartnerEnquiryCtaCard />
             </div>
 
             <p className="mt-4 text-xs text-muted-foreground">{copy.medicalDisclaimer}</p>
