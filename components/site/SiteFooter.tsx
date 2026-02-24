@@ -23,7 +23,7 @@ const footerColumns = [
       { label: "For Clinics", href: "/for-clinics" },
       { label: "Clinic Pricing", href: "/for-clinics/pricing" },
       { label: "Head Lice Symptoms", href: "/head-lice-symptoms" },
-      { label: "Blog", href: "/blog" },
+      { label: "Symptoms Hub", href: "/symptoms" },
     ],
   },
   {

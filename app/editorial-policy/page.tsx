@@ -43,7 +43,7 @@ export default function EditorialPolicyPage() {
         relatedLinks={[
           { href: "/methodology", label: "Methodology" },
           { href: "/clinical-safety", label: "Clinical Safety" },
-          { href: "/blog", label: "Latest Guides" },
+          { href: "/symptoms", label: "Latest Guides" },
         ]}
       />
     </>

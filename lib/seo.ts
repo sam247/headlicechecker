@@ -84,7 +84,7 @@ export function faqJsonLd(items: Array<{ question: string; answer: string }>) {
   };
 }
 
-export function articleJsonLd(post: BlogPost) {
+export function articleJsonLd(post: BlogPost, pathOverride?: string) {
   const base: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -97,7 +97,7 @@ export function articleJsonLd(post: BlogPost) {
       name: post.author,
     },
     keywords: post.keywords.join(", "),
-    mainEntityOfPage: canonical(`/blog/${post.slug}`),
+    mainEntityOfPage: canonical(pathOverride ?? `/blog/${post.slug}`),
     publisher: {
       "@type": "Organization",
       name: SITE_NAME,
@@ -111,6 +111,39 @@ export function articleJsonLd(post: BlogPost) {
     base.image = canonical(post.image);
   }
   return base;
+}
+
+export function contentArticleJsonLd(input: {
+  title: string;
+  description: string;
+  publishedAt: string;
+  updatedAt: string;
+  authorName: string;
+  keywords: string[];
+  path: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: input.title,
+    description: input.description,
+    datePublished: input.publishedAt,
+    dateModified: input.updatedAt,
+    author: {
+      "@type": "Person",
+      name: input.authorName,
+    },
+    keywords: input.keywords.join(", "),
+    mainEntityOfPage: canonical(input.path),
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/logo_new.png`,
+      },
+    },
+  };
 }
 
 export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>) {

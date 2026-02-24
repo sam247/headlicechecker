@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getBlogPosts, getEvergreenPages, getLocationPages, getTrustPages } from "@/lib/data/content";
+import { getContentPages, getEvergreenPages, getLocationPages, getTrustPages } from "@/lib/data/content";
 import { SITE_URL } from "@/lib/seo";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -7,7 +7,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes = [
     "",
     "/about",
-    "/blog",
     "/contact",
     "/find-clinics",
     "/for-clinics",
@@ -21,9 +20,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: staticLastModified,
   }));
 
-  const blogRoutes = getBlogPosts().map((post) => ({
-    url: `${SITE_URL}/blog/${post.slug}`,
-    lastModified: new Date(post.updatedAt || post.publishedAt),
+  const contentRoutes = getContentPages().map((page) => ({
+    url: `${SITE_URL}${page.path}`,
+    lastModified: new Date(page.updatedAt || page.publishedAt),
   }));
 
   const evergreenRoutes = getEvergreenPages().map((page) => ({
@@ -41,5 +40,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(page.updatedAt || page.publishedAt || "2026-02-16"),
   }));
 
-  return [...staticRoutes, ...blogRoutes, ...evergreenRoutes, ...trustRoutes, ...locationRoutes];
+  return [...staticRoutes, ...contentRoutes, ...evergreenRoutes, ...trustRoutes, ...locationRoutes];
 }

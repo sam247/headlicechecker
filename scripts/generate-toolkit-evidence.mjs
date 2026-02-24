@@ -12,8 +12,8 @@ const DATA = path.join(OUT_DIR, 'data');
 const pagesToMap = [
   `${BASE_URL}/`,
   `${BASE_URL}/for-schools`,
-  `${BASE_URL}/blog/what-are-the-first-signs-of-head-lice`,
-  `${BASE_URL}/blog/head-lice-treatment-for-adults`,
+  `${BASE_URL}/symptoms/what-are-the-first-signs-of-head-lice`,
+  `${BASE_URL}/professional/head-lice-treatment-for-adults`,
 ];
 
 function stripHtml(v) {

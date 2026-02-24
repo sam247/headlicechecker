@@ -68,13 +68,13 @@ const leadOps = [
 
 const curatedArticles = [
   {
-    href: "/blog/head-lice-treatment-for-adults",
+    href: "/professional/head-lice-treatment-for-adults",
     title: "Head Lice Treatment for Adults",
     description: "High-intent treatment pathway context families ask about before booking.",
     relevance: "Why this matters for clinics: improves pre-visit expectation setting and reduces repetitive baseline questions.",
   },
   {
-    href: "/blog/what-are-the-first-signs-of-head-lice",
+    href: "/symptoms/what-are-the-first-signs-of-head-lice",
     title: "First Signs of Head Lice",
     description: "Symptom-first guidance that shapes early triage quality.",
     relevance: "Why this matters for clinics: helps families provide clearer symptom timelines at first contact.",

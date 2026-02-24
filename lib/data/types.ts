@@ -218,3 +218,39 @@ export interface LocationSeoPage extends SeoMeta {
   sections: ContentSection[];
   faqs: ContentFaq[];
 }
+
+export type ContentPillar = "ai-detection" | "professional" | "symptoms";
+export type ContentPageType = "hub" | "cluster" | "support" | "legacy-migrated";
+export type SearchIntentType = "informational" | "commercial" | "mixed";
+export type FunnelStage = "panic" | "evaluation" | "decision";
+export type ContentLinkType = "hub" | "sibling" | "conversion" | "tool";
+
+export interface ContentPageLink {
+  href: string;
+  label: string;
+  type: ContentLinkType;
+}
+
+export interface ContentPage extends SeoMeta {
+  slug: string | null;
+  path: string;
+  pillar: ContentPillar;
+  pageType: ContentPageType;
+  publishedAt: string;
+  updatedAt: string;
+  primaryKeyword: string;
+  secondaryKeywords: string[];
+  intentType: SearchIntentType;
+  funnelStage: FunnelStage;
+  intro: string;
+  sections: ContentSection[];
+  faqs: ContentFaq[];
+  internalLinks: ContentPageLink[];
+  escalationModelRequired: boolean;
+  escalationModelText: string;
+  toolCtaAboveFold: boolean;
+  professionalBoundaryDisclaimer: string;
+  internalAnchors: string[];
+  hubChildren?: string[];
+  isPublished: boolean;
+}

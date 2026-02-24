@@ -68,7 +68,7 @@ const playbooks = [
 
 const curatedArticles = [
   {
-    href: "/blog/what-are-the-first-signs-of-head-lice",
+    href: "/symptoms/what-are-the-first-signs-of-head-lice",
     title: "First Signs of Head Lice",
     description: "Early signal guidance for parents and caregivers.",
     relevance: "Why this matters for schools: better early pattern recognition reduces rumor-led escalation.",

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import HomePageClient from "@/components/site/HomePageClient";
-import { getBlogPosts, getHomePageContent, getSiteCopy } from "@/lib/data/content";
+import { getHomePageContent, getLatestGuides, getSiteCopy } from "@/lib/data/content";
 import { canonical, faqJsonLd, medicalWebPageJsonLd, organizationJsonLd, serviceJsonLd, websiteJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -39,14 +39,13 @@ export const metadata: Metadata = {
 export default function Home() {
   const homeContent = getHomePageContent();
   const siteCopy = getSiteCopy();
-  const latestGuides = getBlogPosts().slice(0, 3).map((post) => ({
-    slug: post.slug,
-    title: post.title,
-    description: post.description,
-    publishedAt: post.publishedAt,
-    updatedAt: post.updatedAt,
-    readMinutes: post.readMinutes,
-    image: post.image,
+  const latestGuides = getLatestGuides(3).map((page) => ({
+    path: page.path,
+    title: page.title,
+    description: page.description,
+    publishedAt: page.publishedAt,
+    updatedAt: page.updatedAt,
+    readMinutes: 10,
   }));
 
   const homepageFaqJsonLd = faqJsonLd(

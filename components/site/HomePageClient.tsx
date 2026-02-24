@@ -24,13 +24,12 @@ import { trackEvent } from "@/lib/data/events";
 const HERO_DEMO_INTERVAL_MS = 1750;
 
 interface LatestGuideItem {
-  slug: string;
+  path: string;
   title: string;
   description: string;
   publishedAt: string;
   updatedAt: string;
   readMinutes: number;
-  image?: string;
 }
 
 interface HomePageClientProps {
@@ -376,17 +375,17 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
               <p className="mt-2 text-sm text-muted-foreground md:text-base">{content.guides.intro}</p>
             </div>
             <Button asChild variant="outline" className="rounded-full">
-              <Link href="/blog">View all guides</Link>
+              <Link href="/symptoms">View all guides</Link>
             </Button>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {latestGuides.map((guide) => (
-              <Card key={guide.slug}>
+              <Card key={guide.path}>
                 <CardContent className="overflow-hidden p-0">
-                  <Link href={`/blog/${guide.slug}`} className="relative block aspect-[16/10] w-full bg-muted">
+                  <Link href={guide.path} className="relative block aspect-[16/10] w-full bg-muted">
                     <Image
-                      src={guide.image ?? "/logo_new.png"}
+                      src="/logo_new.png"
                       alt={guide.title}
                       fill
                       className="object-cover"
@@ -399,7 +398,7 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
                       Updated {readableDate(guide.updatedAt)}
                     </p>
                     <h3 className="mt-3 text-lg font-semibold leading-snug">
-                      <Link href={`/blog/${guide.slug}`} className="hover:text-primary">
+                      <Link href={guide.path} className="hover:text-primary">
                         {guide.title}
                       </Link>
                     </h3>
@@ -407,7 +406,7 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
                     <p className="mt-3 text-xs text-muted-foreground">
                       Published {readableDate(guide.publishedAt)} • {guide.readMinutes} min read
                     </p>
-                    <Link href={`/blog/${guide.slug}`} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                    <Link href={guide.path} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
                       Read this practical guide
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Link>

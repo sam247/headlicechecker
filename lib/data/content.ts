@@ -7,6 +7,8 @@ import evergreenPages from "@/content/pages/evergreen.json";
 import locationPages from "@/content/pages/locations.json";
 import trustPages from "@/content/pages/trust.json";
 import homePageContent from "@/content/pages/home.json";
+import { CONTENT_PAGES } from "@/lib/data/content-pages";
+import { validateContentGovernance } from "@/lib/data/content-governance";
 import {
   calculateConversionQualityScore,
   calculatePartnerPriorityScore,
@@ -17,6 +19,7 @@ import type {
   Clinic,
   ClinicPartnerStatus,
   ClinicTier,
+  ContentPage,
   EvergreenPage,
   FaqItem,
   HomePageContent,
@@ -131,6 +134,32 @@ export function getBlogPosts(): BlogPost[] {
 
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {
   return getBlogPosts().find((p) => p.slug === slug);
+}
+
+function isLivePage(page: ContentPage): boolean {
+  const now = Date.now();
+  const publishAt = new Date(page.publishedAt).getTime();
+  return Number.isFinite(publishAt) ? publishAt <= now : true;
+}
+
+export function getContentPages(includeUnpublished = false): ContentPage[] {
+  const pages = validateContentGovernance(CONTENT_PAGES).slice();
+  return includeUnpublished ? pages : pages.filter((page) => page.isPublished && isLivePage(page));
+}
+
+export function getContentPageByPath(path: string, includeUnpublished = false): ContentPage | undefined {
+  return getContentPages(includeUnpublished).find((page) => page.path === path);
+}
+
+export function getContentPageBySegments(segments: string[], includeUnpublished = false): ContentPage | undefined {
+  return getContentPageByPath(`/${segments.join("/")}`, includeUnpublished);
+}
+
+export function getLatestGuides(limit = 3): ContentPage[] {
+  return getContentPages()
+    .filter((page) => page.pageType !== "hub")
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+    .slice(0, limit);
 }
 
 export function getSiteCopy(): SiteCopy {
