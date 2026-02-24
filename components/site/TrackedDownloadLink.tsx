@@ -20,7 +20,10 @@ export default function TrackedDownloadLink({ href, assetName, format, mode, cla
       rel="noreferrer"
       className={className}
       onClick={() => {
-        void trackEvent({ event: "school_asset_download", asset_name: assetName, format });
+        void trackEvent({
+          event_type: mode === "download" ? "toolkit_downloaded" : "toolkit_file_viewed",
+          metadata: { asset_name: assetName, format, source: "tracked_download_link" },
+        });
       }}
       download={mode === "download"}
     >

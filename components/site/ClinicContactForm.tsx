@@ -26,6 +26,7 @@ interface ClinicContactFormProps {
   clinicId?: string;
   clinicName?: string;
   clinicCity?: string;
+  clinicRegion?: string;
   scanLabel?: ScanLabel;
   scanConfidenceLevel?: ScanConfidenceLevel;
   indicatorCount?: number;
@@ -46,6 +47,7 @@ export default function ClinicContactForm({
   clinicId,
   clinicName,
   clinicCity,
+  clinicRegion,
   scanLabel,
   scanConfidenceLevel,
   indicatorCount,
@@ -90,6 +92,7 @@ export default function ClinicContactForm({
         ...values,
         clinicId,
         clinicCity,
+        clinicRegion,
         scanLabel,
         scanConfidenceLevel,
         indicatorCount,
@@ -105,7 +108,13 @@ export default function ClinicContactForm({
 
     setReferenceId(data.referenceId ?? null);
     setDeliveryStatus(data.deliveryStatus ?? "queued");
-    await trackEvent({ event: "clinic_contact_submitted", clinicId, source });
+    await trackEvent({
+      event_type: "clinic_message_submitted",
+      clinic_id: clinicId,
+      region: clinicRegion,
+      confidence_tier: scanConfidenceLevel,
+      metadata: { source, clinic_name: clinicName },
+    });
     if (data.referenceId) {
       await onSuccess?.(data.referenceId);
     }

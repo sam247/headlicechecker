@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import FindClinicsSection from "@/components/site/FindClinicsSection";
 import ClinicEnquiryForm from "@/components/site/ClinicEnquiryForm";
-import { getClinics, getSiteCopy } from "@/lib/data/content";
+import { getSiteCopy } from "@/lib/data/content";
+import { getClinicsWithLeadStats } from "@/lib/server/clinics";
 import { breadcrumbJsonLd, clinicReviewJsonLd, localBusinessJsonLd, medicalWebPageJsonLd, pageMetadata, serviceJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -15,8 +16,8 @@ export const metadata: Metadata = pageMetadata({
 
 const copy = getSiteCopy();
 
-export default function FindClinicsPage() {
-  const clinics = getClinics("ALL");
+export default async function FindClinicsPage() {
+  const clinics = await getClinicsWithLeadStats("ALL");
   const clinicSchemas = clinics.map((clinic) => localBusinessJsonLd(clinic));
   const reviewSchemas = clinics.map((clinic) => clinicReviewJsonLd(clinic)).filter(Boolean);
 

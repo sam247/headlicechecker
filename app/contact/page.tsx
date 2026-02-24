@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import ClinicContactForm from "@/components/site/ClinicContactForm";
 import { Card, CardContent } from "@/components/ui/card";
-import { getClinics, getSiteCopy } from "@/lib/data/content";
+import { getSiteCopy } from "@/lib/data/content";
 import { breadcrumbJsonLd, medicalWebPageJsonLd, pageMetadata } from "@/lib/seo";
+import { getClinicsWithLeadStats } from "@/lib/server/clinics";
 
 export const metadata: Metadata = pageMetadata({
   title: "Contact Head Lice Checker",
@@ -17,8 +18,8 @@ interface ContactPageProps {
 
 const copy = getSiteCopy();
 
-export default function ContactPage({ searchParams }: ContactPageProps) {
-  const clinics = getClinics("ALL");
+export default async function ContactPage({ searchParams }: ContactPageProps) {
+  const clinics = await getClinicsWithLeadStats("ALL");
   const selectedClinic = clinics.find((c) => c.id === searchParams.clinicId);
 
   const breadcrumb = breadcrumbJsonLd([
@@ -147,6 +148,7 @@ export default function ContactPage({ searchParams }: ContactPageProps) {
             clinicId={selectedClinic?.id}
             clinicName={selectedClinic?.name}
             clinicCity={selectedClinic?.city}
+            clinicRegion={selectedClinic?.region}
           />
         </div>
 

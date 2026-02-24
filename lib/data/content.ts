@@ -7,9 +7,15 @@ import evergreenPages from "@/content/pages/evergreen.json";
 import locationPages from "@/content/pages/locations.json";
 import trustPages from "@/content/pages/trust.json";
 import homePageContent from "@/content/pages/home.json";
+import {
+  calculateConversionQualityScore,
+  calculatePartnerPriorityScore,
+  calculateRegionDensityScore,
+} from "@/lib/data/partner-scoring";
 import type {
   BlogPost,
   Clinic,
+  ClinicPartnerStatus,
   ClinicTier,
   EvergreenPage,
   FaqItem,
@@ -20,9 +26,25 @@ import type {
 } from "@/lib/data/types";
 
 function normalizeClinicTier(clinic: Clinic): ClinicTier {
+  if (clinic.partner_status === "featured") return "featured";
   if (clinic.tier === "featured" || clinic.tier === "standard") return clinic.tier;
   if (clinic.featured === true || clinic.sponsored === true) return "featured";
   return "standard";
+}
+
+function normalizePartnerStatus(clinic: Clinic): ClinicPartnerStatus | null {
+  if (
+    clinic.partner_status === "free" ||
+    clinic.partner_status === "founding" ||
+    clinic.partner_status === "verified" ||
+    clinic.partner_status === "featured" ||
+    clinic.partner_status === "exclusive"
+  ) {
+    return clinic.partner_status;
+  }
+  if (clinic.founding_partner) return "founding";
+  if (clinic.tier === "featured") return "featured";
+  return null;
 }
 
 function normalizeClinic(clinic: Clinic): Clinic {
@@ -31,6 +53,10 @@ function normalizeClinic(clinic: Clinic): Clinic {
     ...clinic,
     tier,
     featured: tier === "featured",
+    partner_status: normalizePartnerStatus(clinic),
+    partner_priority_score: clinic.partner_priority_score ?? calculatePartnerPriorityScore(clinic),
+    region_density_score: clinic.region_density_score ?? calculateRegionDensityScore(clinic),
+    conversion_quality_score: clinic.conversion_quality_score ?? calculateConversionQualityScore(clinic),
   };
 }
 
@@ -46,8 +72,15 @@ function featuredRank(clinic: Clinic): number {
   return typeof clinic.featuredRank === "number" ? clinic.featuredRank : Number.MAX_SAFE_INTEGER;
 }
 
+function premiumPosition(clinic: Clinic): number {
+  return typeof clinic.premium_position === "number" ? clinic.premium_position : Number.MAX_SAFE_INTEGER;
+}
+
 export function sortClinicsByTier(clinics: Clinic[]): Clinic[] {
   return clinics.slice().sort((a, b) => {
+    const byPremiumPosition = premiumPosition(a) - premiumPosition(b);
+    if (byPremiumPosition !== 0) return byPremiumPosition;
+
     const aFeatured = a.tier === "featured" ? 1 : 0;
     const bFeatured = b.tier === "featured" ? 1 : 0;
     if (aFeatured !== bFeatured) return bFeatured - aFeatured;

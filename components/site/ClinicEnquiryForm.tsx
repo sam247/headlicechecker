@@ -114,7 +114,10 @@ export default function ClinicEnquiryForm() {
 
     setReferenceId(data.referenceId ?? null);
     setDeliveryStatus(data.deliveryStatus ?? "queued");
-    await trackEvent({ event: "partner_enquiry_submitted", source: "for-clinics" });
+    await trackEvent({
+      event_type: "partner_enquiry_submitted",
+      metadata: { source: "for-clinics" },
+    });
 
     reset({
       contactName: "",

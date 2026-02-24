@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { MapPin, Phone, ExternalLink, Search, Mail, Copy, Check, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,14 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { applyFeaturedCap, getClinics, sortClinicsByTier } from "@/lib/data/content";
 import { findOriginFromQuery, sortClinicsByNearest, distanceMiles } from "@/lib/data/geo";
 import { trackEvent } from "@/lib/data/events";
+import { getClinicPartnerPresentation } from "@/lib/data/clinic-partner";
 import type { Clinic } from "@/lib/data/types";
 
 const GEOCODE_DEBOUNCE_MS = 450;
 const FINDER_PANEL_HEIGHT_PX = 480;
 
 interface ClinicFinderProps {
+  clinics?: Clinic[];
   showHeader?: boolean;
   country?: "US" | "UK" | "ALL";
   onClinicSelect?: (clinicId: string) => void;
@@ -27,7 +29,7 @@ interface ClinicFinderProps {
   containerClassName?: string;
 }
 
-const initialClinics = getClinics("ALL");
+const defaultClinics = getClinics("ALL");
 const MAP_DELTA = 0.02;
 const UK_BBOX = "-8,49,2,61";
 const US_BBOX = "-124,25,-66,49";
@@ -71,6 +73,7 @@ function formatReview(clinic: Clinic): string | null {
 }
 
 export default function ClinicFinder({
+  clinics: clinicsProp,
   showHeader = true,
   country = "ALL",
   onClinicSelect,
@@ -85,6 +88,7 @@ export default function ClinicFinder({
   const pathname = usePathname();
   const isMobile = useIsMobile();
   const isModalMode = mode === "modal";
+  const viewedClinicIdsRef = useRef<Set<string>>(new Set());
 
   const [query, setQuery] = useState(isModalMode ? "" : searchParams.get("q") ?? "");
   const [showMap, setShowMap] = useState(isModalMode ? false : (searchParams.get("view") ?? "list") === "map");
@@ -154,7 +158,9 @@ export default function ClinicFinder({
 
   const { clinics, origin } = useMemo(() => {
     const source =
-      selectedCountry === "ALL" ? initialClinics : initialClinics.filter((clinic) => clinic.country === selectedCountry);
+      selectedCountry === "ALL"
+        ? clinicsProp ?? defaultClinics
+        : (clinicsProp ?? defaultClinics).filter((clinic) => clinic.country === selectedCountry);
 
     const normalized = query.trim().toLowerCase();
     const textFiltered =
@@ -179,7 +185,7 @@ export default function ClinicFinder({
       clinics: applyFeaturedCap(sortClinicsByTier(withinRadius), 2),
       origin: originPoint,
     };
-  }, [query, selectedCountry, geocodedOrigin, radiusMiles]);
+  }, [query, selectedCountry, geocodedOrigin, radiusMiles, clinicsProp]);
 
   const mapSrc = useMemo(() => {
     if (mapFocusClinicId) {
@@ -287,7 +293,8 @@ export default function ClinicFinder({
               {clinics.map((clinic) => {
                 const miles = origin ? Math.round(distanceMiles(origin.lat, origin.lng, clinic.lat, clinic.lng)) : null;
                 const reviewLabel = formatReview(clinic);
-                const isFeatured = clinic.tier === "featured";
+                const partnerPresentation = getClinicPartnerPresentation(clinic);
+                const isFeatured = partnerPresentation.highlightCard;
 
                 return (
                   <Card
@@ -298,6 +305,14 @@ export default function ClinicFinder({
                     onClick={() => {
                       setMapFocusClinicId(clinic.id);
                       onClinicSelect?.(clinic.id);
+                      if (!viewedClinicIdsRef.current.has(clinic.id)) {
+                        viewedClinicIdsRef.current.add(clinic.id);
+                        void trackEvent({
+                          event_type: "clinic_card_viewed",
+                          clinic_id: clinic.id,
+                          region: clinic.region,
+                        });
+                      }
                     }}
                   >
                     <CardContent className="p-5">
@@ -308,7 +323,17 @@ export default function ClinicFinder({
                               {clinic.country} · {clinic.region}
                             </p>
                             {isFeatured && <span className="clinic-badge-sponsored">Featured</span>}
+                            {partnerPresentation.badges.map((badge) => (
+                              <span key={badge.key} className="clinic-badge-standard">
+                                {badge.label}
+                              </span>
+                            ))}
                           </div>
+                          {partnerPresentation.showRegionalBanner && (
+                            <p className="mt-2 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                              Regional Partner
+                            </p>
+                          )}
                           <h3 className="mt-1 text-lg font-semibold text-foreground">{clinic.name}</h3>
                           {clinic.description && <p className="clinic-description mt-1 text-sm text-muted-foreground">{clinic.description}</p>}
                           {reviewLabel && (
@@ -370,7 +395,12 @@ export default function ClinicFinder({
                               size="sm"
                               className="rounded-full"
                               onClick={() => {
-                                void trackEvent({ event: "clinic_profile_click", clinicId: clinic.id, clinicName: clinic.name, destination: "contact_modal" });
+                                void trackEvent({
+                                  event_type: "clinic_contact_clicked",
+                                  clinic_id: clinic.id,
+                                  region: clinic.region,
+                                  metadata: { clinic_name: clinic.name, destination: "contact_modal" },
+                                });
                                 if (onContactClinic) {
                                   onContactClinic(clinic.id);
                                   return;
@@ -388,10 +418,10 @@ export default function ClinicFinder({
                                 rel={clinic.bookingUrl ? "noreferrer" : undefined}
                                 onClick={() => {
                                   void trackEvent({
-                                    event: "clinic_profile_click",
-                                    clinicId: clinic.id,
-                                    clinicName: clinic.name,
-                                    destination: clinic.bookingUrl ?? "/contact",
+                                    event_type: "clinic_contact_clicked",
+                                    clinic_id: clinic.id,
+                                    region: clinic.region,
+                                    metadata: { clinic_name: clinic.name, destination: clinic.bookingUrl ?? "/contact" },
                                   });
                                 }}
                               >
@@ -410,6 +440,14 @@ export default function ClinicFinder({
                               )}`}
                               target="_blank"
                               rel="noreferrer"
+                              onClick={() => {
+                                void trackEvent({
+                                  event_type: "clinic_directions_clicked",
+                                  clinic_id: clinic.id,
+                                  region: clinic.region,
+                                  metadata: { destination: "google_maps" },
+                                });
+                              }}
                             >
                               Directions
                             </a>

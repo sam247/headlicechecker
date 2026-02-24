@@ -113,7 +113,10 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
                 <Link
                   href="/find-clinics"
                   onClick={() => {
-                    void trackEvent({ event: "find_clinic_click", source: "home_hero_secondary_cta" });
+                    void trackEvent({
+                      event_type: "clinic_finder_opened",
+                      metadata: { source: "home_hero_secondary_cta" },
+                    });
                   }}
                 >
                   {siteCopy.secondaryCta}
@@ -186,7 +189,10 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
                       <Link
                         href="/find-clinics"
                         onClick={() => {
-                          void trackEvent({ event: "find_clinic_click", source: "home_demo_preview" });
+                          void trackEvent({
+                            event_type: "clinic_finder_opened",
+                            metadata: { source: "home_demo_preview" },
+                          });
                         }}
                       >
                         View Closest Clinics
@@ -347,7 +353,10 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
                 <Link
                   href="/find-clinics"
                   onClick={() => {
-                    void trackEvent({ event: "find_clinic_click", source: "home_lower_cta" });
+                    void trackEvent({
+                      event_type: "clinic_finder_opened",
+                      metadata: { source: "home_lower_cta" },
+                    });
                   }}
                 >
                   {siteCopy.secondaryCta}
@@ -474,7 +483,10 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
               href="/find-clinics"
               className="text-primary hover:underline"
               onClick={() => {
-                void trackEvent({ event: "find_clinic_click", source: "home_faq_link" });
+                void trackEvent({
+                  event_type: "clinic_finder_opened",
+                  metadata: { source: "home_faq_link" },
+                });
               }}
             >
               Find clinics

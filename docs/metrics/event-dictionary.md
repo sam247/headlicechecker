@@ -1,42 +1,43 @@
-# Event Dictionary
+# Event Dictionary (Canonical)
 
-## Core Events
+## Scan Funnel
 
-- `scan_submission`
-  - Trigger: user submits image scan
-  - Properties: `source`
+- `scan_started`
+  - Trigger: scan pipeline starts for an uploaded image
+- `image_uploaded`
+  - Trigger: user selects or drops an image file
+- `scan_processed`
+  - Trigger: scan API returns successfully
+- `confidence_generated`
+  - Trigger: confidence tier computed and displayed
+- `escalation_triggered`
+  - Trigger: positive result path indicates clinic escalation
+- `clinic_finder_opened`
+  - Trigger: user opens clinic finder from scan/home context
 
-- `scan_result`
-  - Trigger: successful scan response
-  - Properties: `result_label`, `confidence`, `detectionCount`, `topDetectionLabel`, `topDetectionConfidenceLevel`
+## Clinic Engagement
 
-- `scan_positive_detection_click`
-  - Trigger: user clicks clinic CTA after lice/nits result
-  - Properties: `label`, `source`
+- `clinic_card_viewed`
+  - Trigger: user opens/selects a clinic card
+  - Properties: `clinic_id`, `region`
+- `clinic_contact_clicked`
+  - Trigger: user clicks clinic contact CTA
+  - Properties: `clinic_id`, `region`
+- `clinic_directions_clicked`
+  - Trigger: user clicks directions CTA
+  - Properties: `clinic_id`, `region`
+- `clinic_message_submitted`
+  - Trigger: clinic contact form is submitted successfully
+  - Properties: `clinic_id`, `region`, optional `confidence_tier`
 
-- `find_clinic_click`
-  - Trigger: user clicks any find-clinic CTA
-  - Properties: `source`, `label`
+## School Toolkit
 
-- `clinic_profile_click`
-  - Trigger: user clicks clinic outbound destination/contact action
-  - Properties: `clinicId`, `clinicName`, `destination`
-
-- `clinic_contact_submitted`
-  - Trigger: contact-clinic form successful submit
-  - Properties: `clinicId`, `source`
-
-- `clinic_apply_submitted`
-  - Trigger: clinic onboarding/enquiry form successful submit
-  - Properties: `country`, `source`
-
-- `school_asset_download`
-  - Trigger: school toolkit view/download click
-  - Properties: `asset_name`, `format`
-
-## KPI Definitions
-
-- `scans_per_week = count(scan_submission)`
-- `positive_detection_rate = count(scan_result where result_label in [lice,nits]) / count(scan_submission)`
-- `clinic_ctr = count(find_clinic_click) / count(scan_submission)`
-- `enquiries_generated = count(clinic_contact_submitted) + count(clinic_apply_submitted)`
+- `toolkit_unlock_submitted`
+  - Trigger: toolkit unlock form success
+  - Metadata: `school_country`, `school_role`, `email_domain`, `trust_flag`
+- `toolkit_downloaded`
+  - Trigger: toolkit download action
+  - Metadata: `school_country`, `school_role`, `email_domain`, `trust_flag`, `asset_name`
+- `toolkit_file_viewed`
+  - Trigger: toolkit view action
+  - Metadata: `school_country`, `school_role`, `email_domain`, `trust_flag`, `asset_name`

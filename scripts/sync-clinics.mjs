@@ -22,6 +22,14 @@ const OPTIONAL_HEADERS = [
   "Featured",
   "Sponsored",
   "Featured Rank",
+  "Partner Status",
+  "Region Tag",
+  "Coverage Radius KM",
+  "Founding Partner",
+  "Premium Position",
+  "Onboarding Date",
+  "Lead Count",
+  "Last Lead At",
   "Review Stars",
   "Review Count",
   "Description",
@@ -99,6 +107,21 @@ function normalizeTier(input) {
   if (value === "featured") return "featured";
   if (value === "standard") return "standard";
   return null;
+}
+
+function normalizePartnerStatus(input) {
+  const value = String(input ?? "").trim().toLowerCase();
+  if (!value) return undefined;
+  if (["free", "founding", "verified", "featured", "exclusive"].includes(value)) return value;
+  return null;
+}
+
+function normalizeDateString(input) {
+  const raw = String(input ?? "").trim();
+  if (!raw) return undefined;
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString();
 }
 
 function parseCsv(text) {
@@ -273,6 +296,14 @@ async function run() {
     const tierRaw = getCell(row, indexByHeader, "Tier");
     const sponsoredRaw = getCell(row, indexByHeader, "Sponsored");
     const featuredRankRaw = getCell(row, indexByHeader, "Featured Rank");
+    const partnerStatusRaw = getCell(row, indexByHeader, "Partner Status");
+    const regionTagRaw = getCell(row, indexByHeader, "Region Tag");
+    const coverageRadiusRaw = getCell(row, indexByHeader, "Coverage Radius KM");
+    const foundingPartnerRaw = getCell(row, indexByHeader, "Founding Partner");
+    const premiumPositionRaw = getCell(row, indexByHeader, "Premium Position");
+    const onboardingDateRaw = getCell(row, indexByHeader, "Onboarding Date");
+    const leadCountRaw = getCell(row, indexByHeader, "Lead Count");
+    const lastLeadAtRaw = getCell(row, indexByHeader, "Last Lead At");
     const reviewStarsRaw = getCell(row, indexByHeader, "Review Stars");
     const reviewCountRaw = getCell(row, indexByHeader, "Review Count");
     const descriptionRaw = getCell(row, indexByHeader, "Description");
@@ -330,13 +361,33 @@ async function run() {
 
     const featured = normalizeBoolean(featuredRaw);
     const tier = normalizeTier(tierRaw);
+    const partnerStatus = normalizePartnerStatus(partnerStatusRaw);
+    const regionTag = regionTagRaw || undefined;
+    const coverageRadiusKm = normalizeOptionalNumber(coverageRadiusRaw, { min: 0 });
+    const foundingPartner = normalizeBoolean(foundingPartnerRaw);
+    const premiumPosition = normalizeOptionalNumber(premiumPositionRaw);
+    const onboardingDate = normalizeDateString(onboardingDateRaw);
+    const leadCount = normalizeOptionalNumber(leadCountRaw, { min: 0, integer: true });
+    const lastLeadAt = normalizeDateString(lastLeadAtRaw);
     const sponsored = normalizeBoolean(sponsoredRaw);
     const featuredRank = normalizeOptionalNumber(featuredRankRaw, { min: 1, integer: true });
     const reviewStars = normalizeOptionalNumber(reviewStarsRaw, { min: 0, max: 5 });
     const reviewCount = normalizeOptionalNumber(reviewCountRaw, { min: 0, integer: true });
 
-    if (tier === null || featuredRank === null || reviewStars === null || reviewCount === null) {
-      const message = `Row ${rowNum}: invalid value in Tier/Featured Rank/Review Stars/Review Count`;
+    if (
+      tier === null ||
+      partnerStatus === null ||
+      featuredRank === null ||
+      coverageRadiusKm === null ||
+      premiumPosition === null ||
+      onboardingDate === null ||
+      leadCount === null ||
+      lastLeadAt === null ||
+      reviewStars === null ||
+      reviewCount === null
+    ) {
+      const message =
+        `Row ${rowNum}: invalid value in partner/tier/position/date/lead/review columns`;
       if (strictMode) {
         errors.push(message);
         continue;
@@ -415,6 +466,14 @@ async function run() {
       ...(typeof featured === "boolean" ? { featured } : {}),
       ...(typeof sponsored === "boolean" ? { sponsored } : {}),
       ...(typeof featuredRank === "number" ? { featuredRank } : {}),
+      ...(partnerStatus ? { partner_status: partnerStatus } : {}),
+      ...(regionTag ? { region_tag: regionTag } : {}),
+      ...(typeof coverageRadiusKm === "number" ? { coverage_radius_km: coverageRadiusKm } : {}),
+      ...(typeof foundingPartner === "boolean" ? { founding_partner: foundingPartner } : {}),
+      ...(typeof premiumPosition === "number" ? { premium_position: premiumPosition } : {}),
+      ...(onboardingDate ? { onboarding_date: onboardingDate } : {}),
+      ...(typeof leadCount === "number" ? { lead_count: leadCount } : {}),
+      ...(lastLeadAt ? { last_lead_at: lastLeadAt } : {}),
       ...(typeof reviewStars === "number" ? { reviewStars } : {}),
       ...(typeof reviewCount === "number" ? { reviewCount } : {}),
       ...(descriptionRaw ? { description: descriptionRaw } : {}),

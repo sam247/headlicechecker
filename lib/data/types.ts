@@ -2,6 +2,7 @@ export type ScanLabel = "lice" | "nits" | "dandruff" | "psoriasis" | "clear";
 
 export type ScanConfidenceLevel = "high" | "medium" | "low";
 export type ClinicTier = "featured" | "standard";
+export type ClinicPartnerStatus = "free" | "founding" | "verified" | "featured" | "exclusive";
 
 export interface DetectionItem {
   id: string;
@@ -38,6 +39,17 @@ export interface Clinic {
   featured?: boolean;
   sponsored?: boolean;
   featuredRank?: number;
+  partner_status?: ClinicPartnerStatus | null;
+  region_tag?: string | null;
+  coverage_radius_km?: number | null;
+  founding_partner?: boolean | null;
+  premium_position?: number | null;
+  onboarding_date?: string | null;
+  lead_count?: number | null;
+  last_lead_at?: string | null;
+  partner_priority_score?: number | null;
+  region_density_score?: number | null;
+  conversion_quality_score?: number | null;
   reviewStars?: number;
   reviewCount?: number;
   gmbUrl?: string;

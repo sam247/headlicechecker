@@ -32,6 +32,7 @@ export default function FindClinicsSection({ clinics, containerClassName }: Find
   return (
     <>
       <ClinicFinder
+        clinics={clinics}
         country="ALL"
         hideDirectContact
         hideClinicContactDetails
@@ -47,6 +48,7 @@ export default function FindClinicsSection({ clinics, containerClassName }: Find
             clinicId={contactClinic?.id}
             clinicName={contactClinic?.name}
             clinicCity={contactClinic?.city}
+            clinicRegion={contactClinic?.region}
             source="modal"
             compact
             onSuccess={() => setContactModalOpen(false)}

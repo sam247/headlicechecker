@@ -7,6 +7,7 @@ import { deliverLeadEmail } from "@/lib/server/lead-delivery";
 import { clientIp, isAllowedOrigin, normalizeEmail, redactEmail } from "@/lib/server/security";
 import { getRateLimitConfig, rateLimit } from "@/lib/server/rate-limit";
 import { appendAnalyticsRow, countryFromHeaders, mapDetectionOutcome } from "@/lib/server/analytics-table";
+import { insertEvent } from "@/lib/server/events-repo";
 
 const schema = z
   .object({
@@ -17,6 +18,7 @@ const schema = z
     message: z.string().max(500).optional(),
     clinicId: z.string().optional(),
     clinicCity: z.string().optional(),
+    clinicRegion: z.string().optional(),
     scanLabel: z.custom<ScanLabel>().optional(),
     scanConfidenceLevel: z.custom<ScanConfidenceLevel>().optional(),
     indicatorCount: z.number().int().min(0).optional(),
@@ -25,16 +27,16 @@ const schema = z
   })
   .strict();
 
-function pickDestination(clinicId?: string, postcode?: string): { clinicId?: string; email?: string; region: string; city?: string } {
+function pickDestination(clinicId?: string, postcode?: string): { clinicId?: string; email?: string; region: string; city?: string; clinicRegion?: string } {
   const clinics = getClinics("ALL");
   const byId = clinicId ? clinics.find((c) => c.id === clinicId) : undefined;
-  if (byId) return { clinicId: byId.id, email: byId.email, region: byId.country, city: byId.city };
+  if (byId) return { clinicId: byId.id, email: byId.email, region: byId.country, city: byId.city, clinicRegion: byId.region };
 
   const normalized = postcode?.trim().toUpperCase() ?? "";
   const usHint = /^\d{5}/.test(normalized);
   const region = usHint ? "US" : "UK";
   const fallback = clinics.find((c) => c.country === region);
-  return { clinicId: fallback?.id, email: fallback?.email, region, city: fallback?.city };
+  return { clinicId: fallback?.id, email: fallback?.email, region, city: fallback?.city, clinicRegion: fallback?.region };
 }
 
 function classifyDeliveryError(detail?: string): "TRANSIENT_DELIVERY_ERROR" | "PERMANENT_DELIVERY_ERROR" {
@@ -157,6 +159,24 @@ export async function POST(request: NextRequest) {
     leadSubmitted: true,
     eventKey: `lead:${referenceId}:${payload.clinicId ?? destination.clinicId ?? ""}`,
   });
+
+  try {
+    await insertEvent({
+      event_type: "clinic_message_submitted",
+      user_session_id: `server_${referenceId}`,
+      clinic_id: payload.clinicId ?? destination.clinicId ?? null,
+      region: payload.clinicRegion ?? destination.clinicRegion ?? null,
+      confidence_tier: payload.scanConfidenceLevel ?? null,
+      metadata: {
+        source: "api_contact_clinic",
+        country,
+        delivery_status: delivery.deliveryStatus,
+      },
+      timestamp: submittedAt,
+    });
+  } catch {
+    // keep non-blocking
+  }
 
   return NextResponse.json({
     ok: true,

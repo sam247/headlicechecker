@@ -170,6 +170,10 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
     if (!selectedClinicId) return undefined;
     return getClinics("ALL").find((c) => c.id === selectedClinicId)?.city;
   }, [selectedClinicId]);
+  const selectedClinicRegion = useMemo(() => {
+    if (!selectedClinicId) return undefined;
+    return getClinics("ALL").find((c) => c.id === selectedClinicId)?.region;
+  }, [selectedClinicId]);
 
   const reset = useCallback(() => {
     setStage("upload");
@@ -242,6 +246,10 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
 
   const runScan = useCallback(
     async (file: File) => {
+      void trackEvent({
+        event_type: "scan_started",
+        metadata: { source: "photo_checker" },
+      });
       setStage("scanning");
       setProgress(8);
       setScanError(null);
@@ -306,12 +314,22 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
         setScanResult(result);
 
         await trackEvent({
-          event: "scan_completed",
-          result_label: result.label,
-          confidence: result.confidenceLevel,
-          detectionCount: result.detections?.length,
-          topDetectionLabel: result.summary?.strongestLabel,
-          topDetectionConfidenceLevel: result.detections?.[0]?.confidenceLevel,
+          event_type: "scan_processed",
+          confidence_tier: result.confidenceLevel,
+          metadata: {
+            result_label: result.label,
+            detection_count: result.detections?.length ?? 0,
+            top_detection_label: result.summary?.strongestLabel,
+            top_detection_confidence: result.detections?.[0]?.confidenceLevel,
+          },
+        });
+        await trackEvent({
+          event_type: "confidence_generated",
+          confidence_tier: result.confidenceLevel,
+          metadata: {
+            result_label: result.label,
+            detection_count: result.detections?.length ?? 0,
+          },
         });
       } catch (error) {
         setScanErrorCode("UNKNOWN_ERROR");
@@ -328,7 +346,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
   const processFile = useCallback(
     (file: File) => {
       if (!file.type.startsWith("image/")) return;
-      void trackEvent({ event: "photo_upload_initiated", source: "photo_checker" });
+      void trackEvent({ event_type: "image_uploaded", metadata: { source: "photo_checker" } });
       const url = URL.createObjectURL(file);
       const img = new Image();
       img.onload = () => {
@@ -386,10 +404,12 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
     if (positiveShownTrackedRef.current === key) return;
     positiveShownTrackedRef.current = key;
     void trackEvent({
-      event: "positive_detection_shown",
-      label: scanResult.label,
-      confidence: scanResult.confidenceLevel,
-      source: "scan_result_panel",
+      event_type: "escalation_triggered",
+      confidence_tier: scanResult.confidenceLevel,
+      metadata: {
+        label: scanResult.label,
+        source: "scan_result_panel",
+      },
     });
   }, [stage, scanResult, isPositiveResult]);
   const displayPreview = scanPreview ?? preview;
@@ -605,7 +625,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                                     onClick={async () => {
                                       const next = !showMarkers;
                                       setShowMarkers(next);
-                                      await trackEvent({ event: "scan_overlay_toggled", enabled: next });
+                                      await trackEvent({ event_type: "scan_overlay_toggled", metadata: { enabled: next } });
                                     }}
                                   >
                                     {showMarkers ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
@@ -634,7 +654,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                                         }`}
                                         onClick={async () => {
                                           setMarkerFilter(item.key);
-                                          await trackEvent({ event: "scan_legend_filter_used", filter: item.key });
+                                          await trackEvent({ event_type: "scan_legend_filter_used", metadata: { filter: item.key } });
                                         }}
                                       >
                                         {item.label} ({item.count})
@@ -719,15 +739,10 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                         variant={isLowConfidencePositive ? "ghost" : "outline"}
                         onClick={async () => {
                           setShowClinicsModal(true);
-                          if (MODAL_LEAD_FLOW_ENABLED) {
-                            await trackEvent({ event: "clinic_modal_opened", label: scanResult?.label });
-                          }
                           await trackEvent({
-                            event: "view_clinics_clicked",
-                            label: scanResult?.label,
-                            source: "scan_result_panel",
-                            result_label: scanResult?.label,
-                            confidence: scanResult?.confidenceLevel,
+                            event_type: "clinic_finder_opened",
+                            confidence_tier: scanResult?.confidenceLevel,
+                            metadata: { source: "scan_result_panel", label: scanResult?.label },
                           });
                         }}
                       >
@@ -773,7 +788,10 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                 <Link
                   href="/find-clinics?view=list&country=US"
                   onClick={() => {
-                    void trackEvent({ event: "find_clinic_click", source: "scan_modal_full_page" });
+                    void trackEvent({
+                      event_type: "clinic_finder_opened",
+                      metadata: { source: "scan_modal_full_page" },
+                    });
                   }}
                 >
                   Open full page
@@ -790,7 +808,11 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
               onContactClinic={async (clinicId) => {
                 setSelectedClinicId(clinicId);
                 setContactPanelOpen(true);
-                await trackEvent({ event: "clinic_contact_panel_opened", clinicId, label: scanResult?.label });
+                await trackEvent({
+                  event_type: "clinic_contact_clicked",
+                  clinic_id: clinicId,
+                  metadata: { source: "scan_modal_contact_panel", label: scanResult?.label },
+                });
               }}
             />
             {MODAL_LEAD_FLOW_ENABLED && contactPanelOpen && (
@@ -818,6 +840,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                       clinicId={selectedClinicId}
                       clinicName={selectedClinicName}
                       clinicCity={selectedClinicCity}
+                      clinicRegion={selectedClinicRegion}
                       scanLabel={scanResult?.label}
                       scanConfidenceLevel={scanResult?.confidenceLevel}
                       indicatorCount={scanResult?.summary?.totalDetections}

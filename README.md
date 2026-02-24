@@ -6,7 +6,8 @@ Next.js front end for the Head Lice Checker photo screening tool and clinic find
 
 - **Next.js 14** (App Router), React 18, TypeScript
 - **Tailwind CSS**, shadcn/ui (Radix)
-- **Vercel Analytics** custom events (`@vercel/analytics`)
+- **Vercel Analytics** page analytics (`@vercel/analytics`)
+- **Server-side event capture** (`POST /api/event`) backed by Vercel Postgres
 - **Photo scan API** (`/api/scan`) — your YOLO inference (DETECTION_API_URL), DeepSeek vision, or stub
 
 ## Scripts
@@ -37,31 +38,40 @@ The find-clinics and for-clinics pages also show a **clinic listing enquiry** fo
 
 If email provider credentials are missing, lead routing gracefully returns a queued status to avoid silent lead loss.
 
-## Structured Analytics Table (Google Sheets)
+## Server-Side Events (Postgres)
 
-Phase 1 writes minimal conversion rows to an append-only Google Sheet. Configure:
+Primary event logging route:
 
-- `ANALYTICS_SHEET_ID`
-- `ANALYTICS_SHEET_TAB`
-- `ANALYTICS_METRICS_SHEET_TAB` (for event metrics like toolkit funnel events)
-- `GOOGLE_SERVICE_ACCOUNT_EMAIL`
-- `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`
+- `POST /api/event`
 
-Row shape:
+Payload:
 
-1. `timestamp`
-2. `user_country`
-3. `detection_outcome` (`clear`, `possible activity`, `high confidence`)
-4. `clinic_clicked`
-5. `lead_submitted`
+```json
+{
+  "event_type": "string",
+  "user_session_id": "string",
+  "clinic_id": "string (optional)",
+  "region": "string (optional)",
+  "confidence_tier": "string (optional)",
+  "metadata": {},
+  "timestamp": "ISO string"
+}
+```
 
-Toolkit event metrics rows (when enabled) use:
+Core canonical events:
 
-1. `timestamp`
-2. `event_name`
-3. `country`
-4. `reference_id`
-5. `asset_name`
+- Scan funnel: `scan_started`, `image_uploaded`, `scan_processed`, `confidence_generated`, `escalation_triggered`, `clinic_finder_opened`
+- Clinic engagement: `clinic_card_viewed`, `clinic_contact_clicked`, `clinic_directions_clicked`, `clinic_message_submitted`
+- Toolkit: `toolkit_unlock_submitted`, `toolkit_downloaded`, `toolkit_file_viewed`
+
+Storage:
+
+- Vercel Postgres table `events` (created automatically by server schema init)
+- Env required: `POSTGRES_URL`
+
+Legacy endpoint:
+
+- `POST /api/events` is deprecated and returns `410`.
 
 ## School Toolkit Funnel
 
@@ -135,9 +145,9 @@ Use this exact header row:
 
 | Name | Address 1 | Address 2 | Town | County | Postcode | Country | Telephone | Email | Website |
 
-Optional headers for featured placement and reviews:
+Optional headers for featured placement, partner metadata, and reviews:
 
-| Tier | Featured | Sponsored | Featured Rank | Review Stars | Review Count | Description | Google Business URL |
+| Tier | Featured | Sponsored | Featured Rank | Partner Status | Region Tag | Coverage Radius KM | Founding Partner | Premium Position | Onboarding Date | Lead Count | Last Lead At | Review Stars | Review Count | Description | Google Business URL |
 
 ### Mapping Notes
 
@@ -151,8 +161,25 @@ Optional headers for featured placement and reviews:
 - `Tier` supports explicit placement strategy: `featured` or `standard`
 - If `Tier` is blank, sync falls back to `Featured` (`YES` => `featured`, otherwise `standard`)
 - `Featured Rank` sorts sponsored clinics to the top (`1` highest)
+- `Partner Status` supports: `free | founding | verified | featured | exclusive`
+- `Region Tag` remains free-form string (not fixed list)
 - `Review Stars` (0-5) and `Review Count` render in finder cards
 - `Google Business URL` is stored as `gmbUrl` for manual enrichment
+
+## Admin Metrics
+
+Internal route:
+
+- `/admin/metrics`
+
+Current panels:
+
+- Scans per day
+- Escalations per day
+- Clinic clicks per region
+- Leads per clinic
+- Toolkit unlocks per day
+- Top regions by activity
 
 ## Clinic Pricing Labels
 
@@ -193,6 +220,6 @@ You can deploy the Next.js app to Vercel with **no local runs**. Vercel runs the
 
 ## Project structure
 
-- `app/` — layout, pages, `/api/scan` and `/api/scan/status` routes
+- `app/` — layout, pages, `/api/scan`, `/api/scan/status`, `/api/event`, `/admin/metrics`
 - `components/` — UI and features (PhotoChecker, ClinicFinder, etc.)
 - `lib/`, `hooks/` — utilities and hooks

@@ -6,6 +6,7 @@ import { getSchoolToolkitAssets } from "@/lib/data/school-toolkit";
 import { appendSchoolLeadRow } from "@/lib/server/school-leads-table";
 import { clientIp, isAllowedOrigin, normalizeEmail, redactEmail } from "@/lib/server/security";
 import { getRateLimitConfig, rateLimit } from "@/lib/server/rate-limit";
+import { insertEvent } from "@/lib/server/events-repo";
 
 const schema = z
   .object({
@@ -136,6 +137,26 @@ export async function POST(request: NextRequest) {
     assetName: "",
     eventKey: `school_toolkit_confirmation_email_sent:${referenceId}`,
   });
+
+  try {
+    const emailDomain = payload.email.includes("@") ? payload.email.split("@")[1]?.toLowerCase() ?? "" : "";
+    const trustFlag = Boolean(payload.trustName && payload.trustName.trim().length > 0);
+    await insertEvent({
+      event_type: "toolkit_unlock_submitted",
+      user_session_id: `server_${referenceId}`,
+      region: payload.country,
+      metadata: {
+        school_country: country,
+        school_role: payload.role,
+        email_domain: emailDomain,
+        trust_flag: trustFlag,
+        reference_id: referenceId,
+      },
+      timestamp: submittedAt,
+    });
+  } catch {
+    // keep non-blocking
+  }
 
   return NextResponse.json({
     ok: true,

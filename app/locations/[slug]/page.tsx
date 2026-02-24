@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import LocationClinicSection from "@/components/site/LocationClinicSection";
 import LongformContentPage from "@/components/site/LongformContentPage";
-import { getClinicsForLocationPage, getLocationPageBySlug, getLocationPages } from "@/lib/data/content";
+import { getLocationPageBySlug, getLocationPages } from "@/lib/data/content";
 import { breadcrumbJsonLd, clinicReviewJsonLd, faqJsonLd, localBusinessJsonLd, medicalWebPageJsonLd, pageMetadata, serviceJsonLd } from "@/lib/seo";
+import { getClinicsForLocationPageWithLeadStats } from "@/lib/server/clinics";
 
 export function generateStaticParams() {
   return getLocationPages().map((page) => ({ slug: page.slug }));
@@ -24,10 +25,10 @@ export function generateMetadata({ params }: LocationPageProps): Metadata {
   });
 }
 
-export default function LocationPage({ params }: LocationPageProps) {
+export default async function LocationPage({ params }: LocationPageProps) {
   const page = getLocationPageBySlug(params.slug);
   if (!page) notFound();
-  const nearbyClinics = getClinicsForLocationPage(page, 2, 6);
+  const nearbyClinics = await getClinicsForLocationPageWithLeadStats(page, 2, 6);
 
   const breadcrumb = breadcrumbJsonLd([
     { name: "Home", path: "/" },

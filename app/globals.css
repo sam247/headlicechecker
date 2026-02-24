@@ -166,6 +166,13 @@
     border: 1px solid hsl(var(--primary) / 0.35);
   }
 
+  .clinic-badge-standard {
+    @apply inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium tracking-wide;
+    border-color: hsl(var(--border));
+    background: hsl(var(--card));
+    color: hsl(var(--foreground));
+  }
+
   .clinic-stars {
     @apply inline-flex items-center gap-1 text-xs font-medium;
     color: hsl(var(--primary));

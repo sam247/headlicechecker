@@ -56,6 +56,12 @@ export default function SchoolToolkitGate({ assets }: { assets: SchoolToolkitAss
   const [referenceId, setReferenceId] = useState<string | null>(null);
   const [unlockedAssets, setUnlockedAssets] = useState<SchoolToolkitAsset[]>([]);
   const [countryTag, setCountryTag] = useState("unknown");
+  const [eventContext, setEventContext] = useState<{
+    school_country: string;
+    school_role: string;
+    email_domain: string;
+    trust_flag: boolean;
+  } | null>(null);
 
   const {
     register,
@@ -75,7 +81,7 @@ export default function SchoolToolkitGate({ assets }: { assets: SchoolToolkitAss
   });
 
   useEffect(() => {
-    void trackEvent({ event: "school_toolkit_page_view", source: "school_toolkit_page" });
+    void trackEvent({ event_type: "toolkit_file_viewed", metadata: { source: "school_toolkit_page" } });
   }, []);
 
   const email = watch("email");
@@ -107,11 +113,23 @@ export default function SchoolToolkitGate({ assets }: { assets: SchoolToolkitAss
     setUnlockedAssets(unlocked);
     setReferenceId(data.referenceId ?? null);
     setCountryTag(values.country || "unknown");
+    const emailDomain = values.email.includes("@") ? values.email.split("@")[1]?.toLowerCase() ?? "" : "";
+    const trustFlag = Boolean(values.trustName && values.trustName.trim().length > 0);
+    setEventContext({
+      school_country: values.country,
+      school_role: values.role,
+      email_domain: emailDomain,
+      trust_flag: trustFlag,
+    });
     await trackEvent({
-      event: "school_toolkit_form_submitted",
-      role: values.role,
-      country: values.country,
-      reference_id: data.referenceId,
+      event_type: "toolkit_unlock_submitted",
+      metadata: {
+        school_country: values.country,
+        school_role: values.role,
+        email_domain: emailDomain,
+        trust_flag: trustFlag,
+        reference_id: data.referenceId,
+      },
     });
   };
 
@@ -205,11 +223,14 @@ export default function SchoolToolkitGate({ assets }: { assets: SchoolToolkitAss
                       onClick={() => {
                         if (locked) return;
                         void trackEvent({
-                          event: "school_toolkit_file_downloaded",
-                          asset_name: asset.title,
-                          format: asset.format,
-                          reference_id: referenceId ?? undefined,
-                          country: countryTag,
+                          event_type: "toolkit_file_viewed",
+                          metadata: {
+                            asset_name: asset.title,
+                            format: asset.format,
+                            reference_id: referenceId ?? undefined,
+                            country: countryTag,
+                            ...eventContext,
+                          },
                         });
                       }}
                     >
@@ -223,11 +244,14 @@ export default function SchoolToolkitGate({ assets }: { assets: SchoolToolkitAss
                       onClick={() => {
                         if (locked) return;
                         void trackEvent({
-                          event: "school_toolkit_file_downloaded",
-                          asset_name: asset.title,
-                          format: asset.format,
-                          reference_id: referenceId ?? undefined,
-                          country: countryTag,
+                          event_type: "toolkit_downloaded",
+                          metadata: {
+                            asset_name: asset.title,
+                            format: asset.format,
+                            reference_id: referenceId ?? undefined,
+                            country: countryTag,
+                            ...eventContext,
+                          },
                         });
                       }}
                     >
