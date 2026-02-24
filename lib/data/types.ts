@@ -252,5 +252,6 @@ export interface ContentPage extends SeoMeta {
   professionalBoundaryDisclaimer: string;
   internalAnchors: string[];
   hubChildren?: string[];
+  image?: string;
   isPublished: boolean;
 }

@@ -46,6 +46,7 @@ export default function Home() {
     publishedAt: page.publishedAt,
     updatedAt: page.updatedAt,
     readMinutes: 10,
+    image: page.image,
   }));
 
   const homepageFaqJsonLd = faqJsonLd(

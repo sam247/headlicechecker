@@ -30,6 +30,7 @@ interface LatestGuideItem {
   publishedAt: string;
   updatedAt: string;
   readMinutes: number;
+  image?: string;
 }
 
 interface HomePageClientProps {
@@ -385,7 +386,7 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
                 <CardContent className="overflow-hidden p-0">
                   <Link href={guide.path} className="relative block aspect-[16/10] w-full bg-muted">
                     <Image
-                      src="/logo_new.png"
+                      src={guide.image ?? "/logo_new.png"}
                       alt={guide.title}
                       fill
                       className="object-cover"

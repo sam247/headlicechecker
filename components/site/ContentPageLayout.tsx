@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import StructuredEscalationModel from "@/components/site/StructuredEscalationModel";
@@ -23,6 +24,17 @@ export default function ContentPageLayout({ page }: ContentPageLayoutProps) {
         <div id="overview">
           <h1 className="section-title">{page.title}</h1>
           <p className="mt-4 section-copy">{page.intro}</p>
+          {page.image ? (
+            <figure className="mt-6 overflow-hidden rounded-xl border border-border">
+              <Image
+                src={page.image}
+                alt={page.title}
+                width={1200}
+                height={700}
+                className="h-auto w-full object-cover"
+              />
+            </figure>
+          ) : null}
           <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Published {formatDate(page.publishedAt)} · Updated {formatDate(page.updatedAt)}
           </p>
@@ -38,6 +50,15 @@ export default function ContentPageLayout({ page }: ContentPageLayoutProps) {
           </div>
         </div>
 
+        {page.pageType === "cluster" && page.escalationModelRequired ? (
+          <>
+            <p className="mt-6 text-sm text-muted-foreground">
+              This structured model explains how detection moves toward confirmation in practical stages.
+            </p>
+            <StructuredEscalationModel />
+          </>
+        ) : null}
+
         <div className="mt-6 flex flex-wrap gap-3 text-sm">
           {page.internalAnchors.map((anchor) => (
             <Link key={anchor} href={`#${anchor}`} className="rounded-full border border-border px-3 py-1 hover:border-primary">
@@ -46,9 +67,7 @@ export default function ContentPageLayout({ page }: ContentPageLayoutProps) {
           ))}
         </div>
 
-        {page.escalationModelRequired ? <StructuredEscalationModel /> : null}
-
-        <div id="next-steps" className="mt-8 space-y-5">
+        <div id="next-steps" className="mt-8 space-y-8">
           {page.sections.map((section) => {
             const anchor = section.heading
               .toLowerCase()
@@ -56,23 +75,21 @@ export default function ContentPageLayout({ page }: ContentPageLayoutProps) {
               .trim()
               .replace(/\\s+/g, "-");
             return (
-              <Card key={section.heading} id={anchor}>
-                <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold">{section.heading}</h2>
-                  <div className="mt-3 space-y-3 text-sm leading-7 text-muted-foreground md:text-base">
-                    {section.paragraphs.map((paragraph) => (
-                      <p key={paragraph}>{paragraph}</p>
+              <section key={section.heading} id={anchor} className="border-b border-border/60 pb-6">
+                <h2 className="text-2xl font-semibold">{section.heading}</h2>
+                <div className="mt-3 space-y-3 text-base leading-8 text-muted-foreground">
+                  {section.paragraphs.map((paragraph, index) => (
+                    <p key={`${section.heading}-${index}`}>{paragraph}</p>
+                  ))}
+                </div>
+                {section.bullets?.length ? (
+                  <ul className="mt-4 list-disc space-y-2 pl-5 text-base leading-8 text-muted-foreground">
+                    {section.bullets.map((bullet) => (
+                      <li key={bullet}>{bullet}</li>
                     ))}
-                  </div>
-                  {section.bullets?.length ? (
-                    <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-muted-foreground md:text-base">
-                      {section.bullets.map((bullet) => (
-                        <li key={bullet}>{bullet}</li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </CardContent>
-              </Card>
+                  </ul>
+                ) : null}
+              </section>
             );
           })}
         </div>

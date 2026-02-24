@@ -52,12 +52,16 @@ export function validateContentGovernance(pages: ContentPage[] = CONTENT_PAGES):
     assert(page.internalLinks.some((link) => link.type === "conversion"), `${page.path} missing conversion link.`);
     assert(page.internalLinks.some((link) => link.type === "tool"), `${page.path} missing tool link.`);
     assert(page.toolCtaAboveFold, `${page.path} missing above-the-fold tool CTA flag.`);
-    assert(page.escalationModelRequired, `${page.path} must require standard escalation model.`);
-    assert(
-      page.escalationModelText ===
-        "Detection -> Confidence -> Monitor -> Recheck -> Professional Confirmation -> Urgent Medical Review (if symptoms escalate)",
-      `${page.path} uses non-standard escalation wording.`
-    );
+    if (page.pageType === "cluster") {
+      assert(page.escalationModelRequired, `${page.path} cluster page must require standard escalation model.`);
+      assert(
+        page.escalationModelText ===
+          "Detection -> Confidence -> Monitor -> Recheck -> Professional Confirmation -> Urgent Medical Review (if symptoms escalate)",
+        `${page.path} uses non-standard escalation wording.`
+      );
+    } else {
+      assert(!page.escalationModelRequired, `${page.path} should not require escalation module by page type.`);
+    }
     assert(page.internalAnchors.length >= 3, `${page.path} must include internal anchor sections.`);
     assert(page.faqs.length >= 4, `${page.path} must include at least 4 FAQs.`);
     assert(page.professionalBoundaryDisclaimer.length > 0, `${page.path} missing professional boundary disclaimer.`);

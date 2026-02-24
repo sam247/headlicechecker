@@ -97,7 +97,7 @@ export function articleJsonLd(post: BlogPost, pathOverride?: string) {
       name: post.author,
     },
     keywords: post.keywords.join(", "),
-    mainEntityOfPage: canonical(pathOverride ?? `/blog/${post.slug}`),
+    mainEntityOfPage: canonical(pathOverride ?? `/${post.slug}`),
     publisher: {
       "@type": "Organization",
       name: SITE_NAME,

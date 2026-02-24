@@ -14,6 +14,7 @@ type SeedPage = {
   pageType: ContentPage["pageType"];
   publishOn: string;
   summaryFocus: string;
+  image?: string;
 };
 
 interface SectionPlan {
@@ -247,25 +248,22 @@ function sectionPlansFor(seed: SeedPage, pillar: ContentPage["pillar"]): Section
 function buildParagraph(seed: SeedPage, pillar: ContentPage["pillar"], plan: SectionPlan, variant: number): string {
   const details = PAGE_DETAIL_POINTS[seed.path] ?? PAGE_DETAIL_POINTS[`/${pillar}`] ?? [];
   const detail = details[variant % Math.max(details.length, 1)] ?? seed.summaryFocus.toLowerCase();
-  const corridor =
-    pillar === "professional"
-      ? "When comparing verified regional clinics, the aim is safe routing and practical clarity rather than sales pressure."
-      : pillar === "ai-detection"
-        ? "AI output is an indicative triage signal and should always be interpreted with confidence boundaries."
-        : "Symptom checks are useful for triage but do not replace professional confirmation when risk stays elevated.";
-
-  const base = [
-    `${seed.title} is often searched during uncertainty. ${plan.prompt} In this context, a common decision factor is that ${detail}. This guide keeps language calm, practical, and non-diagnostic so families can make time-sensitive decisions without panic.`,
-    `A stronger decision comes from repeatable evidence capture: good light, parted hair close to the scalp, and consistent comparison across likely zones. ${corridor} In practical terms, ${detail}, which is why consistency matters more than one fast check.`,
-    `In real households, mixed signals are common. The safest response is to separate confidence from urgency, repeat checks when quality is low, and escalate when patterns persist. This page supports practical triage flow, and it reflects that ${detail}.`,
-    `For UK-first guidance with US-secondary relevance, the same principle applies: use clear evidence, apply structured escalation, and avoid one-step assumptions. Where needed, route early to verified clinics, because ${detail}.`,
-  ];
-  return base[variant % base.length];
+  if (variant % 4 === 0) {
+    return `${plan.prompt} In day-to-day use, one of the most important realities is that ${detail}. Families often search this topic when they need a practical answer quickly, so this section keeps language plain and decision-focused rather than technical or alarm-driven. The goal is to reduce uncertainty with a repeatable process, document what was actually observed, and avoid assumptions based on a single low-quality check. ${seed.summaryFocus} This supports calmer decisions at home and clearer communication if professional follow-up becomes necessary.`;
+  }
+  if (variant % 4 === 1) {
+    return `Use a consistent method each time: strong lighting, hair parted close to the scalp, and checks repeated across the same high-probability zones. Consistency matters because mixed evidence is common, especially when families are tired, short on time, or checking more than one child. A structured method reduces both false reassurance and unnecessary panic actions, and it creates better continuity between scan output, manual observations, and later escalation decisions. Clear process is usually more valuable than rushing through multiple unstructured checks.`;
+  }
+  if (variant % 4 === 2) {
+    return `Keep communication concise and factual, especially for school and household updates. Record when symptoms started, what was seen, and how confidence changed after recheck. This evidence-first approach improves decision quality because it separates urgency from uncertainty, helping families avoid repeated treatment cycles driven by guesswork. When professional teams receive clear timelines and consistent observations, triage is faster, advice is more targeted, and follow-up planning is usually more efficient for everyone involved.`;
+  }
+  return `When confidence remains unclear or likely indicators persist, follow the fixed escalation pathway instead of escalating emotionally. Move from detection signals to confidence review, then monitor and recheck before deciding on professional confirmation unless symptoms are clearly worsening. This keeps the process proportionate and medically responsible, while still allowing rapid escalation when needed. Where practical, use verified clinic routes and location pathways so next steps are specific, time-bound, and easier to execute without delay.`;
 }
 
 function buildSections(seed: SeedPage, pillar: ContentPage["pillar"]): ContentSection[] {
   return sectionPlansFor(seed, pillar).map((plan, index) => {
-    const heading = `${seed.title}: ${plan.heading}`;
+    const baseTitle = seed.title.split(":")[0].replace(/\?$/, "");
+    const heading = seed.pageType === "hub" ? plan.heading : `${plan.heading} for ${baseTitle}`;
     const paragraphs = [0, 1, 2, 3].map((variant) => buildParagraph(seed, pillar, plan, variant + index));
     return {
       heading,
@@ -593,6 +591,7 @@ const LEGACY_MIGRATED_SEEDS: SeedPage[] = [
     pageType: "legacy-migrated",
     publishOn: "2026-02-24",
     summaryFocus: "Migrated legacy article aligned to professional folder architecture.",
+    image: "/blog_images/head-lice-treatment-for-adults.jpg",
   },
   {
     path: "/symptoms/what-are-the-first-signs-of-head-lice",
@@ -605,6 +604,7 @@ const LEGACY_MIGRATED_SEEDS: SeedPage[] = [
     pageType: "legacy-migrated",
     publishOn: "2026-02-24",
     summaryFocus: "Migrated legacy article aligned to symptoms folder architecture.",
+    image: "/blog_images/what-are-the-first-signs-of-head-lice.jpg",
   },
   {
     path: "/professional/best-over-the-counter-head-lice-treatment-for-sensitive-skin",
@@ -617,6 +617,7 @@ const LEGACY_MIGRATED_SEEDS: SeedPage[] = [
     pageType: "legacy-migrated",
     publishOn: "2026-02-24",
     summaryFocus: "Migrated legacy article aligned to professional folder architecture.",
+    image: "/blog_images/best-over-the-counter-head-lice-treatment-for-sensitive-skin.jpg",
   },
 ];
 
@@ -684,12 +685,13 @@ function toContentPage(seed: SeedPage, allPaths: string[]): ContentPage {
     sections,
     faqs: baseFaq,
     internalLinks,
-    escalationModelRequired: true,
+    escalationModelRequired: seed.pageType === "cluster",
     escalationModelText: ESCALATION_MODEL_TEXT,
     toolCtaAboveFold: true,
     professionalBoundaryDisclaimer:
       "This content is educational and non-diagnostic. It supports triage and escalation planning but does not replace qualified medical or clinical assessment.",
     internalAnchors: ["overview", "escalation-model", "next-steps", "faq"],
+    ...(seed.image ? { image: seed.image } : {}),
     isPublished: true,
   };
 }
@@ -700,13 +702,25 @@ const contentPages = ALL_SEEDS.map((seed) => toContentPage(seed, allPaths));
 
 const HUB_CHILDREN: Record<ContentPage["pillar"], string[]> = {
   "ai-detection": contentPages
-    .filter((page) => page.pillar === "ai-detection" && (page.pageType === "cluster" || page.pageType === "support"))
+    .filter(
+      (page) =>
+        page.pillar === "ai-detection" &&
+        (page.pageType === "cluster" || page.pageType === "support" || page.pageType === "legacy-migrated")
+    )
     .map((page) => page.path),
   professional: contentPages
-    .filter((page) => page.pillar === "professional" && (page.pageType === "cluster" || page.pageType === "support"))
+    .filter(
+      (page) =>
+        page.pillar === "professional" &&
+        (page.pageType === "cluster" || page.pageType === "support" || page.pageType === "legacy-migrated")
+    )
     .map((page) => page.path),
   symptoms: contentPages
-    .filter((page) => page.pillar === "symptoms" && (page.pageType === "cluster" || page.pageType === "support"))
+    .filter(
+      (page) =>
+        page.pillar === "symptoms" &&
+        (page.pageType === "cluster" || page.pageType === "support" || page.pageType === "legacy-migrated")
+    )
     .map((page) => page.path),
 };
 
