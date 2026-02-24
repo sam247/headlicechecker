@@ -37,7 +37,16 @@
   - Metadata: `school_country`, `school_role`, `email_domain`, `trust_flag`
 - `toolkit_downloaded`
   - Trigger: toolkit download action
-  - Metadata: `school_country`, `school_role`, `email_domain`, `trust_flag`, `asset_name`
+  - Metadata: `school_country`, `school_role`, `email_domain`, `trust_flag`, `asset_name`, `asset_id`, `download_sequence_number`, `is_school_domain`, `domain_type`
 - `toolkit_file_viewed`
   - Trigger: toolkit view action
-  - Metadata: `school_country`, `school_role`, `email_domain`, `trust_flag`, `asset_name`
+  - Metadata: `school_country`, `school_role`, `email_domain`, `trust_flag`, `asset_name`, `asset_id`, `is_school_domain`, `domain_type`
+- `toolkit_download_notify_success`
+  - Trigger: server-side notification email for toolkit download sent successfully
+  - Metadata: `reference_id`, `asset_id`, `provider`, `delivery_status`
+- `toolkit_download_notify_failed`
+  - Trigger: server-side notification email for toolkit download failed
+  - Metadata: `reference_id`, `asset_id`, `provider?`, `error?`
+- `toolkit_download_rate_limited`
+  - Trigger: download endpoint soft-abuse guard blocked request
+  - Metadata: `limiter_dimension`, `reference_id`, `token_hash`

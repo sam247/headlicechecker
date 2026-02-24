@@ -78,6 +78,22 @@ export type SchoolToolkitLeadPayload = {
   toolkitAssets: Array<{ id: string; title: string; href: string }>;
 };
 
+export type ToolkitDownloadNotificationPayload = {
+  referenceId: string;
+  assetId: string;
+  assetName: string;
+  mode: "download" | "view";
+  downloadSequenceNumber: number;
+  emailDomain: string;
+  isSchoolDomain: boolean;
+  domainType: "school" | "trust" | "generic" | "unknown";
+  schoolCountry: string;
+  schoolRole: string;
+  trustFlag: boolean;
+  requestedAt: string;
+  ipCountry?: string;
+};
+
 function buildTextBody(payload: LeadPayload, destination: LeadDestination): string {
   return [
     `Reference: ${payload.referenceId}`,
@@ -265,5 +281,31 @@ export async function deliverSchoolToolkitEmail(
   return sendEmail(subject, text, to, {
     from: process.env.SCHOOL_TOOLKIT_CONFIRMATION_FROM ?? process.env.LEAD_FROM_EMAIL,
     bcc: process.env.SCHOOL_TOOLKIT_OPS_BCC,
+  });
+}
+
+export async function deliverToolkitDownloadNotification(
+  payload: ToolkitDownloadNotificationPayload
+): Promise<LeadDeliveryResult> {
+  const to = process.env.TOOLKIT_DOWNLOAD_NOTIFY_TO ?? "";
+  const subject = `Toolkit ${payload.mode}: ${payload.assetName} (${payload.referenceId})`;
+  const text = [
+    `Reference: ${payload.referenceId}`,
+    `Asset ID: ${payload.assetId}`,
+    `Asset Name: ${payload.assetName}`,
+    `Mode: ${payload.mode}`,
+    `Download sequence number: ${payload.downloadSequenceNumber}`,
+    `Email domain: ${payload.emailDomain || "unknown"}`,
+    `School domain: ${payload.isSchoolDomain ? "true" : "false"}`,
+    `Domain type: ${payload.domainType}`,
+    `School country: ${payload.schoolCountry || "unknown"}`,
+    `School role: ${payload.schoolRole || "unknown"}`,
+    `Trust flag: ${payload.trustFlag ? "true" : "false"}`,
+    `Requested at: ${payload.requestedAt}`,
+    `IP country: ${payload.ipCountry ?? "unknown"}`,
+  ].join("\n");
+
+  return sendEmail(subject, text, to, {
+    from: process.env.TOOLKIT_DOWNLOAD_NOTIFY_FROM ?? process.env.LEAD_FROM_EMAIL,
   });
 }

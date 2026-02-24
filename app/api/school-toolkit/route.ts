@@ -7,6 +7,7 @@ import { appendSchoolLeadRow } from "@/lib/server/school-leads-table";
 import { clientIp, isAllowedOrigin, normalizeEmail, redactEmail } from "@/lib/server/security";
 import { getRateLimitConfig, rateLimit } from "@/lib/server/rate-limit";
 import { insertEvent } from "@/lib/server/events-repo";
+import { createDownloadToken } from "@/lib/server/toolkit-download";
 
 const schema = z
   .object({
@@ -158,10 +159,21 @@ export async function POST(request: NextRequest) {
     // keep non-blocking
   }
 
+  const emailDomain = payload.email.includes("@") ? payload.email.split("@")[1]?.toLowerCase() ?? "" : "";
+  const trustFlag = Boolean(payload.trustName && payload.trustName.trim().length > 0);
+  const downloadToken = createDownloadToken({
+    referenceId,
+    emailDomain,
+    schoolCountry: country,
+    schoolRole: payload.role,
+    trustFlag,
+  });
+
   return NextResponse.json({
     ok: true,
     referenceId,
     deliveryStatus: delivery.deliveryStatus,
+    downloadToken,
     assets,
   });
 }

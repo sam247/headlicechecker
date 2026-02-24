@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import type { SchoolToolkitAsset } from "@/lib/data/school-toolkit";
-import { trackEvent } from "@/lib/data/events";
 
 const schema = z.object({
   schoolName: z.string().min(2, "School name is required"),
@@ -26,6 +25,7 @@ type SchoolToolkitResponse = {
   ok: boolean;
   referenceId?: string;
   deliveryStatus?: "sent" | "queued" | "failed";
+  downloadToken?: string | null;
   assets?: SchoolToolkitAsset[];
   code?: "VALIDATION_ERROR" | "RATE_LIMITED" | "TRANSIENT_DELIVERY_ERROR" | "PERMANENT_DELIVERY_ERROR";
 };
@@ -53,15 +53,10 @@ function isInstitutionalEmail(email: string): boolean {
 
 export default function SchoolToolkitGate({ assets }: { assets: SchoolToolkitAsset[] }) {
   const [serverError, setServerError] = useState<string | null>(null);
+  const [tokenError, setTokenError] = useState<string | null>(null);
   const [referenceId, setReferenceId] = useState<string | null>(null);
   const [unlockedAssets, setUnlockedAssets] = useState<SchoolToolkitAsset[]>([]);
-  const [countryTag, setCountryTag] = useState("unknown");
-  const [eventContext, setEventContext] = useState<{
-    school_country: string;
-    school_role: string;
-    email_domain: string;
-    trust_flag: boolean;
-  } | null>(null);
+  const [downloadToken, setDownloadToken] = useState<string | null>(null);
 
   const {
     register,
@@ -80,16 +75,26 @@ export default function SchoolToolkitGate({ assets }: { assets: SchoolToolkitAss
     },
   });
 
-  useEffect(() => {
-    void trackEvent({ event_type: "toolkit_file_viewed", metadata: { source: "school_toolkit_page" } });
-  }, []);
-
   const email = watch("email");
-  const selectedCountry = watch("country");
   const institutional = useMemo(() => isInstitutionalEmail(email ?? ""), [email]);
+
+  const buildToolkitUrl = useMemo(
+    () =>
+      (assetId: string, mode: "download" | "view") => {
+        if (!downloadToken) return "";
+        const params = new URLSearchParams({
+          asset: assetId,
+          token: downloadToken,
+          mode,
+        });
+        return `/api/toolkit/download?${params.toString()}`;
+      },
+    [downloadToken]
+  );
 
   const onSubmit = async (values: FormValues) => {
     setServerError(null);
+    setTokenError(null);
     const res = await fetch("/api/school-toolkit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -112,25 +117,11 @@ export default function SchoolToolkitGate({ assets }: { assets: SchoolToolkitAss
     const unlocked = data.assets?.length ? data.assets : assets;
     setUnlockedAssets(unlocked);
     setReferenceId(data.referenceId ?? null);
-    setCountryTag(values.country || "unknown");
-    const emailDomain = values.email.includes("@") ? values.email.split("@")[1]?.toLowerCase() ?? "" : "";
-    const trustFlag = Boolean(values.trustName && values.trustName.trim().length > 0);
-    setEventContext({
-      school_country: values.country,
-      school_role: values.role,
-      email_domain: emailDomain,
-      trust_flag: trustFlag,
-    });
-    await trackEvent({
-      event_type: "toolkit_unlock_submitted",
-      metadata: {
-        school_country: values.country,
-        school_role: values.role,
-        email_domain: emailDomain,
-        trust_flag: trustFlag,
-        reference_id: data.referenceId,
-      },
-    });
+    setDownloadToken(data.downloadToken ?? null);
+    if (!data.downloadToken) {
+      setTokenError("Toolkit unlocked but secure links are not available yet. Please refresh and try again.");
+    }
+
   };
 
   return (
@@ -207,53 +198,27 @@ export default function SchoolToolkitGate({ assets }: { assets: SchoolToolkitAss
               Reference: <span className="font-medium">{referenceId}</span>
             </p>
           )}
+          {tokenError && <p className="mt-2 text-sm text-amber-700">{tokenError}</p>}
           <div className="mt-4 space-y-3">
             {(unlockedAssets.length > 0 ? unlockedAssets : assets).map((asset) => {
-              const locked = unlockedAssets.length === 0;
+              const locked = unlockedAssets.length === 0 || !downloadToken;
               return (
                 <div key={asset.id} className="rounded-xl border border-border px-4 py-3">
                   <p className="text-sm font-semibold">{asset.title}</p>
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">{asset.format}</p>
                   <div className="mt-2 flex items-center gap-3 text-sm">
                     <a
-                      href={locked ? undefined : asset.href}
+                      href={locked ? undefined : buildToolkitUrl(asset.id, "view")}
                       target="_blank"
                       rel="noreferrer"
                       className={locked ? "pointer-events-none text-muted-foreground" : "inline-flex items-center gap-1 text-primary hover:underline"}
-                      onClick={() => {
-                        if (locked) return;
-                        void trackEvent({
-                          event_type: "toolkit_file_viewed",
-                          metadata: {
-                            asset_name: asset.title,
-                            format: asset.format,
-                            reference_id: referenceId ?? undefined,
-                            country: countryTag,
-                            ...eventContext,
-                          },
-                        });
-                      }}
                     >
                       <ExternalLink className="h-4 w-4" />
                       View
                     </a>
                     <a
-                      href={locked ? undefined : asset.href}
-                      download={!locked}
+                      href={locked ? undefined : buildToolkitUrl(asset.id, "download")}
                       className={locked ? "pointer-events-none text-muted-foreground" : "inline-flex items-center gap-1 text-primary hover:underline"}
-                      onClick={() => {
-                        if (locked) return;
-                        void trackEvent({
-                          event_type: "toolkit_downloaded",
-                          metadata: {
-                            asset_name: asset.title,
-                            format: asset.format,
-                            reference_id: referenceId ?? undefined,
-                            country: countryTag,
-                            ...eventContext,
-                          },
-                        });
-                      }}
                     >
                       <Download className="h-4 w-4" />
                       Download

@@ -29,6 +29,15 @@ export interface ClinicLeadPoint {
   last_lead_at: string;
 }
 
+export interface EventCountPoint {
+  count: number;
+}
+
+export interface NameCountPoint {
+  name: string;
+  count: number;
+}
+
 function normalizeMetadata(input: EventInsertInput): Record<string, unknown> {
   const metadata = { ...(input.metadata ?? {}) };
   if (input.confidence_tier && metadata.confidence_tier == null) {
@@ -116,6 +125,91 @@ export async function queryLeadsPerClinic(): Promise<ClinicLeadPoint[]> {
     group by clinic_id
     order by lead_count desc, clinic_id asc
     limit 200
+  `;
+  return result.rows;
+}
+
+export async function queryEventTotal(eventType: string): Promise<number> {
+  if (!isPostgresConfigured()) return 0;
+  await ensureEventsTable();
+  const result = await sql<EventCountPoint>`
+    select count(*)::int as count
+    from events
+    where event_type = ${eventType}
+  `;
+  return result.rows[0]?.count ?? 0;
+}
+
+export async function countToolkitDownloadsForReference(referenceId: string): Promise<number> {
+  if (!isPostgresConfigured()) return 0;
+  await ensureEventsTable();
+  const result = await sql<EventCountPoint>`
+    select count(*)::int as count
+    from events
+    where event_type = 'toolkit_downloaded'
+      and metadata->>'reference_id' = ${referenceId}
+  `;
+  return result.rows[0]?.count ?? 0;
+}
+
+export async function queryToolkitDomainTypeDistribution(): Promise<NameCountPoint[]> {
+  if (!isPostgresConfigured()) return [];
+  await ensureEventsTable();
+  const result = await sql<NameCountPoint>`
+    select
+      coalesce(nullif(trim(metadata->>'domain_type'), ''), 'unknown') as name,
+      count(*)::int as count
+    from events
+    where event_type = 'toolkit_downloaded'
+    group by 1
+    order by 2 desc, 1 asc
+  `;
+  return result.rows;
+}
+
+export async function queryToolkitTopEmailDomains(limit = 10): Promise<NameCountPoint[]> {
+  if (!isPostgresConfigured()) return [];
+  await ensureEventsTable();
+  const result = await sql<NameCountPoint>`
+    select
+      coalesce(nullif(trim(metadata->>'email_domain'), ''), 'unknown') as name,
+      count(*)::int as count
+    from events
+    where event_type = 'toolkit_downloaded'
+    group by 1
+    order by 2 desc, 1 asc
+    limit ${Math.max(1, Math.min(limit, 100))}
+  `;
+  return result.rows;
+}
+
+export async function queryToolkitTopAssets(limit = 10): Promise<NameCountPoint[]> {
+  if (!isPostgresConfigured()) return [];
+  await ensureEventsTable();
+  const result = await sql<NameCountPoint>`
+    select
+      coalesce(nullif(trim(metadata->>'asset_name'), ''), 'unknown') as name,
+      count(*)::int as count
+    from events
+    where event_type = 'toolkit_downloaded'
+    group by 1
+    order by 2 desc, 1 asc
+    limit ${Math.max(1, Math.min(limit, 100))}
+  `;
+  return result.rows;
+}
+
+export async function queryToolkitSchoolDomainBreakdown(): Promise<NameCountPoint[]> {
+  if (!isPostgresConfigured()) return [];
+  await ensureEventsTable();
+  const result = await sql<NameCountPoint>`
+    select
+      case when lower(coalesce(metadata->>'is_school_domain', 'false')) = 'true' then 'school' else 'non_school' end as name,
+      count(*)::int as count
+    from events
+    where event_type = 'toolkit_downloaded'
+    group by 1
+    order by 2 desc, 1 asc
   `;
   return result.rows;
 }

@@ -63,6 +63,7 @@ Core canonical events:
 - Scan funnel: `scan_started`, `image_uploaded`, `scan_processed`, `confidence_generated`, `escalation_triggered`, `clinic_finder_opened`
 - Clinic engagement: `clinic_card_viewed`, `clinic_contact_clicked`, `clinic_directions_clicked`, `clinic_message_submitted`
 - Toolkit: `toolkit_unlock_submitted`, `toolkit_downloaded`, `toolkit_file_viewed`
+- Toolkit reliability/abuse: `toolkit_download_notify_success`, `toolkit_download_notify_failed`, `toolkit_download_rate_limited`
 
 Storage:
 
@@ -82,6 +83,7 @@ The school toolkit landing page is:
 Gated submissions post to:
 
 - `POST /api/school-toolkit`
+- `GET /api/toolkit/download?asset=<asset_id>&token=<download_token>&mode=<download|view>`
 
 Required fields:
 
@@ -95,6 +97,7 @@ Optional fields:
 - `trustName`
 
 On success, users receive immediate file access and confirmation email delivery.
+Unlock responses now also return a `downloadToken`, used to generate tokenized view/download links routed through `/api/toolkit/download`.
 
 ### SchoolLeads Table (Google Sheets)
 
@@ -104,6 +107,10 @@ Configure:
 - `SCHOOL_LEADS_SHEET_TAB`
 - `SCHOOL_TOOLKIT_CONFIRMATION_FROM` (optional; falls back to `LEAD_FROM_EMAIL`)
 - `SCHOOL_TOOLKIT_OPS_BCC` (ops copy destination)
+- `TOOLKIT_DOWNLOAD_NOTIFY_TO` (download notification recipient, e.g. `info@headlicechecker.com`)
+- `TOOLKIT_DOWNLOAD_NOTIFY_FROM` (optional sender override)
+- `TOOLKIT_DOWNLOAD_TOKEN_SECRET`
+- `TOOLKIT_DOWNLOAD_TOKEN_TTL_MINUTES` (default `1440`)
 
 `SchoolLeads` columns written by the API:
 
@@ -180,6 +187,14 @@ Current panels:
 - Leads per clinic
 - Toolkit unlocks per day
 - Top regions by activity
+- Toolkit conversion snapshot (unlocks, downloads, download rate %)
+- Download notification reliability (success, failed, success rate %)
+- Domain classification and top toolkit asset/domain insights
+
+## Toolkit Storage Note
+
+Current implementation uses tokenized delivery and server-side transactional logging for gated toolkit actions.  
+Because toolkit files still exist under public static paths, direct URL access remains possible until private storage migration (signed URL model).
 
 ## Clinic Pricing Labels
 
