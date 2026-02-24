@@ -38,8 +38,11 @@ const footerColumns = [
     ],
   },
   {
-    title: "Downloads",
+    title: "Resources",
     links: [
+      { label: "AI Detection Hub", href: "/ai-detection" },
+      { label: "Professional Hub", href: "/professional" },
+      { label: "Symptoms Hub", href: "/symptoms" },
       { label: "School Response Toolkit", href: "/school-head-lice-toolkit" },
       { label: "Parent Notice Template", href: "/for-schools#downloads" },
       { label: "Classroom Response Checklist", href: "/for-schools#downloads" },
