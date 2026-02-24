@@ -20,6 +20,7 @@ import type {
   ClinicPartnerStatus,
   ClinicTier,
   ContentPage,
+  ContentPillar,
   EvergreenPage,
   FaqItem,
   HomePageContent,
@@ -27,6 +28,12 @@ import type {
   SiteCopy,
   TrustPage,
 } from "@/lib/data/types";
+
+const HOMEPAGE_FEATURED_GUIDE_PATHS = [
+  "/professional/head-lice-treatment-for-adults",
+  "/symptoms/what-are-the-first-signs-of-head-lice",
+  "/professional/best-over-the-counter-head-lice-treatment-for-sensitive-skin",
+] as const;
 
 function normalizeClinicTier(clinic: Clinic): ClinicTier {
   if (clinic.partner_status === "featured") return "featured";
@@ -160,6 +167,17 @@ export function getLatestGuides(limit = 3): ContentPage[] {
     .filter((page) => page.pageType !== "hub")
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
     .slice(0, limit);
+}
+
+export function getHomepageFeaturedGuides(): ContentPage[] {
+  const byPath = new Map(getContentPages().map((page) => [page.path, page] as const));
+  return HOMEPAGE_FEATURED_GUIDE_PATHS.map((path) => byPath.get(path)).filter((page): page is ContentPage => Boolean(page));
+}
+
+export function getClusterPagesForPillar(pillar: ContentPillar): ContentPage[] {
+  return getContentPages()
+    .filter((page) => page.pillar === pillar && page.pageType === "cluster")
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 }
 
 export function getSiteCopy(): SiteCopy {

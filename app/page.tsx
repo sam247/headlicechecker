@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import HomePageClient from "@/components/site/HomePageClient";
-import { getHomePageContent, getLatestGuides, getSiteCopy } from "@/lib/data/content";
+import { getHomePageContent, getHomepageFeaturedGuides, getSiteCopy } from "@/lib/data/content";
 import { canonical, faqJsonLd, medicalWebPageJsonLd, organizationJsonLd, serviceJsonLd, websiteJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 export default function Home() {
   const homeContent = getHomePageContent();
   const siteCopy = getSiteCopy();
-  const latestGuides = getLatestGuides(3).map((page) => ({
+  const latestGuides = getHomepageFeaturedGuides().map((page) => ({
     path: page.path,
     title: page.title,
     description: page.description,
