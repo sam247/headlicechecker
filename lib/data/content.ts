@@ -28,6 +28,7 @@ import type {
   SiteCopy,
   TrustPage,
 } from "@/lib/data/types";
+import { isVerifiedRegionalPartner } from "@/lib/data/clinic-partner";
 
 const HOMEPAGE_FEATURED_GUIDE_PATHS = [
   "/professional/head-lice-treatment-for-adults",
@@ -99,6 +100,28 @@ export function sortClinicsByTier(clinics: Clinic[]): Clinic[] {
   });
 }
 
+export function sortClinicsForDirectory(clinics: Clinic[]): Clinic[] {
+  return clinics.slice().sort((a, b) => {
+    const aVerified = isVerifiedRegionalPartner(a) ? 1 : 0;
+    const bVerified = isVerifiedRegionalPartner(b) ? 1 : 0;
+    if (aVerified !== bVerified) return bVerified - aVerified;
+
+    if (aVerified === 1 && bVerified === 1) {
+      const byPremiumPosition = premiumPosition(a) - premiumPosition(b);
+      if (byPremiumPosition !== 0) return byPremiumPosition;
+
+      const aFeatured = a.tier === "featured" ? 1 : 0;
+      const bFeatured = b.tier === "featured" ? 1 : 0;
+      if (aFeatured !== bFeatured) return bFeatured - aFeatured;
+      if (aFeatured === 1 && bFeatured === 1) return featuredRank(a) - featuredRank(b);
+    }
+
+    const byName = a.name.localeCompare(b.name);
+    if (byName !== 0) return byName;
+    return a.region.localeCompare(b.region);
+  });
+}
+
 export function applyFeaturedCap(clinics: Clinic[], maxFeatured = 2): Clinic[] {
   if (maxFeatured < 0) return clinics.slice();
   let featuredSeen = 0;
@@ -124,7 +147,7 @@ export function getClinicsForLocationPage(page: LocationSeoPage, maxFeatured = 2
   });
 
   const source = primary.length > 0 ? primary : inCountry;
-  const ranked = applyFeaturedCap(sortClinicsByTier(source), maxFeatured);
+  const ranked = applyFeaturedCap(sortClinicsForDirectory(source), maxFeatured);
   return ranked.slice(0, Math.max(maxTotal, 1));
 }
 

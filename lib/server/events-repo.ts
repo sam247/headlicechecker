@@ -86,7 +86,7 @@ export async function queryClinicClicksByRegion(): Promise<RegionMetricPoint[]> 
       coalesce(region, 'unknown') as region,
       count(*)::int as count
     from events
-    where event_type in ('clinic_contact_clicked', 'clinic_directions_clicked')
+    where event_type in ('clinic_contact_clicked', 'clinic_directions_clicked', 'call_click', 'website_click')
     group by 1
     order by 2 desc, 1 asc
     limit 100
@@ -119,7 +119,7 @@ export async function queryLeadsPerClinic(): Promise<ClinicLeadPoint[]> {
       count(*)::int as lead_count,
       max(created_at)::text as last_lead_at
     from events
-    where event_type in ('clinic_contact_clicked', 'clinic_directions_clicked', 'clinic_message_submitted')
+    where event_type in ('clinic_contact_clicked', 'clinic_directions_clicked', 'clinic_message_submitted', 'call_click', 'website_click')
       and clinic_id is not null
       and length(trim(clinic_id)) > 0
     group by clinic_id

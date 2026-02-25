@@ -29,6 +29,16 @@
 - `clinic_message_submitted`
   - Trigger: clinic contact form is submitted successfully
   - Properties: `clinic_id`, `region`, optional `confidence_tier`
+- `call_click`
+  - Trigger: user taps/clicks tracked phone link (`/api/call`)
+  - Properties: `clinic_id`, `region`, metadata `source_path`, `pillar`
+- `website_click`
+  - Trigger: user taps/clicks tracked website link (`/api/outbound`)
+  - Properties: `clinic_id`, `region`, metadata `source_path`, `pillar`
+- `clinic_listing_claim_submitted`
+  - Trigger: clinic owner verification form is submitted (`/api/claim-listing`)
+- `clinic_suggestion_submitted`
+  - Trigger: suggest-a-clinic form is submitted (`/api/suggest-clinic`)
 
 ## School Toolkit
 

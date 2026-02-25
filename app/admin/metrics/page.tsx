@@ -11,6 +11,7 @@ import {
   queryToolkitTopEmailDomains,
   queryTopRegionsByActivity,
 } from "@/lib/server/events-repo";
+import { queryClinicEngagementSummary } from "@/lib/server/clinic-directory-repo";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,7 @@ export default async function AdminMetricsPage() {
     schoolDomainBreakdown,
     topEmailDomains,
     topToolkitAssets,
+    clinicEngagement,
   ] = await Promise.all([
     queryDailyEventCounts("scan_started"),
     queryDailyEventCounts("escalation_triggered"),
@@ -49,6 +51,7 @@ export default async function AdminMetricsPage() {
     queryToolkitSchoolDomainBreakdown(),
     queryToolkitTopEmailDomains(10),
     queryToolkitTopAssets(10),
+    queryClinicEngagementSummary(),
   ]);
 
   const clinics = getClinics("ALL");
@@ -173,6 +176,47 @@ export default async function AdminMetricsPage() {
                   </li>
                 ))}
               </ul>
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-2">
+            <CardContent className="p-5">
+              <h2 className="text-lg font-semibold">Clinic Engagement Summary</h2>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Sorted by total interactions. Includes month-to-date counts for outreach summaries.
+              </p>
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full min-w-[860px] text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-border/60 text-xs uppercase tracking-wide text-muted-foreground">
+                      <th className="py-2 pr-3">Clinic</th>
+                      <th className="py-2 pr-3 text-right">Call clicks</th>
+                      <th className="py-2 pr-3 text-right">Website clicks</th>
+                      <th className="py-2 pr-3 text-right">Lead forms</th>
+                      <th className="py-2 pr-3 text-right">Total engagement</th>
+                      <th className="py-2 pr-3 text-right">Month calls</th>
+                      <th className="py-2 pr-3 text-right">Month websites</th>
+                      <th className="py-2 pr-3 text-right">Month leads</th>
+                      <th className="py-2 text-right">Month total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {clinicEngagement.map((row) => (
+                      <tr key={row.clinic_id} className="border-b border-border/40">
+                        <td className="py-2 pr-3">{clinicNameById.get(row.clinic_id) ?? row.clinic_id}</td>
+                        <td className="py-2 pr-3 text-right">{safeNumber(row.call_click_count)}</td>
+                        <td className="py-2 pr-3 text-right">{safeNumber(row.website_click_count)}</td>
+                        <td className="py-2 pr-3 text-right">{safeNumber(row.lead_form_submissions)}</td>
+                        <td className="py-2 pr-3 text-right font-semibold">{safeNumber(row.total_engagement)}</td>
+                        <td className="py-2 pr-3 text-right">{safeNumber(row.call_click_count_month)}</td>
+                        <td className="py-2 pr-3 text-right">{safeNumber(row.website_click_count_month)}</td>
+                        <td className="py-2 pr-3 text-right">{safeNumber(row.lead_form_submissions_month)}</td>
+                        <td className="py-2 text-right font-semibold">{safeNumber(row.total_engagement_month)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </CardContent>
           </Card>
 

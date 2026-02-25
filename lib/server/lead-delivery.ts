@@ -67,6 +67,26 @@ export type ClinicEnquiryPayload = {
   policyVersion: string;
 };
 
+export type ClaimListingPayload = {
+  referenceId: string;
+  clinicId: string;
+  clinicName: string;
+  contactEmail: string;
+  website: string;
+  ownershipDeclaration: string;
+  phone?: string;
+  submittedAt: string;
+};
+
+export type SuggestClinicPayload = {
+  referenceId: string;
+  clinicName: string;
+  website: string;
+  region: string;
+  submittedByEmail?: string;
+  submittedAt: string;
+};
+
 export type SchoolToolkitLeadPayload = {
   referenceId: string;
   submittedAt: string;
@@ -151,6 +171,32 @@ function buildClinicEnquiryText(payload: ClinicEnquiryPayload): string {
     `Website: ${payload.website ?? "N/A"}`,
     `Google Business URL: ${payload.gmbUrl ?? "N/A"}`,
     `Consent: true (${payload.consentAt}) policy ${payload.policyVersion}`,
+  ].join("\n");
+}
+
+function buildClaimListingText(payload: ClaimListingPayload): string {
+  return [
+    `Reference: ${payload.referenceId}`,
+    `Clinic ID: ${payload.clinicId}`,
+    `Clinic name: ${payload.clinicName}`,
+    `Contact email: ${payload.contactEmail}`,
+    `Website: ${payload.website}`,
+    `Phone: ${payload.phone ?? "N/A"}`,
+    `Ownership declaration: ${payload.ownershipDeclaration}`,
+    `Submitted at: ${payload.submittedAt}`,
+    "Status: claim_pending",
+  ].join("\n");
+}
+
+function buildSuggestClinicText(payload: SuggestClinicPayload): string {
+  return [
+    `Reference: ${payload.referenceId}`,
+    `Clinic name: ${payload.clinicName}`,
+    `Website: ${payload.website}`,
+    `Region: ${payload.region}`,
+    `Submitted by email: ${payload.submittedByEmail ?? "N/A"}`,
+    `Submitted at: ${payload.submittedAt}`,
+    "Status: pending_review",
   ].join("\n");
 }
 
@@ -255,6 +301,24 @@ export async function deliverClinicEnquiryEmail(
   const to = process.env.CLINIC_ENQUIRY_TO ?? process.env.LEAD_FALLBACK_TO;
   const subject = `Clinic enquiry ${payload.referenceId}`;
   const text = buildClinicEnquiryText(payload);
+  return sendEmail(subject, text, to ?? "");
+}
+
+export async function deliverClaimListingEmail(
+  payload: ClaimListingPayload
+): Promise<LeadDeliveryResult> {
+  const to = process.env.CLINIC_ENQUIRY_TO ?? process.env.LEAD_FALLBACK_TO;
+  const subject = `Clinic listing verification request ${payload.referenceId}`;
+  const text = buildClaimListingText(payload);
+  return sendEmail(subject, text, to ?? "");
+}
+
+export async function deliverSuggestClinicEmail(
+  payload: SuggestClinicPayload
+): Promise<LeadDeliveryResult> {
+  const to = process.env.CLINIC_ENQUIRY_TO ?? process.env.LEAD_FALLBACK_TO;
+  const subject = `Clinic directory suggestion ${payload.referenceId}`;
+  const text = buildSuggestClinicText(payload);
   return sendEmail(subject, text, to ?? "");
 }
 

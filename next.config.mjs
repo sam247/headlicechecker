@@ -3,6 +3,11 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: "/find-clinics",
+        destination: "/directory",
+        permanent: true,
+      },
+      {
         source: "/blog/head-lice-treatment-for-adults",
         destination: "/professional/head-lice-treatment-for-adults",
         permanent: true,

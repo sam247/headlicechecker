@@ -11,7 +11,7 @@ import { getSiteCopy } from "@/lib/data/content";
 
 const navItems = [
   { href: "/how-it-works", label: "How It Works" },
-  { href: "/find-clinics", label: "Find Clinics" },
+  { href: "/directory", label: "Directory" },
   { href: "/locations", label: "Locations" },
   { href: "/for-schools", label: "For Schools" },
   { href: "/for-clinics", label: "For Clinics" },
@@ -47,7 +47,7 @@ export default function SiteHeader() {
 
         <div className="hidden items-center gap-2 lg:flex">
           <Button asChild variant="outline" className="rounded-full">
-            <Link href="/find-clinics">{copy.secondaryCta}</Link>
+            <Link href="/directory">{copy.secondaryCta}</Link>
           </Button>
           <Button asChild className="rounded-full">
             <Link href="/#start-scan">{copy.primaryCta}</Link>
@@ -83,7 +83,7 @@ export default function SiteHeader() {
             ))}
             <div className="grid grid-cols-2 gap-2 pt-2">
               <Button asChild variant="outline" className="rounded-full">
-                <Link href="/find-clinics" onClick={() => setOpen(false)}>
+                <Link href="/directory" onClick={() => setOpen(false)}>
                   {copy.secondaryCta}
                 </Link>
               </Button>

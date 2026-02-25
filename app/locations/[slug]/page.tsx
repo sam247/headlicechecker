@@ -28,7 +28,7 @@ export function generateMetadata({ params }: LocationPageProps): Metadata {
 export default async function LocationPage({ params }: LocationPageProps) {
   const page = getLocationPageBySlug(params.slug);
   if (!page) notFound();
-  const nearbyClinics = await getClinicsForLocationPageWithLeadStats(page, 2, 6);
+  const nearbyClinics = await getClinicsForLocationPageWithLeadStats(page, -1, 500);
 
   const breadcrumb = breadcrumbJsonLd([
     { name: "Home", path: "/" },
@@ -81,7 +81,7 @@ export default async function LocationPage({ params }: LocationPageProps) {
         extraContent={<LocationClinicSection city={page.city} clinics={nearbyClinics} />}
         relatedLinks={[
           { href: "/locations", label: "All Locations" },
-          { href: "/find-clinics", label: "Find Clinics" },
+          { href: "/directory", label: "Directory" },
           { href: "/head-lice-symptoms", label: "Head Lice Symptoms" },
         ]}
       />

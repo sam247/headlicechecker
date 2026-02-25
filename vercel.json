@@ -1,1 +1,10 @@
-{"crons":[]}
+{
+  "crons": [],
+  "redirects": [
+    {
+      "source": "/find-clinics",
+      "destination": "/directory",
+      "statusCode": 301
+    }
+  ]
+}

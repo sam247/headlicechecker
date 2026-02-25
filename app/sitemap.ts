@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getContentPages, getEvergreenPages, getLocationPages, getTrustPages } from "@/lib/data/content";
+import { getClinics, getContentPages, getEvergreenPages, getLocationPages, getTrustPages } from "@/lib/data/content";
 import { SITE_URL } from "@/lib/seo";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -7,13 +7,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes = [
     "",
     "/about",
+    "/claim-listing",
     "/contact",
-    "/find-clinics",
+    "/directory",
     "/for-clinics",
     "/for-schools",
     "/how-it-works",
     "/locations",
     "/privacy",
+    "/suggest-clinic",
     "/terms",
   ].map((route) => ({
     url: `${SITE_URL}${route}`,
@@ -40,5 +42,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(page.updatedAt || page.publishedAt || "2026-02-16"),
   }));
 
-  return [...staticRoutes, ...contentRoutes, ...evergreenRoutes, ...trustRoutes, ...locationRoutes];
+  const directoryRoutes = getClinics("UK").map((clinic) => ({
+    url: `${SITE_URL}/directory/${clinic.id}`,
+    lastModified: staticLastModified,
+  }));
+
+  return [...staticRoutes, ...contentRoutes, ...evergreenRoutes, ...trustRoutes, ...locationRoutes, ...directoryRoutes];
 }

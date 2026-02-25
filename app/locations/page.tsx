@@ -155,14 +155,17 @@ export default function LocationsHubPage() {
         <div className="mt-10 rounded-2xl border border-border bg-card p-6">
           <h2 className="text-xl font-semibold">Need help right now?</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Start with a quick photo scan, then use the clinic finder when you want professional follow-up.
+            Start with a quick photo scan, then use the UK specialist directory when you want professional follow-up.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Button asChild className="rounded-full">
               <Link href="/#start-scan">{siteCopy.primaryCta}</Link>
             </Button>
             <Button asChild variant="outline" className="rounded-full">
-              <Link href="/find-clinics">{siteCopy.secondaryCta}</Link>
+              <Link href="/directory">{siteCopy.secondaryCta}</Link>
+            </Button>
+            <Button asChild variant="outline" className="rounded-full">
+              <Link href="/suggest-clinic">Suggest a clinic</Link>
             </Button>
           </div>
         </div>

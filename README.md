@@ -1,6 +1,6 @@
 # Head Lice Checker — Head Lice Photo Checker
 
-Next.js front end for the Head Lice Checker photo screening tool and clinic finder. Users upload photos for a quick indicative check and can find nearby professional clinics.
+Next.js front end for the Head Lice Checker photo screening tool and UK specialist clinic directory. Users upload photos for a quick indicative check and can find nearby professional clinics.
 
 ## Stack
 
@@ -62,6 +62,7 @@ Core canonical events:
 
 - Scan funnel: `scan_started`, `image_uploaded`, `scan_processed`, `confidence_generated`, `escalation_triggered`, `clinic_finder_opened`
 - Clinic engagement: `clinic_card_viewed`, `clinic_contact_clicked`, `clinic_directions_clicked`, `clinic_message_submitted`
+- Directory engagement: `call_click`, `website_click`, `clinic_listing_claim_submitted`, `clinic_suggestion_submitted`
 - Toolkit: `toolkit_unlock_submitted`, `toolkit_downloaded`, `toolkit_file_viewed`
 - Toolkit reliability/abuse: `toolkit_download_notify_success`, `toolkit_download_notify_failed`, `toolkit_download_rate_limited`
 
@@ -190,6 +191,25 @@ Current panels:
 - Toolkit conversion snapshot (unlocks, downloads, download rate %)
 - Download notification reliability (success, failed, success rate %)
 - Domain classification and top toolkit asset/domain insights
+- Clinic engagement summary table (`call_click`, `website_click`, lead submissions, total engagement + month-to-date)
+
+## Directory Layer
+
+Primary directory routes:
+
+- `/directory`
+- `/directory/[slug]`
+- `/claim-listing`
+- `/suggest-clinic`
+
+Tracked outbound routes:
+
+- `GET /api/call`
+- `GET /api/outbound`
+
+Legacy finder route:
+
+- `/find-clinics` now permanently redirects to `/directory`.
 
 ## Toolkit Storage Note
 
