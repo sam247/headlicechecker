@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import AreaFocusMap from "@/components/site/AreaFocusMap";
 import DirectoryClinicDetailActions from "@/components/site/DirectoryClinicDetailActions";
 import { Card, CardContent } from "@/components/ui/card";
 import { getClinics } from "@/lib/data/content";
@@ -66,6 +67,17 @@ export default function DirectoryClinicPage({ params }: DirectoryClinicPageProps
                   <strong>Website:</strong> {clinic.bookingUrl}
                 </p>
               ) : null}
+            </div>
+
+            <div className="mt-6">
+              <AreaFocusMap
+                lat={clinic.lat}
+                lng={clinic.lng}
+                title={`${clinic.city} clinic area`}
+                subtitle="City focus"
+                mapDelta={0.04}
+                heightClassName="h-[260px]"
+              />
             </div>
           </CardContent>
         </Card>

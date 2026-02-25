@@ -18,6 +18,7 @@ const REQUIRED_HEADERS = [
   "Website",
 ];
 const OPTIONAL_HEADERS = [
+  "Partner",
   "Tier",
   "Featured",
   "Sponsored",
@@ -294,6 +295,7 @@ async function run() {
     const websiteRaw = getCell(row, indexByHeader, "Website");
     const featuredRaw = getCell(row, indexByHeader, "Featured");
     const tierRaw = getCell(row, indexByHeader, "Tier");
+    const partnerRaw = getCell(row, indexByHeader, "Partner");
     const sponsoredRaw = getCell(row, indexByHeader, "Sponsored");
     const featuredRankRaw = getCell(row, indexByHeader, "Featured Rank");
     const partnerStatusRaw = getCell(row, indexByHeader, "Partner Status");
@@ -361,7 +363,11 @@ async function run() {
 
     const featured = normalizeBoolean(featuredRaw);
     const tier = normalizeTier(tierRaw);
-    const partnerStatus = normalizePartnerStatus(partnerStatusRaw);
+    const partnerFlag = normalizeBoolean(partnerRaw);
+    const partnerStatusFromLegacy = normalizePartnerStatus(partnerStatusRaw);
+    const partnerStatus =
+      partnerStatusFromLegacy ??
+      (partnerFlag === true ? "verified" : partnerFlag === false ? "free" : undefined);
     const regionTag = regionTagRaw || undefined;
     const coverageRadiusKm = normalizeOptionalNumber(coverageRadiusRaw, { min: 0 });
     const foundingPartner = normalizeBoolean(foundingPartnerRaw);
@@ -464,6 +470,7 @@ async function run() {
       ...(bookingUrl ? { bookingUrl } : {}),
       tier: normalizedTier,
       ...(typeof featured === "boolean" ? { featured } : {}),
+      ...(typeof partnerFlag === "boolean" ? { partner: partnerFlag ? "YES" : "NO" } : {}),
       ...(typeof sponsored === "boolean" ? { sponsored } : {}),
       ...(typeof featuredRank === "number" ? { featuredRank } : {}),
       ...(partnerStatus ? { partner_status: partnerStatus } : {}),

@@ -18,6 +18,8 @@ interface LongformContentPageProps {
   reviewedAt?: string;
   ctaTitle?: string;
   ctaCopy?: string;
+  fullWidth?: boolean;
+  heroMedia?: ReactNode;
   extraContent?: ReactNode;
   relatedLinks?: RelatedLink[];
 }
@@ -32,13 +34,16 @@ export default function LongformContentPage({
   reviewedAt,
   ctaTitle = "Ready for a quick next step?",
   ctaCopy = "Start a free photo scan first, then use the clinic finder if you want professional confirmation.",
+  fullWidth = false,
+  heroMedia,
   extraContent,
   relatedLinks = [],
 }: LongformContentPageProps) {
   return (
     <section className="section-shell">
-      <div className="container mx-auto max-w-5xl px-4">
+      <div className={`container mx-auto px-4 ${fullWidth ? "" : "max-w-5xl"}`.trim()}>
         <h1 className="section-title">{title}</h1>
+        {heroMedia ? <div className="mt-6">{heroMedia}</div> : null}
         <p className="mt-4 section-copy">{intro}</p>
         {reviewedAt ? (
           <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">

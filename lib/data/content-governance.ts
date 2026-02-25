@@ -1,7 +1,7 @@
 import { CONTENT_PAGES } from "@/lib/data/content-pages";
 import type { ContentPage } from "@/lib/data/types";
 
-const MIN_WORDS = 1500;
+const MIN_WORDS = 1000;
 const MIN_PARAGRAPH_RATIO = 0.72;
 
 function normalize(value: string): string {

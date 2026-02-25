@@ -17,6 +17,8 @@ const VERIFIED_PARTNER_STATUSES = new Set(["verified", "featured", "exclusive", 
 
 export function isVerifiedRegionalPartner(clinic: Clinic): boolean {
   if (clinic.partner_status && VERIFIED_PARTNER_STATUSES.has(clinic.partner_status)) return true;
+  const partnerFlag = String(clinic.partner ?? "").trim().toLowerCase();
+  if (["yes", "y", "true", "1"].includes(partnerFlag)) return true;
   return clinic.founding_partner === true;
 }
 

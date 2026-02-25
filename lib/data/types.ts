@@ -38,6 +38,7 @@ export interface Clinic {
   tier?: ClinicTier;
   featured?: boolean;
   sponsored?: boolean;
+  partner?: "YES" | "NO" | boolean | string;
   featuredRank?: number;
   partner_status?: ClinicPartnerStatus | null;
   region_tag?: string | null;

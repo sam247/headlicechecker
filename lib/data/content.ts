@@ -53,6 +53,9 @@ function normalizePartnerStatus(clinic: Clinic): ClinicPartnerStatus | null {
   ) {
     return clinic.partner_status;
   }
+  const partnerFlag = String(clinic.partner ?? "").trim().toLowerCase();
+  if (["yes", "y", "true", "1"].includes(partnerFlag)) return "verified";
+  if (["no", "n", "false", "0"].includes(partnerFlag)) return "free";
   if (clinic.founding_partner) return "founding";
   if (clinic.tier === "featured") return "featured";
   return null;

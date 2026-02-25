@@ -15,11 +15,13 @@ type SeedPage = {
   publishOn: string;
   summaryFocus: string;
   image?: string;
+  introOverride?: string;
+  faqOverride?: { question: string; answer: string }[];
 };
 
 interface SectionPlan {
   heading: string;
-  prompt: string;
+  paragraphs: string[];
   bullets?: string[];
 }
 
@@ -181,120 +183,346 @@ function inferSlug(path: string): string | null {
   return parts.length > 1 ? parts[1] : null;
 }
 
-function sectionPlansFor(seed: SeedPage, pillar: ContentPage["pillar"]): SectionPlan[] {
-  const commonBullets = [
-    "Document what was seen, where it was seen, and when the check was completed.",
-    "Use the same high-light, close-parting method on each repeat check.",
-    "Prioritize child comfort and short, calm checks over rushed repeated checks.",
-    "Escalate to professional confirmation if likely indicators persist across checks.",
-    "Use local clinic pathways when practical support is needed quickly.",
+const COMMON_CHECKLIST_BULLETS = [
+  "Record what you saw, where on the scalp you saw it, and when you checked.",
+  "Repeat checks in strong light and use the same method each time.",
+  "Keep checks short and calm so children do not resist follow-up.",
+  "Escalate to clinic confirmation if likely indicators repeat across checks.",
+];
+
+const SECTION_BLUEPRINTS: Record<string, string[]> = {
+  "/ai-detection": [
+    "What This Hub Helps You Decide",
+    "How to Read AI Results Without Guessing",
+    "When to Recheck and When to Escalate",
+    "Best Guides to Start With",
+    "Common Mistakes to Avoid",
+    "How This Connects to Clinic Confirmation",
+    "Quick Next Steps",
+  ],
+  "/professional": [
+    "What This Hub Helps You Compare",
+    "When Professional Support Makes Sense",
+    "Cost, Time, and Booking Factors",
+    "How to Compare Clinics Fairly",
+    "What to Prepare Before Contacting a Clinic",
+    "Mistakes That Delay Resolution",
+    "Quick Next Steps",
+  ],
+  "/symptoms": [
+    "What This Hub Helps You Triage",
+    "Symptoms That Commonly Cause Panic",
+    "What Is Often Misread at Home",
+    "How to Recheck Without Overreacting",
+    "When to Move to Professional Confirmation",
+    "How to Communicate With School Calmly",
+    "Quick Next Steps",
+  ],
+  "/ai-detection/can-ai-detect-head-lice": [
+    "What AI Can Detect Reliably",
+    "Where AI Results Are Most Likely to Miss",
+    "How to Improve Scan Quality at Home",
+    "When to Pair AI With Manual Checks",
+    "When to Escalate to a Clinic",
+    "Bottom Line",
+  ],
+  "/ai-detection/how-accurate-is-an-online-head-lice-checker": [
+    "What Accuracy Means in Real Use",
+    "Why Results Vary Between Families",
+    "How to Increase Accuracy Before Rechecking",
+    "How to Interpret Confidence Safely",
+    "When an Online Checker Is Not Enough",
+    "Bottom Line",
+  ],
+  "/ai-detection/ai-vs-manual-lice-combing": [
+    "AI and Manual Combing Solve Different Problems",
+    "Where AI Is Faster",
+    "Where Combing Gives Better Confirmation",
+    "A Practical Combined Workflow",
+    "When to Escalate to a Clinic",
+    "Bottom Line",
+  ],
+  "/ai-detection/is-a-photo-enough-to-detect-head-lice": [
+    "When a Photo Can Be Useful",
+    "Why One Photo Is Often Not Enough",
+    "How to Capture Better Images",
+    "How to Decide Between Recheck and Escalation",
+    "When to Seek Professional Confirmation",
+    "Bottom Line",
+  ],
+  "/professional/professional-head-lice-removal-cost-uk": [
+    "Typical UK Price Ranges",
+    "What Usually Increases Cost",
+    "How to Compare Value Instead of Just Price",
+    "When Paying for Clinic Support Saves Time",
+    "Questions to Ask Before Booking",
+    "Bottom Line",
+  ],
+  "/professional/are-head-lice-clinics-worth-it": [
+    "When Clinics Are Usually Worth It",
+    "When Home Checks May Be Enough",
+    "Time and Stress Trade-Offs",
+    "How to Compare Local Options",
+    "Signs You Should Escalate Soon",
+    "Bottom Line",
+  ],
+  "/professional/mobile-head-lice-removal-services": [
+    "How Mobile Services Typically Work",
+    "What to Confirm Before Booking",
+    "Pricing and Availability Realities",
+    "Who Mobile Care Suits Best",
+    "When to Choose Clinic Visit Instead",
+    "Bottom Line",
+  ],
+  "/professional/how-long-does-professional-lice-treatment-take": [
+    "Typical Appointment Lengths",
+    "What Makes Sessions Longer",
+    "When Follow-Up Is Needed",
+    "How to Plan Around School and Work",
+    "Questions to Ask Your Clinic",
+    "Bottom Line",
+  ],
+  "/professional/do-head-lice-clinics-guarantee-results": [
+    "What Clinics Mean by a Guarantee",
+    "Common Conditions in Guarantee Policies",
+    "How to Read the Fine Print",
+    "What to Do If Symptoms Return",
+    "How to Set Realistic Expectations",
+    "Bottom Line",
+  ],
+  "/symptoms/white-dots-in-hair-lice-or-dandruff": [
+    "How to Tell White Dots Apart",
+    "Signs That Suggest Lice",
+    "Signs That Suggest Dandruff or Debris",
+    "A Simple Home Recheck Method",
+    "When to Escalate to Confirmation",
+    "Bottom Line",
+  ],
+  "/symptoms/why-is-my-childs-head-itchy-at-night": [
+    "Why Itch Often Feels Worse at Night",
+    "When Itch Points to Lice",
+    "Other Common Causes of Night Itch",
+    "A Calm Recheck Plan for Parents",
+    "When to Escalate Quickly",
+    "Bottom Line",
+  ],
+  "/symptoms/can-you-have-lice-without-seeing-bugs": [
+    "Yes, It Can Happen Early On",
+    "Why Bugs Are Often Missed",
+    "What to Look For Instead",
+    "How to Recheck Over 48 Hours",
+    "When to Escalate to a Clinic",
+    "Bottom Line",
+  ],
+  "/symptoms/early-signs-of-head-lice-in-children": [
+    "Early Signs Parents Notice First",
+    "What Is Often Missed in Fast Checks",
+    "How to Check at Home Step by Step",
+    "How to Respond Without Panic",
+    "When to Move to Professional Confirmation",
+    "Bottom Line",
+  ],
+  "/symptoms/how-often-should-you-check-for-lice": [
+    "A Practical Checking Frequency",
+    "How Frequency Changes During Outbreaks",
+    "How to Avoid Overchecking",
+    "A Repeatable Weekly Routine",
+    "When to Escalate Beyond Routine Checks",
+    "Bottom Line",
+  ],
+  "/ai-detection/how-to-take-a-clear-lice-check-photo": [
+    "What Makes a Photo Useful for AI",
+    "Lighting and Parting Technique",
+    "Angles and Distance That Work Best",
+    "Common Photo Mistakes to Avoid",
+    "How to Review Before Uploading",
+    "Bottom Line",
+  ],
+  "/professional/how-to-choose-a-head-lice-clinic-near-you": [
+    "What to Check First",
+    "How to Compare Clinics Quickly",
+    "Questions to Ask Before You Book",
+    "Red Flags to Watch For",
+    "How to Decide Without Delaying",
+    "Bottom Line",
+  ],
+  "/professional/head-lice-treatment-for-adults": [
+    "Why Adult Cases Are Often Delayed",
+    "What Treatment Options Usually Involve",
+    "How to Reduce Reinfestation at Home",
+    "When to Move to Professional Support",
+    "What to Track Between Checks",
+    "Bottom Line",
+  ],
+  "/symptoms/what-are-the-first-signs-of-head-lice": [
+    "First Signs People Usually Notice",
+    "Early Signs Commonly Misread",
+    "How to Check Properly at Home",
+    "What to Do in the First 24 Hours",
+    "When to Escalate for Confirmation",
+    "Bottom Line",
+  ],
+  "/professional/best-over-the-counter-head-lice-treatment-for-sensitive-skin": [
+    "Choosing Products for Sensitive Skin",
+    "How to Test Tolerance Safely",
+    "Application Habits That Matter",
+    "When OTC Is Not Enough",
+    "When to Seek Professional Advice",
+    "Bottom Line",
+  ],
+};
+
+function sectionHeadingsFor(seed: SeedPage): string[] {
+  const headings = SECTION_BLUEPRINTS[seed.path];
+  if (headings) return headings;
+  return SECTION_BLUEPRINTS[`/${inferPillar(seed.path)}`] ?? [];
+}
+
+function topicLabelForSeed(seed: SeedPage): string {
+  return seed.path
+    .split("/")
+    .filter(Boolean)
+    .pop()
+    ?.replace(/-/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase()) ?? "This Topic";
+}
+
+function withEditorialDepth(paragraphs: string[], detail: string, actionLine: string): string[] {
+  return [
+    ...paragraphs,
+    `For this topic, keep one short evidence log with dates, check method, and confidence notes. That record prevents repeated guesswork and makes handovers clearer if another parent, school lead, or clinic team needs to understand what has already been tried. ${detail}.`,
+    `${actionLine} The aim is steady progress, not instant certainty. A consistent process over one or two days usually gives better decisions than a rushed sequence of unrelated checks and treatments.`,
   ];
+}
+
+function buildSectionParagraphs(seed: SeedPage, pillar: ContentPage["pillar"], heading: string, index: number): string[] {
+  const details = PAGE_DETAIL_POINTS[seed.path] ?? PAGE_DETAIL_POINTS[`/${pillar}`] ?? [seed.summaryFocus.toLowerCase()];
+  const detailA = details[index % details.length];
+  const detailB = details[(index + 1) % details.length];
+  const detailC = details[(index + 2) % details.length];
+  const actionLine =
+    pillar === "professional"
+      ? "Before booking, prepare symptom timing, recent checks, prior treatment attempts, and any constraints around school or work so clinics can triage quickly and set realistic expectations."
+      : pillar === "ai-detection"
+        ? "Use two to three clear checks in the same scalp zones before deciding that confidence is high enough to stop, and keep capture quality consistent so comparisons are meaningful."
+        : "Use a calm, repeatable check method and note what changed between checks before making treatment decisions, especially when symptoms are affecting sleep or school confidence.";
 
   if (seed.pageType === "hub") {
     return [
-      { heading: "Pillar overview and intent", prompt: "Define what this pillar solves and who it serves in the user journey." },
-      { heading: "How to use this hub", prompt: "Explain how users should navigate the cluster pages and when to use each one." },
-      { heading: "Core risk boundaries", prompt: "State non-diagnostic limits and when self-triage is insufficient." },
-      { heading: "Structured escalation in practice", prompt: "Apply the shared escalation model to common household and school scenarios.", bullets: commonBullets },
-      { heading: "Links to all cluster pages", prompt: "Introduce each cluster page as a decision-support step within the same pillar." },
-      { heading: "Tool-first workflow", prompt: "Describe how the AI scan fits before manual checks and clinic escalation." },
-      { heading: "Professional confirmation thresholds", prompt: "Set practical thresholds for when clinic confirmation should be prioritized." },
-      { heading: "Common mistakes and safer alternatives", prompt: "List avoidable errors and calmer, evidence-first alternatives.", bullets: commonBullets },
-      { heading: "Summary and next actions", prompt: "Close with practical next actions and clear conversion routes." },
+      `This part of the hub is designed to make same-day decisions clearer. In practice, ${detailA}. Keep language simple, focus on what can be observed, and avoid escalating based on one uncertain check.`,
+      `${detailB}. A short, repeatable process usually gives better outcomes than long unstructured checking sessions. If confidence remains mixed after improved checks, move to a clear next action rather than staying in a loop.`,
+      `${actionLine}`,
+      `If multiple people are involved in checking, agree one shared method first. Consistency between adults is often the difference between useful progress and repeated uncertainty, especially in busy school-week routines.`,
     ];
   }
 
-  if (pillar === "ai-detection") {
-    return [
-      { heading: "Question framing and user context", prompt: "Frame the high-intent question and define what users usually need to decide today." },
-      { heading: "How the detection signal is created", prompt: "Explain image quality, scalp visibility, and confidence interpretation in plain language." },
-      { heading: "Known limitations and false reassurance risks", prompt: "Clarify where AI output can underperform or overstate confidence." },
-      { heading: "Structured escalation in practice", prompt: "Apply the fixed escalation model to mixed-confidence outcomes.", bullets: commonBullets },
-      { heading: "AI versus alternative checking methods", prompt: "Compare AI triage with manual checks and professional confirmation workflow." },
-      { heading: "Photo quality and repeat-check protocol", prompt: "Describe repeatability standards that improve consistency between checks." },
-      { heading: "When to move to clinics and locations", prompt: "Define escalation triggers that should route to verified regional clinics." },
-      { heading: "Common interpretation mistakes", prompt: "Show common user misreads and how to avoid overconfidence or overreaction.", bullets: commonBullets },
-      { heading: "Decision summary for families and schools", prompt: "Provide an action-ready summary with scan, monitor, and clinic pathways." },
-    ];
+  if (/bottom line/i.test(heading) || /quick next steps/i.test(heading)) {
+    return withEditorialDepth(
+      [
+      `${seed.summaryFocus} Keep decisions practical: check clearly, recheck when confidence is mixed, and escalate when likely indicators persist. Families usually do best when they follow one simple sequence and avoid changing strategy after every uncertain result.`,
+      `In this topic, ${detailA}. That means the goal is not perfection on the first check; the goal is better evidence over a short window so you can make a confident next decision without unnecessary panic or delay.`,
+      `${actionLine}`,
+      `If uncertainty remains after repeat checks, move to professional confirmation rather than repeating guess-based cycles. A clear handover of what you observed, when you observed it, and how confidence changed will usually improve triage speed and reduce back-and-forth.`,
+      ],
+      detailB,
+      actionLine
+    );
   }
 
-  if (pillar === "professional") {
-    return [
-      { heading: "Decision context and practical expectations", prompt: "Set clear expectations for professional support without hard-sell language." },
-      { heading: "What influences outcome quality", prompt: "Explain how service quality, timing, and evidence quality shape outcomes." },
-      { heading: "Costs, time, and logistics variables", prompt: "Describe concrete variables that change cost and service planning." },
-      { heading: "Structured escalation in practice", prompt: "Map when families should move from home checks to clinic confirmation.", bullets: commonBullets },
-      { heading: "How to compare verified regional clinics", prompt: "Give objective comparison criteria for families choosing care routes." },
-      { heading: "When clinic support is better than OTC-only cycles", prompt: "Define practical decision triggers where clinic care is more efficient." },
-      { heading: "Communication checklist before booking", prompt: "Explain what details to prepare so clinics can triage quickly and safely." },
-      { heading: "Avoiding aggressive or premature decisions", prompt: "Reinforce calm tone and avoid unnecessary urgency language.", bullets: commonBullets },
-      { heading: "Summary with clear next steps", prompt: "Close with neutral routing to scan, locations, and professional follow-up." },
-    ];
+  if (/mistakes|red flags|overchecking/i.test(heading)) {
+    return withEditorialDepth(
+      [
+      `A common problem is reacting to one unclear check as if it were final proof. In this topic, ${detailA}. Slow down, document what you observed, and avoid switching methods every time confidence feels uncertain.`,
+      `${detailB}. Consistency beats urgency: use the same method, the same high-probability zones, and a clear note of what changed after each check so decisions are based on pattern, not anxiety.`,
+      `Another frequent issue is over-correcting with too many products, too many checks, or mixed advice from multiple sources in one evening. That usually creates confusion and can make it harder to tell whether things are improving.`,
+      `A better approach is one calm routine for 24-48 hours, followed by a clear escalation decision. This keeps households aligned, improves communication with schools, and gives clinics usable context if professional support is needed.`,
+      ],
+      detailC,
+      actionLine
+    );
   }
 
-  return [
-    { heading: "Symptom framing and panic reduction", prompt: "Acknowledge anxiety while reframing decisions around observable evidence." },
-    { heading: "What the symptom may indicate", prompt: "Differentiate likely lice indicators from common non-lice causes." },
-    { heading: "What is often misread", prompt: "Explain why quick checks produce false alarms and false reassurance." },
-    { heading: "Structured escalation in practice", prompt: "Apply the fixed escalation sequence to symptom-led decisions.", bullets: commonBullets },
-    { heading: "Home check method for clearer evidence", prompt: "Give a repeatable home-check protocol for better confidence." },
-    { heading: "When to escalate to professional confirmation", prompt: "Define thresholds for clinic support and location-based routing." },
-    { heading: "School and household communication guidance", prompt: "Provide practical communication guidance to avoid stigma and panic." },
-    { heading: "Frequent mistakes and safer alternatives", prompt: "Highlight avoidable actions and practical alternatives.", bullets: commonBullets },
-    { heading: "Summary and next actions", prompt: "Close with clear, calm actions including scan and clinic pathways." },
-  ];
+  if (/escalate|clinic|professional|booking|guarantee/i.test(heading)) {
+    return withEditorialDepth(
+      [
+      `Escalation should be based on repeated indicators, not a single moment of uncertainty. In practice, ${detailA}. This keeps decisions proportionate and helps families move quickly when confidence improves, rather than escalating out of fear.`,
+      `Use local clinic routes when symptoms continue after improved rechecks. Ask about response time, follow-up policy, and what evidence is most useful before your appointment so the first conversation is productive.`,
+      `${detailB}. If a clinic offers guarantees, clarify exactly what is covered, what follow-up is expected from you, and the timeframe in which recheck support applies.`,
+      `Where possible, book the earliest suitable slot rather than waiting for a perfect option. Earlier confirmation usually reduces repeated household disruption and avoids treatment loops driven by uncertainty.`,
+      ],
+      detailC,
+      actionLine
+    );
+  }
+
+  if (/photo|ai|accuracy|confidence|signal|combing/i.test(heading)) {
+    return withEditorialDepth(
+      [
+      `This section matters because ${detailA}. Reliable outcomes come from clear inputs, not rushed checks or low-light photos, and most confidence problems begin before the scan rather than after it.`,
+      `Treat confidence as decision support, not diagnosis. ${detailB}. Combine strong capture quality with repeat checks so results are easier to trust and easier to explain to another adult helping with checks.`,
+      `${detailC}. If AI and manual combing appear to disagree, repeat both methods with cleaner technique before jumping to a final conclusion; mixed first-pass evidence is common and manageable.`,
+      `The strongest workflow is usually: capture clearly, interpret confidence cautiously, run a structured recheck, then escalate if likely indicators continue. That sequence protects against both false reassurance and unnecessary alarm.`,
+      ],
+      detailA,
+      actionLine
+    );
+  }
+
+  return withEditorialDepth(
+    [
+      `Families usually search this question while trying to make a same-day decision under pressure. Here, ${detailA}, so plain-language steps are more useful than technical terms and easier for households to follow consistently.`,
+      `${detailB}. Keep notes short, use the same check method each time, and focus on evidence that can be repeated across a short window rather than one isolated observation.`,
+      `When possible, separate checking from treatment decisions. First gather better evidence, then choose next actions. That order reduces mistakes, keeps communication calmer, and prevents unnecessary cycles that are hard to interpret later.`,
+      `If signs persist or confidence stays mixed, escalation is a practical next step, not a failure. A clear summary of your timeline, observations, and previous checks will help clinics or school teams support you more effectively.`,
+    ],
+    detailC,
+    actionLine
+  );
 }
 
-function buildParagraph(seed: SeedPage, pillar: ContentPage["pillar"], plan: SectionPlan, variant: number): string {
-  const details = PAGE_DETAIL_POINTS[seed.path] ?? PAGE_DETAIL_POINTS[`/${pillar}`] ?? [];
-  const detail = details[variant % Math.max(details.length, 1)] ?? seed.summaryFocus.toLowerCase();
-  if (variant % 4 === 0) {
-    return `${plan.prompt} In day-to-day use, one of the most important realities is that ${detail}. Families often search this topic when they need a practical answer quickly, so this section keeps language plain and decision-focused rather than technical or alarm-driven. The goal is to reduce uncertainty with a repeatable process, document what was actually observed, and avoid assumptions based on a single low-quality check. ${seed.summaryFocus} This supports calmer decisions at home and clearer communication if professional follow-up becomes necessary.`;
-  }
-  if (variant % 4 === 1) {
-    return `Use a consistent method each time: strong lighting, hair parted close to the scalp, and checks repeated across the same high-probability zones. Consistency matters because mixed evidence is common, especially when families are tired, short on time, or checking more than one child. A structured method reduces both false reassurance and unnecessary panic actions, and it creates better continuity between scan output, manual observations, and later escalation decisions. Clear process is usually more valuable than rushing through multiple unstructured checks.`;
-  }
-  if (variant % 4 === 2) {
-    return `Keep communication concise and factual, especially for school and household updates. Record when symptoms started, what was seen, and how confidence changed after recheck. This evidence-first approach improves decision quality because it separates urgency from uncertainty, helping families avoid repeated treatment cycles driven by guesswork. When professional teams receive clear timelines and consistent observations, triage is faster, advice is more targeted, and follow-up planning is usually more efficient for everyone involved.`;
-  }
-  return `When confidence remains unclear or likely indicators persist, follow the fixed escalation pathway instead of escalating emotionally. Move from detection signals to confidence review, then monitor and recheck before deciding on professional confirmation unless symptoms are clearly worsening. This keeps the process proportionate and medically responsible, while still allowing rapid escalation when needed. Where practical, use verified clinic routes and location pathways so next steps are specific, time-bound, and easier to execute without delay.`;
+function sectionPlansFor(seed: SeedPage, pillar: ContentPage["pillar"]): SectionPlan[] {
+  const headings = sectionHeadingsFor(seed);
+  const topicLabel = topicLabelForSeed(seed);
+  return headings.map((heading, index) => ({
+    heading: seed.pageType === "hub" ? heading : `${heading}: ${topicLabel}`,
+    paragraphs: buildSectionParagraphs(seed, pillar, heading, index),
+    ...(index === headings.length - 1 ? { bullets: COMMON_CHECKLIST_BULLETS } : {}),
+  }));
 }
 
 function buildSections(seed: SeedPage, pillar: ContentPage["pillar"]): ContentSection[] {
-  return sectionPlansFor(seed, pillar).map((plan, index) => {
-    const baseTitle = seed.title.split(":")[0].replace(/\?$/, "");
-    const heading = seed.pageType === "hub" ? plan.heading : `${plan.heading} for ${baseTitle}`;
-    const paragraphs = [0, 1, 2, 3].map((variant) => buildParagraph(seed, pillar, plan, variant + index));
-    return {
-      heading,
-      paragraphs,
-      ...(plan.bullets ? { bullets: plan.bullets } : {}),
-    };
-  });
+  return sectionPlansFor(seed, pillar).map((plan) => ({
+    heading: plan.heading,
+    paragraphs: plan.paragraphs,
+    ...(plan.bullets ? { bullets: plan.bullets } : {}),
+  }));
 }
 
 function buildFaq(seed: SeedPage, pillar: ContentPage["pillar"]) {
+  if (seed.faqOverride) return seed.faqOverride;
+
+  const topicLabel = topicLabelForSeed(seed);
+  const withTopic = (question: string) => (seed.pageType === "hub" ? question : `${question} (${topicLabel})`);
+
   if (pillar === "professional") {
     return [
       {
-        question: `${seed.title}: when is professional confirmation better than repeating OTC attempts?`,
+        question: withTopic("When is clinic support usually better than repeating home treatment?"),
         answer:
-          "Professional confirmation is often more efficient when uncertainty persists across repeat checks, when multiple household members are affected, or when prior OTC cycles have not resolved likely indicators.",
+          "Clinic support is usually faster when signs repeat after structured checks, more than one household member is affected, or previous home attempts have not resolved likely indicators.",
       },
       {
-        question: `${seed.title}: how should families compare verified regional clinics objectively?`,
+        question: withTopic("How should I compare clinics fairly?"),
         answer:
-          "Compare response times, session structure, follow-up policy, and communication clarity. Choose the first suitable confirmation slot rather than delaying for an ideal option.",
+          "Compare response time, follow-up policy, clarity of communication, and whether expectations are explained in plain language before booking.",
       },
       {
-        question: `${seed.title}: does this page provide diagnosis or treatment prescriptions?`,
-        answer:
-          "No. This guidance supports practical routing and decision preparation. Diagnosis and treatment decisions should be confirmed by qualified professionals.",
+        question: withTopic("Does this page replace clinical advice?"),
+        answer: "No. The guide supports practical decisions and preparation, but diagnosis and treatment should be confirmed by qualified professionals.",
       },
       {
-        question: `${seed.title}: what should I prepare before contacting a clinic?`,
-        answer:
-          "Prepare symptom timing, what was seen in checks, scan confidence context, and any prior treatment attempts so the clinic can triage accurately.",
+        question: withTopic("What details should I prepare before contacting a clinic?"),
+        answer: "Prepare symptom timing, what you observed in checks, any scan context, and prior treatment steps so triage can be faster and more accurate.",
       },
     ];
   }
@@ -302,48 +530,40 @@ function buildFaq(seed: SeedPage, pillar: ContentPage["pillar"]) {
   if (pillar === "ai-detection") {
     return [
       {
-        question: `${seed.title}: can a high-confidence result still need professional confirmation?`,
-        answer:
-          "Yes. High confidence can support triage but does not replace in-person confirmation where symptoms persist, risk is repeated, or clinical advice is needed.",
+        question: withTopic("Can a high-confidence AI result still need clinic confirmation?"),
+        answer: "Yes. High confidence can support triage, but persistent symptoms or repeated uncertainty should still be confirmed professionally.",
       },
       {
-        question: `${seed.title}: what causes low-confidence AI outcomes most often?`,
-        answer:
-          "Low light, unclear focus, poor scalp visibility, and limited section coverage are common causes. Repeat with better image quality before making decisions.",
+        question: withTopic("What usually causes low-confidence scan results?"),
+        answer: "Low light, poor focus, limited scalp coverage, and inconsistent capture distance are the most common causes.",
       },
       {
-        question: `${seed.title}: should families rely on one photo only?`,
-        answer:
-          "Usually no. Multiple close-up images across likely zones improve consistency and reduce false reassurance.",
+        question: withTopic("Is one image enough to make a decision?"),
+        answer: "Usually not. Two to three clear images across likely zones are more reliable than a single photo.",
       },
       {
-        question: `${seed.title}: what is the safest action order?`,
-        answer:
-          "Use the scan as triage, classify confidence, monitor or recheck where needed, and escalate to professional confirmation when patterns persist.",
+        question: withTopic("What is the safest order of actions?"),
+        answer: "Capture clearly, review confidence, recheck if uncertain, and escalate to clinic confirmation when likely indicators repeat.",
       },
     ];
   }
 
   return [
     {
-      question: `${seed.title}: can symptoms appear before visible bugs are found?`,
-      answer:
-        "Yes. Symptoms can appear before clearly visible bugs, which is why repeatable checks and confidence-based escalation are important.",
+      question: withTopic("Can symptoms appear before I see live bugs?"),
+      answer: "Yes. Early infestations are easy to miss visually, so symptom patterns and repeat checks are important.",
     },
     {
-      question: `${seed.title}: what usually causes false alarms?`,
-      answer:
-        "Dandruff, product residue, weak lighting, and rushed checks are frequent causes. Better image quality and section-based checking reduce misreads.",
+      question: withTopic("What causes the most false alarms?"),
+      answer: "Dandruff, product residue, and rushed low-light checks are common causes of false positives.",
     },
     {
-      question: `${seed.title}: when should we escalate beyond home checks?`,
-      answer:
-        "Escalate when likely indicators repeat, symptoms worsen, or uncertainty remains after an improved recheck cycle.",
+      question: withTopic("When should we move beyond home checks?"),
+      answer: "Escalate when likely indicators repeat across structured checks or symptoms worsen despite better checking quality.",
     },
     {
-      question: `${seed.title}: is this intended for schools and family use?`,
-      answer:
-        "Yes. The guidance is designed for practical household and school communication while maintaining non-diagnostic boundaries.",
+      question: withTopic("Is this guidance suitable for families and schools?"),
+      answer: "Yes. The guidance is designed for practical household and school use with calm, non-diagnostic language.",
     },
   ];
 }
@@ -636,6 +856,16 @@ function conversionLinkFor(pillar: ContentPage["pillar"]): ContentPageLink {
   return { href: "/find-clinics", label: "Move to clinic confirmation support", type: "conversion" };
 }
 
+function buildIntro(seed: SeedPage, pillar: ContentPage["pillar"]): string {
+  if (seed.introOverride) return seed.introOverride;
+
+  const focus =
+    PAGE_DETAIL_POINTS[seed.path]?.[0] ??
+    PAGE_DETAIL_POINTS[`/${pillar}`]?.[0] ??
+    "families need practical next steps and clear language";
+  return `${seed.summaryFocus} In practical terms, ${focus}. This guide is educational and non-diagnostic: it helps you gather clearer evidence, choose the next sensible action, and know when to move from home checks to professional confirmation.`;
+}
+
 function toContentPage(seed: SeedPage, allPaths: string[]): ContentPage {
   const pillar = inferPillar(seed.path);
   const slug = inferSlug(seed.path);
@@ -684,7 +914,7 @@ function toContentPage(seed: SeedPage, allPaths: string[]): ContentPage {
     funnelStage: seed.funnelStage,
     publishedAt: seed.publishOn,
     updatedAt: seed.publishOn,
-    intro: `${seed.summaryFocus} This guide is written for practical, calm decision-making and keeps a strict non-diagnostic boundary. It prioritizes evidence quality, confidence-based escalation, and clear routing to the AI scan tool, hub context, and verified clinic pathways. UK-first wording is used with US-secondary relevance where appropriate.`,
+    intro: buildIntro(seed, pillar),
     sections,
     faqs: baseFaq,
     internalLinks,
@@ -699,9 +929,40 @@ function toContentPage(seed: SeedPage, allPaths: string[]): ContentPage {
   };
 }
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function validateEditorialQuality(pages: ContentPage[]): void {
+  const bannedHeadingPatterns = [/question framing and user context/i, /structured escalation in practice/i];
+
+  for (const page of pages) {
+    const seen = new Set<string>();
+    const titleNoPunctuation = page.title.replace(/[?:]/g, "").trim();
+    const titleSuffixPattern = new RegExp(`\\bfor\\s+${escapeRegex(titleNoPunctuation)}\\b`, "i");
+
+    for (const section of page.sections) {
+      const headingKey = section.heading.trim().toLowerCase();
+      if (seen.has(headingKey)) {
+        throw new Error(`[content-pages] Duplicate section heading "${section.heading}" on ${page.path}`);
+      }
+      seen.add(headingKey);
+
+      if (titleSuffixPattern.test(section.heading)) {
+        throw new Error(`[content-pages] Robotic heading pattern detected on ${page.path}: "${section.heading}"`);
+      }
+
+      if (bannedHeadingPatterns.some((pattern) => pattern.test(section.heading))) {
+        throw new Error(`[content-pages] Banned heading phrase detected on ${page.path}: "${section.heading}"`);
+      }
+    }
+  }
+}
+
 const allPaths = ALL_SEEDS.map((seed) => seed.path);
 
 const contentPages = ALL_SEEDS.map((seed) => toContentPage(seed, allPaths));
+validateEditorialQuality(contentPages);
 
 const HUB_CHILDREN: Record<ContentPage["pillar"], string[]> = {
   "ai-detection": contentPages

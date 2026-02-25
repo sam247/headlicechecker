@@ -9,7 +9,10 @@
     "phone": "7785390540",
     "email": "info@no-more-nits.com",
     "bookingUrl": "https://no-more-nits.com/",
+    "tier": "standard",
     "featured": false,
+    "partner": "NO",
+    "partner_status": "free",
     "reviewStars": 5,
     "description": "No More Nits is your trusted specialist for safe, gentle and clinically-informed head lice and nit removal, across Berkshire and surrounding areas.",
     "lat": 51.4062463,
@@ -18,8 +21,7 @@
       "Screening",
       "Removal"
     ],
-    "active": true,
-    "tier": "standard"
+    "active": true
   },
   {
     "id": "uk-chipping-norton-nit-happens",
@@ -31,7 +33,10 @@
     "phone": "7713982012",
     "email": "info@nithappens.co.uk",
     "bookingUrl": "https://nithappens.co.uk/",
+    "tier": "standard",
     "featured": false,
+    "partner": "NO",
+    "partner_status": "free",
     "reviewStars": 5,
     "description": "Mobile head lice removal in the Cotswolds. Natural, chemical-free treatments that come to you, using gentle aromatherapy-based methods.",
     "lat": 51.9382855,
@@ -40,8 +45,7 @@
       "Screening",
       "Removal"
     ],
-    "active": true,
-    "tier": "standard"
+    "active": true
   },
   {
     "id": "uk-essex-the-nit-nurse",
@@ -54,7 +58,10 @@
     "phone": "7944227477",
     "email": "info@nitnurse.co.uk",
     "bookingUrl": "https://nitnurse.co.uk/",
+    "tier": "standard",
     "featured": false,
+    "partner": "NO",
+    "partner_status": "free",
     "reviewStars": 5,
     "description": "Non toxic & hypoallergenic, 100% guaranteed head lice removal from my private home clinic in Buckhurst Hill in Essex.",
     "lat": 51.6259439,
@@ -63,8 +70,31 @@
       "Screening",
       "Removal"
     ],
-    "active": true,
-    "tier": "standard"
+    "active": true
+  },
+  {
+    "id": "uk-manchester-the-calm-comb",
+    "name": "The Calm Comb",
+    "region": "Manchester",
+    "country": "UK",
+    "city": "Manchester",
+    "postcode": "M1",
+    "phone": "7521338975",
+    "email": "thecalmcomb_mcr_@outlook.com",
+    "bookingUrl": "https://thecalmcomb.co.uk/",
+    "tier": "standard",
+    "featured": false,
+    "partner": "NO",
+    "partner_status": "free",
+    "reviewStars": 5,
+    "description": "The Calm Comb is a friendly, professional mobile head lice removal service based in Manchester.",
+    "lat": 53.473776,
+    "lng": -2.2394321,
+    "services": [
+      "Screening",
+      "Removal"
+    ],
+    "active": true
   },
   {
     "id": "uk-richmond-nitnot-clinic",
@@ -78,7 +108,10 @@
     "phone": "7835356251",
     "email": "anica@nitnot.com",
     "bookingUrl": "https://nitnotclinic.com/",
+    "tier": "featured",
     "featured": true,
+    "partner": "YES",
+    "partner_status": "verified",
     "reviewStars": 4.7,
     "description": "We provide professional head lice removal with a 100% guarantee of success in our clinic based in Hampton, UK and a mobile service directly to you, for stress-free treatment your family can trust.",
     "lat": 51.4314516,
@@ -87,8 +120,7 @@
       "Screening",
       "Removal"
     ],
-    "active": true,
-    "tier": "featured"
+    "active": true
   },
   {
     "id": "uk-yorkshire-york-head-lice-clinic",
@@ -101,7 +133,10 @@
     "phone": "7830193302",
     "email": "redgem85@gmail.com",
     "bookingUrl": "https://yorkheadliceclinic.co.uk/",
+    "tier": "standard",
     "featured": false,
+    "partner": "NO",
+    "partner_status": "free",
     "reviewStars": 5,
     "description": "We want to make sure we get rid of 100% of your bugs from nit, to larvae. We use an eco-friendly, perfume-free, chemical-free and hypoallergenic treatments.",
     "lat": 54.0367761,
@@ -110,7 +145,6 @@
       "Screening",
       "Removal"
     ],
-    "active": true,
-    "tier": "standard"
+    "active": true
   }
 ]

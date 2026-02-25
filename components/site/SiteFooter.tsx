@@ -50,14 +50,14 @@ export default function SiteFooter() {
   return (
     <footer className="border-t border-border bg-card">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid gap-10 md:grid-cols-5 md:gap-8">
-          <div>
+        <div className="grid gap-8 md:grid-cols-[2fr_repeat(4,minmax(0,1fr))] md:gap-5 lg:gap-6">
+          <div className="md:pr-6 lg:pr-10">
             <Image
               src="/logo_new.png"
               alt="Head Lice Checker"
               width={152}
               height={44}
-              className="mb-4 h-9 w-auto"
+              className="mb-4 h-7 w-auto"
             />
             <p className="text-sm text-muted-foreground">{copy.tagline}</p>
             <p className="mt-3 text-xs text-muted-foreground">{copy.medicalDisclaimer}</p>

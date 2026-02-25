@@ -44,16 +44,35 @@ function ctaConfig(pillar: ContentPage["pillar"]) {
   };
 }
 
-const SECTION_GROUPS = [
-  { title: "How this hub works", range: [0, 2] as const },
-  { title: "Operational guidance", range: [2, 5] as const },
-  { title: "Risk and escalation context", range: [5, 8] as const },
-  { title: "Summary", range: [8, 9] as const },
-];
+const FLOW_BY_PILLAR: Record<ContentPage["pillar"], { title: string; detail: string }[]> = {
+  "ai-detection": [
+    { title: "Start With A Clear Scan", detail: "Use strong lighting and parting before interpreting confidence." },
+    { title: "Recheck For Consistency", detail: "Repeat with the same method before acting on mixed results." },
+    { title: "Escalate When Needed", detail: "Use clinic confirmation if likely indicators persist." },
+  ],
+  professional: [
+    { title: "Shortlist Local Clinics", detail: "Compare response speed, follow-up policy, and communication quality." },
+    { title: "Prepare A Clean Handover", detail: "Bring symptom timing, check notes, and prior attempts." },
+    { title: "Confirm And Follow Through", detail: "Use agreed follow-up windows to reduce repeat uncertainty." },
+  ],
+  symptoms: [
+    { title: "Spot The Pattern", detail: "Separate one-off irritation from repeated likely indicators." },
+    { title: "Run Structured Rechecks", detail: "Use the same method and track what changes." },
+    { title: "Escalate Calmly", detail: "Move to professional confirmation if signs persist." },
+  ],
+};
+
+function sectionId(heading: string): string {
+  return heading
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 export default function HubControlPanelPage({ page, clusterPages }: HubControlPanelPageProps) {
   const ctas = ctaConfig(page.pillar);
   const intro = shortIntro(page.intro);
+  const flowSteps = FLOW_BY_PILLAR[page.pillar];
 
   return (
     <section className="section-shell">
@@ -73,6 +92,19 @@ export default function HubControlPanelPage({ page, clusterPages }: HubControlPa
             This structured model explains how decisions move from detection toward confirmation.
           </p>
         </header>
+
+        <section className="mt-8 rounded-2xl border border-border/80 bg-card p-6">
+          <h2 className="text-xl font-semibold">Use this hub in 3 steps</h2>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {flowSteps.map((step, index) => (
+              <article key={step.title} className="rounded-xl border border-border/70 bg-muted/20 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Step {index + 1}</p>
+                <h3 className="mt-1 text-base font-semibold">{step.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
 
         <StructuredEscalationModel />
 
@@ -123,36 +155,41 @@ export default function HubControlPanelPage({ page, clusterPages }: HubControlPa
           </div>
         </section>
 
-        <div id="next-steps" className="mt-12 space-y-10 max-w-4xl">
-          {SECTION_GROUPS.map((group) => {
-            const groupSections = page.sections.slice(group.range[0], group.range[1]);
-            if (groupSections.length === 0) return null;
-            return (
-              <section key={group.title} className="border-t border-border/60 pt-8">
-                <h2 className="text-2xl font-semibold">{group.title}</h2>
-                <div className="mt-6 space-y-8">
-                  {groupSections.map((section) => (
-                    <article key={section.heading}>
-                      <h3 className="text-lg font-semibold">{section.heading}</h3>
-                      <div className="mt-3 space-y-3 text-base leading-8 text-muted-foreground">
-                        {section.paragraphs.map((paragraph, index) => (
-                          <p key={`${section.heading}-${index}`}>{paragraph}</p>
-                        ))}
-                      </div>
-                      {section.bullets?.length ? (
-                        <ul className="mt-4 list-disc space-y-2 pl-5 text-base leading-8 text-muted-foreground">
-                          {section.bullets.map((bullet) => (
-                            <li key={bullet}>{bullet}</li>
-                          ))}
-                        </ul>
-                      ) : null}
-                    </article>
+        <section id="next-steps" className="mt-12 max-w-4xl">
+          <h2 className="text-2xl font-semibold">Hub guidance</h2>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {page.sections.map((section, index) => (
+              <Link
+                key={`jump-${section.heading}`}
+                href={`#${sectionId(section.heading)}`}
+                className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+              >
+                {index + 1}. {section.heading}
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-6 space-y-5">
+            {page.sections.map((section, index) => (
+              <article key={section.heading} id={sectionId(section.heading)} className="rounded-2xl border border-border/80 bg-card p-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Section {index + 1}</p>
+                <h3 className="mt-1 text-lg font-semibold">{section.heading}</h3>
+                <div className="mt-3 space-y-3 text-base leading-8 text-muted-foreground">
+                  {section.paragraphs.map((paragraph, paragraphIndex) => (
+                    <p key={`${section.heading}-${paragraphIndex}`}>{paragraph}</p>
                   ))}
                 </div>
-              </section>
-            );
-          })}
-        </div>
+                {section.bullets?.length ? (
+                  <ul className="mt-4 list-disc space-y-2 pl-5 text-base leading-8 text-muted-foreground">
+                    {section.bullets.map((bullet) => (
+                      <li key={bullet}>{bullet}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        </section>
 
         <section className="mt-14 rounded-2xl border border-border bg-card p-6">
           <h2 className="text-xl font-semibold">Continue within {hubLabel(page.pillar)}</h2>
