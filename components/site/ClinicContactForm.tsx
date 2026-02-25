@@ -173,7 +173,7 @@ export default function ClinicContactForm({
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}
 
         {referenceId && (
-          <p className="text-sm text-green-700">
+          <p className="text-sm text-foreground">
             Request sent ({deliveryStatus ?? "queued"}). Reference: <strong>{referenceId}</strong>
           </p>
         )}

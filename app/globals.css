@@ -6,82 +6,82 @@
 
 @layer base {
   :root {
-    --background: 200 36% 98%;
-    --foreground: 204 18% 15%;
+    --background: 0 0% 98%;
+    --foreground: 0 0% 7%;
 
     --card: 0 0% 100%;
-    --card-foreground: 204 18% 15%;
+    --card-foreground: 0 0% 7%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 204 18% 15%;
+    --popover-foreground: 0 0% 7%;
 
-    --primary: 21 93% 52%;
+    --primary: 0 0% 18%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 191 55% 92%;
-    --secondary-foreground: 202 24% 22%;
+    --secondary: 0 0% 93%;
+    --secondary-foreground: 0 0% 20%;
 
-    --muted: 195 26% 94%;
-    --muted-foreground: 204 12% 38%;
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 36%;
 
-    --accent: 191 48% 88%;
-    --accent-foreground: 202 30% 20%;
+    --accent: 0 0% 90%;
+    --accent-foreground: 0 0% 20%;
 
-    --destructive: 0 82% 59%;
+    --destructive: 0 0% 28%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 198 20% 85%;
-    --input: 198 20% 85%;
-    --ring: 21 93% 52%;
+    --border: 0 0% 82%;
+    --input: 0 0% 82%;
+    --ring: 0 0% 18%;
     --radius: 0.9rem;
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 21 93% 52%;
+    --sidebar-foreground: 0 0% 22%;
+    --sidebar-primary: 0 0% 18%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 195 26% 94%;
-    --sidebar-accent-foreground: 204 18% 15%;
-    --sidebar-border: 198 20% 85%;
-    --sidebar-ring: 21 93% 52%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 0 0% 14%;
+    --sidebar-border: 0 0% 82%;
+    --sidebar-ring: 0 0% 18%;
   }
 
   .dark {
-    --background: 204 24% 10%;
-    --foreground: 200 36% 96%;
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
 
-    --card: 204 24% 13%;
-    --card-foreground: 200 36% 96%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 204 24% 13%;
-    --popover-foreground: 200 36% 96%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 21 93% 57%;
+    --primary: 0 0% 78%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 203 25% 21%;
-    --secondary-foreground: 200 36% 94%;
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 0 0% 92%;
 
-    --muted: 203 18% 19%;
-    --muted-foreground: 203 13% 70%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 72%;
 
-    --accent: 203 25% 23%;
-    --accent-foreground: 200 36% 96%;
+    --accent: 0 0% 22%;
+    --accent-foreground: 0 0% 95%;
 
-    --destructive: 0 64% 43%;
+    --destructive: 0 0% 70%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 203 19% 24%;
-    --input: 203 19% 24%;
-    --ring: 21 93% 57%;
+    --border: 0 0% 22%;
+    --input: 0 0% 22%;
+    --ring: 0 0% 78%;
 
-    --sidebar-background: 204 24% 10%;
-    --sidebar-foreground: 200 36% 96%;
-    --sidebar-primary: 21 93% 57%;
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 0 0% 78%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 203 18% 19%;
-    --sidebar-accent-foreground: 200 36% 96%;
-    --sidebar-border: 203 19% 24%;
-    --sidebar-ring: 21 93% 57%;
+    --sidebar-accent: 0 0% 16%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 22%;
+    --sidebar-ring: 0 0% 78%;
   }
 
   * {
@@ -148,7 +148,7 @@
   .clinic-card--sponsored {
     border-color: hsl(var(--primary) / 0.5) !important;
     box-shadow: 0 0 0 1px hsl(var(--primary) / 0.2);
-    background: rgba(255, 251, 245, 0.6);
+    background: hsl(var(--muted) / 0.4);
   }
 
   .clinic-badge-sponsored {

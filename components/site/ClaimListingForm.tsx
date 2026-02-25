@@ -100,7 +100,7 @@ export default function ClaimListingForm({ initialClinicName, initialClinicId, i
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       {referenceId ? (
-        <p className="text-sm text-green-700">
+        <p className="text-sm text-foreground">
           Submission received. Reference: <strong>{referenceId}</strong>. Listing status is now claim pending for manual review.
         </p>
       ) : null}

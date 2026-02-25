@@ -160,7 +160,7 @@ export default function SchoolToolkitGate({ assets }: { assets: SchoolToolkitAss
             <div>
               <Input placeholder="School email" type="email" {...register("email")} />
               {institutional ? (
-                <p className="mt-1 text-xs text-green-700">Institutional domain detected.</p>
+                <p className="mt-1 text-xs text-foreground">Institutional domain detected.</p>
               ) : (
                 <p className="mt-1 text-xs text-muted-foreground">Tip: institutional email helps verify school context faster.</p>
               )}
@@ -200,7 +200,7 @@ export default function SchoolToolkitGate({ assets }: { assets: SchoolToolkitAss
               Reference: <span className="font-medium">{referenceId}</span>
             </p>
           )}
-          {tokenError && <p className="mt-2 text-sm text-amber-700">{tokenError}</p>}
+          {tokenError && <p className="mt-2 text-sm text-foreground">{tokenError}</p>}
           {isLockedView ? (
             <div className="mt-4 rounded-xl border border-border/80 bg-background p-4">
               <ul className="space-y-2 text-sm text-muted-foreground">

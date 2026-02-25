@@ -79,10 +79,10 @@ function confidenceLabel(level?: ScanConfidenceLevel): string {
 }
 
 function markerClasses(label: Exclude<ScanLabel, "clear">): { stroke: string; fill: string; badge: string } {
-  if (label === "lice") return { stroke: "stroke-[#e45a2a]", fill: "fill-[#e45a2a]/20", badge: "fill-[#e45a2a]" };
-  if (label === "nits") return { stroke: "stroke-[#d89a1a]", fill: "fill-[#d89a1a]/20", badge: "fill-[#d89a1a]" };
-  if (label === "dandruff") return { stroke: "stroke-[#2779c7]", fill: "fill-[#2779c7]/20", badge: "fill-[#2779c7]" };
-  return { stroke: "stroke-[#b13b62]", fill: "fill-[#b13b62]/20", badge: "fill-[#b13b62]" };
+  if (label === "lice") return { stroke: "stroke-[#2f2f2f]", fill: "fill-[#2f2f2f]/20", badge: "fill-[#2f2f2f]" };
+  if (label === "nits") return { stroke: "stroke-[#4a4a4a]", fill: "fill-[#4a4a4a]/20", badge: "fill-[#4a4a4a]" };
+  if (label === "dandruff") return { stroke: "stroke-[#666666]", fill: "fill-[#666666]/20", badge: "fill-[#666666]" };
+  return { stroke: "stroke-[#808080]", fill: "fill-[#808080]/20", badge: "fill-[#808080]" };
 }
 
 function nextStepsForLabel(label: ScanLabel): string[] {
@@ -506,8 +506,8 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                         unoptimized
                         className="mx-auto mb-4 h-28 w-28 rounded-xl object-cover"
                       />
-                      <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
-                        <AlertTriangle className="h-5 w-5 text-amber-700" />
+                      <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                        <AlertTriangle className="h-5 w-5 text-foreground" />
                       </div>
                       <p className="text-lg font-semibold">Photo too small</p>
                       <p className="mt-2 text-sm text-muted-foreground">
@@ -715,7 +715,7 @@ export default function PhotoChecker({ initialFile, onFileConsumed }: PhotoCheck
                   </div>
 
                   {scanResult.confidenceLevel === "low" && (
-                    <div className="mx-auto mt-4 max-w-lg rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-left text-sm text-amber-800">
+                    <div className="mx-auto mt-4 max-w-lg rounded-xl border border-border bg-muted/40 px-4 py-3 text-left text-sm text-foreground">
                       <p className="font-semibold">Low confidence image quality tip</p>
                       <p className="mt-1">
                         Re-upload a sharper close-up in bright light, with hair parted to show the roots clearly.

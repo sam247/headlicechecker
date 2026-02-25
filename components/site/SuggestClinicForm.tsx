@@ -82,7 +82,7 @@ export default function SuggestClinicForm() {
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       {referenceId ? (
-        <p className="text-sm text-green-700">
+        <p className="text-sm text-foreground">
           Suggestion received. Reference: <strong>{referenceId}</strong>. Our team will review before publishing.
         </p>
       ) : null}

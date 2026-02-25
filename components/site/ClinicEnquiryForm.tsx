@@ -203,7 +203,7 @@ export default function ClinicEnquiryForm() {
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}
 
         {referenceId && (
-          <p className="text-sm text-green-700">
+          <p className="text-sm text-foreground">
             Enquiry sent ({deliveryStatus ?? "queued"}). Reference: <strong>{referenceId}</strong>
           </p>
         )}

@@ -90,8 +90,8 @@ export default function HomePageClient({ content, latestGuides, siteCopy }: Home
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--secondary))_0%,transparent_45%)]" />
         <div className="container relative z-10 mx-auto grid gap-8 px-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
-            <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-900 ring-1 ring-orange-200">
-              <Shield className="h-3.5 w-3.5 text-orange-700" />
+            <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-border">
+              <Shield className="h-3.5 w-3.5 text-foreground" />
               {content.hero.badge}
             </p>
             <h1 className="text-4xl font-extrabold leading-tight md:text-6xl">
