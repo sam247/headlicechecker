@@ -10,7 +10,12 @@ type SuggestResponse = {
   error?: string;
 };
 
-export default function SuggestClinicForm() {
+interface SuggestClinicFormProps {
+  sourcePath?: string;
+  onSuccess?: () => void;
+}
+
+export default function SuggestClinicForm({ sourcePath, onSuccess }: SuggestClinicFormProps) {
   const [clinicName, setClinicName] = useState("");
   const [website, setWebsite] = useState("");
   const [region, setRegion] = useState("");
@@ -35,6 +40,7 @@ export default function SuggestClinicForm() {
         website,
         region,
         submittedByEmail,
+        sourcePath,
         hp_field: "",
       }),
     });
@@ -52,6 +58,7 @@ export default function SuggestClinicForm() {
     setWebsite("");
     setRegion("");
     setSubmittedByEmail("");
+    onSuccess?.();
   };
 
   return (

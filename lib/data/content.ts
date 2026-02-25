@@ -197,10 +197,11 @@ export function getHomepageFeaturedGuides(): ContentPage[] {
   return HOMEPAGE_FEATURED_GUIDE_PATHS.map((path) => byPath.get(path)).filter((page): page is ContentPage => Boolean(page));
 }
 
-export function getClusterPagesForPillar(pillar: ContentPillar): ContentPage[] {
-  return getContentPages()
+export function getClusterPagesForPillar(pillar: ContentPillar, limit?: number): ContentPage[] {
+  const pages = getContentPages()
     .filter((page) => page.pillar === pillar && page.pageType === "cluster")
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+  return typeof limit === "number" ? pages.slice(0, Math.max(limit, 0)) : pages;
 }
 
 export function getSiteCopy(): SiteCopy {

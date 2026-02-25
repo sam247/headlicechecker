@@ -21,7 +21,7 @@ export function generateMetadata({ params }: HubPageProps): Metadata {
 export default function HubPage({ params }: HubPageProps) {
   const page = getContentPageByPath(`/${params.pillar}`);
   if (!page || page.pageType !== "hub") notFound();
-  const clusterPages = getClusterPagesForPillar(page.pillar);
+  const clusterPages = getClusterPagesForPillar(page.pillar, 3);
 
   const breadcrumb = breadcrumbJsonLd([
     { name: "Home", path: "/" },

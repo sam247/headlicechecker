@@ -13,8 +13,8 @@ const navItems = [
   { href: "/how-it-works", label: "How It Works" },
   { href: "/directory", label: "Directory" },
   { href: "/locations", label: "Locations" },
-  { href: "/for-schools", label: "For Schools" },
-  { href: "/for-clinics", label: "For Clinics" },
+  { href: "/schools", label: "For Schools" },
+  { href: "/clinics", label: "For Clinics" },
 ];
 
 const copy = getSiteCopy();

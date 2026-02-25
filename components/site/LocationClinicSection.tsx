@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ExternalLink, MapPin, Phone, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import SuggestClinicModal from "@/components/site/SuggestClinicModal";
 import { getClinicPartnerPresentation } from "@/lib/data/clinic-partner";
 import { buildTrackedCallHref, buildTrackedOutboundHref } from "@/lib/data/tracked-links";
 import type { Clinic } from "@/lib/data/types";
@@ -37,9 +38,7 @@ export default function LocationClinicSection({ city, clinics }: LocationClinicS
           <Button asChild variant="outline" className="rounded-full">
             <Link href="/directory">Open directory</Link>
           </Button>
-          <Button asChild variant="outline" className="rounded-full">
-            <Link href="/suggest-clinic">Suggest a clinic</Link>
-          </Button>
+          <SuggestClinicModal sourcePath={pathname} />
         </div>
       </div>
 

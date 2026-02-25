@@ -132,7 +132,7 @@ export default function ClinicApplicationForm() {
     setDeliveryStatus(data.deliveryStatus ?? "queued");
     await trackEvent({
       event_type: "partner_enquiry_submitted",
-      metadata: { country: values.country, source: "for-clinics" },
+      metadata: { country: values.country, source: "clinics" },
     });
 
     reset({

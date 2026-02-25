@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import SuggestClinicModal from "@/components/site/SuggestClinicModal";
 import { getLocationPages, getSiteCopy } from "@/lib/data/content";
 import { breadcrumbJsonLd, collectionPageJsonLd, faqJsonLd, pageMetadata, serviceJsonLd } from "@/lib/seo";
 
@@ -164,9 +165,7 @@ export default function LocationsHubPage() {
             <Button asChild variant="outline" className="rounded-full">
               <Link href="/directory">{siteCopy.secondaryCta}</Link>
             </Button>
-            <Button asChild variant="outline" className="rounded-full">
-              <Link href="/suggest-clinic">Suggest a clinic</Link>
-            </Button>
+            <SuggestClinicModal sourcePath="/locations" />
           </div>
         </div>
 

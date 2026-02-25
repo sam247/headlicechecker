@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import DirectoryListings from "@/components/site/DirectoryListings";
-import { Button } from "@/components/ui/button";
+import SuggestClinicModal from "@/components/site/SuggestClinicModal";
 import { getClinics, getLocationPages, sortClinicsForDirectory } from "@/lib/data/content";
 import { pageMetadata } from "@/lib/seo";
 
@@ -12,9 +12,14 @@ export const metadata: Metadata = pageMetadata({
   path: "/directory",
 });
 
-export default function DirectoryPage() {
+interface DirectoryPageProps {
+  searchParams?: { suggest_clinic?: string };
+}
+
+export default function DirectoryPage({ searchParams }: DirectoryPageProps) {
   const ukClinics = sortClinicsForDirectory(getClinics("UK"));
   const ukRegionPages = getLocationPages().filter((page) => page.country === "UK");
+  const suggestModalOpen = searchParams?.suggest_clinic === "1";
 
   return (
     <section className="section-shell">
@@ -26,9 +31,7 @@ export default function DirectoryPage() {
         <p className="mt-3 text-sm font-medium text-foreground">Currently listing {ukClinics.length} UK specialist clinics.</p>
 
         <div className="mt-5 flex flex-wrap gap-3">
-          <Button asChild variant="outline" className="rounded-full">
-            <Link href="/suggest-clinic">Suggest a clinic</Link>
-          </Button>
+          <SuggestClinicModal sourcePath="/directory" defaultOpen={suggestModalOpen} />
         </div>
 
         <div className="mt-6 rounded-2xl border border-border bg-card p-5">

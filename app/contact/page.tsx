@@ -69,10 +69,10 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
                 Share coverage details, enquiry goals, and service regions. We will route to the right team.
               </p>
               <div className="mt-3 flex flex-wrap gap-3 text-sm">
-                <Link href="/for-clinics" className="text-primary hover:underline">
+                <Link href="/clinics" className="text-primary hover:underline">
                   Clinic partnerships
                 </Link>
-                <Link href="/for-schools" className="text-primary hover:underline">
+                <Link href="/schools" className="text-primary hover:underline">
                   School support
                 </Link>
               </div>

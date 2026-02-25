@@ -396,6 +396,7 @@ const SEEDS: SeedPage[] = [
     pageType: "cluster",
     publishOn: "2026-02-24",
     summaryFocus: "This page clarifies what AI can and cannot infer from a single scalp photo.",
+    image: "/blog_images/hub_images/ai-detection:can-ai-detect-head-lice.png",
   },
   {
     path: "/ai-detection/how-accurate-is-an-online-head-lice-checker",
@@ -406,7 +407,7 @@ const SEEDS: SeedPage[] = [
     intentType: "informational",
     funnelStage: "evaluation",
     pageType: "cluster",
-    publishOn: "2026-03-05",
+    publishOn: "2026-02-25",
     summaryFocus: "This page explains why image quality and symptom context change confidence outcomes.",
   },
   {
@@ -418,7 +419,7 @@ const SEEDS: SeedPage[] = [
     intentType: "mixed",
     funnelStage: "evaluation",
     pageType: "cluster",
-    publishOn: "2026-03-07",
+    publishOn: "2026-02-25",
     summaryFocus: "This page helps users combine methods rather than treating them as mutually exclusive.",
   },
   {
@@ -444,6 +445,7 @@ const SEEDS: SeedPage[] = [
     pageType: "cluster",
     publishOn: "2026-02-24",
     summaryFocus: "This page provides concrete UK pricing ranges and when costs typically increase.",
+    image: "/blog_images/hub_images/professional_professional-head-lice-removal-cost-uk.png",
   },
   {
     path: "/professional/are-head-lice-clinics-worth-it",
@@ -454,7 +456,7 @@ const SEEDS: SeedPage[] = [
     intentType: "commercial",
     funnelStage: "decision",
     pageType: "cluster",
-    publishOn: "2026-03-05",
+    publishOn: "2026-02-25",
     summaryFocus: "This page compares household effort burden against professional confirmation speed.",
   },
   {
@@ -466,7 +468,7 @@ const SEEDS: SeedPage[] = [
     intentType: "commercial",
     funnelStage: "decision",
     pageType: "cluster",
-    publishOn: "2026-03-10",
+    publishOn: "2026-02-25",
     summaryFocus: "This page prepares users for service scope, timing, and cost variables in mobile care.",
   },
   {
@@ -504,6 +506,7 @@ const SEEDS: SeedPage[] = [
     pageType: "cluster",
     publishOn: "2026-02-24",
     summaryFocus: "This page helps parents reduce panic from visual misreads during home checks.",
+    image: "/blog_images/hub_images/symptoms_white-dots-in-hair-lice-or-dandruff.png",
   },
   {
     path: "/symptoms/why-is-my-childs-head-itchy-at-night",
@@ -514,7 +517,7 @@ const SEEDS: SeedPage[] = [
     intentType: "informational",
     funnelStage: "panic",
     pageType: "cluster",
-    publishOn: "2026-03-07",
+    publishOn: "2026-02-25",
     summaryFocus: "This page turns high-anxiety symptom searches into practical evidence-gathering steps.",
   },
   {
@@ -526,7 +529,7 @@ const SEEDS: SeedPage[] = [
     intentType: "informational",
     funnelStage: "panic",
     pageType: "cluster",
-    publishOn: "2026-03-10",
+    publishOn: "2026-02-25",
     summaryFocus: "This page addresses silent or low-visibility infestations and practical follow-up timing.",
   },
   {

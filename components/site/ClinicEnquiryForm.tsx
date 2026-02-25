@@ -116,7 +116,7 @@ export default function ClinicEnquiryForm() {
     setDeliveryStatus(data.deliveryStatus ?? "queued");
     await trackEvent({
       event_type: "partner_enquiry_submitted",
-      metadata: { source: "for-clinics" },
+      metadata: { source: "clinics" },
     });
 
     reset({
@@ -140,7 +140,7 @@ export default function ClinicEnquiryForm() {
     <div className="rounded-2xl border border-border bg-card p-5 md:p-6">
       <p className="text-sm text-muted-foreground">
         Looking for priority visibility?{" "}
-        <Link href="/for-clinics/pricing" className="font-medium text-primary hover:underline">
+        <Link href="/clinics/pricing" className="font-medium text-primary hover:underline">
           See featured placement options
         </Link>
         .

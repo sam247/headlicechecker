@@ -20,6 +20,7 @@ const schema = z
       .refine((value) => /^https?:\/\//.test(value), "Website must be a valid URL"),
     region: z.string().trim().min(2),
     submittedByEmail: z.string().email().optional().or(z.literal("")),
+    sourcePath: z.string().trim().min(1).optional(),
     hp_field: z.string().optional(),
   })
   .strict();
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
   }
 
   const payload = parsed.data;
+  const sourcePath = payload.sourcePath?.startsWith("/") ? payload.sourcePath : "/directory";
   if (payload.hp_field && payload.hp_field.trim().length > 0) {
     return NextResponse.json({ ok: true, deliveryStatus: "queued" }, { status: 200 });
   }
@@ -91,7 +93,7 @@ export async function POST(request: NextRequest) {
       submittedByEmail: payload.submittedByEmail || undefined,
       createdAt: submittedAt,
       metadata: {
-        source_path: "/suggest-clinic",
+        source_path: sourcePath,
       },
     });
   } catch {
@@ -137,7 +139,7 @@ export async function POST(request: NextRequest) {
       clinic_id: null,
       region: payload.region,
       metadata: {
-        source_path: "/suggest-clinic",
+        source_path: sourcePath,
         delivery_status: delivery.deliveryStatus,
       },
       timestamp: submittedAt,

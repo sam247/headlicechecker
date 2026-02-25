@@ -4,7 +4,7 @@ export interface SchoolToolkitAsset {
   id: string;
   title: string;
   type: "policy_template" | "parent_notice" | "escalation_tracker" | "staff_briefing" | "printable_poster";
-  format: "docx" | "pptx" | "md";
+  format: "docx" | "pptx";
   href: string;
 }
 
@@ -33,39 +33,46 @@ const assets: SchoolToolkitAsset[] = [
     href: "/downloads/schools/parent-communication-notice.docx",
   },
   {
-    id: "escalation-tracker-md",
+    id: "escalation-tracker-docx",
     title: "Escalation Tracker",
     type: "escalation_tracker",
-    format: "md",
-    href: "/downloads/schools/Head%20Lice%20Escalation%20Tracker:%20Internal%20Record%20Keeping.md",
+    format: "docx",
+    href: "/downloads/schools/escalation-tracker.docx",
   },
   {
     id: "staff-briefing-framework-pptx",
     title: "Staff Briefing Slides",
     type: "staff_briefing",
     format: "pptx",
-    href: "/downloads/schools/The%20Head%20Lice%20School%20Response%20Framework%E2%84%A2:%20Staff%20Briefing.pptx",
+    href: "/downloads/schools/The%20Head%20Lice%20School%20Response%20Framework%E2%84%A2%20Staff%20Briefing.pptx",
   },
   {
     id: "staff-briefing-professional-pptx",
     title: "Staff Briefing Slides (Professional Briefing)",
     type: "staff_briefing",
     format: "pptx",
-    href: "/downloads/schools/Head%20Lice%20Management:%20Professional%20Briefing%20for%20School%20Staff.pptx",
+    href: "/downloads/schools/Head%20Lice%20Management%20Professional%20Briefing%20for%20School%20Staff.pptx",
   },
   {
     id: "school-family-guidance-pptx",
     title: "Printable Poster",
     type: "printable_poster",
     format: "pptx",
-    href: "/downloads/schools/Head%20Lice%20Checker:%20School%20%26%20Family%20Guidance.pptx",
+    href: "/downloads/schools/Head%20Lice%20Checker%20School%20%26%20Family%20Guidance.pptx",
   },
   {
     id: "modern-school-family-guidance-pptx",
     title: "Printable Poster (Modern Layout)",
     type: "printable_poster",
     format: "pptx",
-    href: "/downloads/schools/Head%20Lice%20Checker:%20Modern%20School%20%26%20Family%20Guidance.pptx",
+    href: "/downloads/schools/Head%20Lice%20Checker%20Modern%20School%20%26%20Family%20Guidance.pptx",
+  },
+  {
+    id: "quick-check-poster-docx",
+    title: "Quick Check Poster",
+    type: "printable_poster",
+    format: "docx",
+    href: "/downloads/schools/quick-check-poster.docx",
   },
 ];
 

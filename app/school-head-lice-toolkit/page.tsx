@@ -20,7 +20,7 @@ export const metadata: Metadata = pageMetadata({
 export default function SchoolHeadLiceToolkitPage() {
   const breadcrumb = breadcrumbJsonLd([
     { name: "Home", path: "/" },
-    { name: "For Schools", path: "/for-schools" },
+    { name: "For Schools", path: "/schools" },
     { name: "School Head Lice Toolkit", path: "/school-head-lice-toolkit" },
   ]);
 
@@ -167,7 +167,7 @@ export default function SchoolHeadLiceToolkitPage() {
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Button asChild className="rounded-full">
-              <Link href="/for-schools">
+              <Link href="/schools">
                 Go to schools hub
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>

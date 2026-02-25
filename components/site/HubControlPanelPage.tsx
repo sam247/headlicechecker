@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import StructuredEscalationModel from "@/components/site/StructuredEscalationModel";
@@ -73,9 +74,7 @@ export default function HubControlPanelPage({ page, clusterPages }: HubControlPa
           </p>
         </header>
 
-        <div className="mt-4 rounded-2xl border border-primary/20 bg-muted/20 p-2">
-          <StructuredEscalationModel />
-        </div>
+        <StructuredEscalationModel />
 
         <section className="mt-12">
           <h2 className="text-2xl font-semibold">What this hub covers</h2>
@@ -88,12 +87,27 @@ export default function HubControlPanelPage({ page, clusterPages }: HubControlPa
                 key={article.path}
                 className="border-border/80 transition duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-sm"
               >
-                <CardContent className="p-5">
-                  <h3 className="text-base font-semibold leading-snug">{article.title}</h3>
+                <CardContent className="overflow-hidden p-0">
+                  <Link href={article.path} className="relative block aspect-[16/10] w-full bg-muted">
+                    <Image
+                      src={article.image ?? "/logo_new.png"}
+                      alt={article.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+                  </Link>
+                  <div className="p-5">
+                    <h3 className="text-base font-semibold leading-snug">
+                      <Link href={article.path} className="hover:text-primary">
+                        {article.title}
+                      </Link>
+                    </h3>
                   <p className="mt-2 text-sm leading-7 text-muted-foreground">{article.description}</p>
                   <Link href={article.path} className="mt-4 inline-flex text-sm font-medium text-primary hover:underline">
                     Read guide
                   </Link>
+                  </div>
                 </CardContent>
               </Card>
             ))}

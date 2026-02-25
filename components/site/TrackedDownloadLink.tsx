@@ -7,7 +7,7 @@ import { trackEvent } from "@/lib/data/events";
 interface TrackedDownloadLinkProps {
   href: string;
   assetName: string;
-  format: "pdf" | "docx" | "xlsx";
+  format: "pdf" | "docx" | "xlsx" | "pptx";
   mode: "view" | "download";
   className?: string;
 }

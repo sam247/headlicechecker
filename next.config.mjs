@@ -8,6 +8,21 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: "/for-schools",
+        destination: "/schools",
+        permanent: true,
+      },
+      {
+        source: "/for-clinics",
+        destination: "/clinics",
+        permanent: true,
+      },
+      {
+        source: "/for-clinics/pricing",
+        destination: "/clinics/pricing",
+        permanent: true,
+      },
+      {
         source: "/blog/head-lice-treatment-for-adults",
         destination: "/professional/head-lice-treatment-for-adults",
         permanent: true,

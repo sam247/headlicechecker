@@ -29,9 +29,9 @@ export default function PartnerEnquiryCtaCard() {
       <div className="mt-5 flex flex-wrap gap-3">
         <Button asChild className="rounded-full">
           <Link
-            href="/for-clinics#enquiry"
+            href="/clinics#enquiry"
             onClick={() => {
-              trackPartnerCta("/for-clinics#enquiry");
+              trackPartnerCta("/clinics#enquiry");
             }}
           >
             Apply to be listed
@@ -39,10 +39,10 @@ export default function PartnerEnquiryCtaCard() {
           </Link>
         </Button>
         <Link
-          href="/for-clinics/pricing"
+          href="/clinics/pricing"
           className="inline-flex items-center text-sm font-medium text-primary hover:underline"
           onClick={() => {
-            trackPartnerCta("/for-clinics/pricing");
+            trackPartnerCta("/clinics/pricing");
           }}
         >
           See featured placement options
